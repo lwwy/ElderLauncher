@@ -18,7 +18,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 
@@ -172,7 +172,7 @@ class HomeActivity : AppCompatActivity() {
     private fun updateClock() {
         val cal = Calendar.getInstance()
         val now = Date()
-        tvTime.text = DateFormat.format("HH:mm", now)
+        tvTime.text = SimpleDateFormat("HH:mm").format(now)
         tvAmPm.text = if (cal.get(Calendar.HOUR_OF_DAY) < 12)
             getString(R.string.home_am) else getString(R.string.home_pm)
         val m = cal.get(Calendar.MONTH) + 1
