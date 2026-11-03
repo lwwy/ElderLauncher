@@ -1,71 +1,104 @@
 package com.example.elderlauncher
 
-import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
+import android.content.IntentFilter
+import android.os.BatteryManager
 import android.os.Bundle
-import android.widget.Button
+import android.os.Handler
+import android.os.Looper
+import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import androidx.activity.result.contract.ActivityResultContracts
+import java.text.DateFormat
+import java.util.Calendar
+import java.util.Date
 
 class HomeActivity : AppCompatActivity() {
 
-    private val neededPermissions: List<String>
-        get() = listOf(
-            Manifest.permission.CALL_PHONE,
-            Manifest.permission.READ_CONTACTS,
-            Manifest.permission.READ_SMS,
-            Manifest.permission.SEND_SMS,
-            Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.ANSWER_PHONE_CALLS
-        )
+    private lateinit var tvTime: TextView
+    private lateinit var tvAmPm: TextView
+    private lateinit var tvDate: TextView
+    private lateinit var tvLunar: TextView
+    private lateinit var tvBattery: TextView
 
-    private val requestLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {}
+    private val handler = Handler(Looper.getMainLooper())
+    private val weekdays = arrayOf(
+        "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"
+    )
+
+    private val clockRunnable = object : Runnable {
+        override fun run() {
+            updateClock()
+            handler.postDelayed(this, 30000)
+        }
+    }
+
+    private val batteryReceiver = object : BroadcastReceiver() {
+        override fun onReceive(c: Context?, i: Intent?) {
+            val level = i?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+            val scale = i?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+            val pct = if (level >= 0 && scale > 0) level * 100 / scale else -1
+            tvBattery.text = if (pct >= 0) pct.toString() else "--"
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
-
         TtsManager.init(this)
-        requestPermissionsIfNeeded()
-        setupUi()
+
+        tvTime = findViewById(R.id.tvTime)
+        tvAmPm = findViewById(R.id.tvAmPm)
+        tvDate = findViewById(R.id.tvDate)
+        tvLunar = findViewById(R.id.tvLunar)
+        tvBattery = findViewById(R.id.tvBattery)
+
+        // 时间卡右上角四圆点图标 -> 设置
+        findViewById<ImageView>(R.id.ivWidget).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+
+        // 2x2 联系人卡片与底部加号 -> 联系人列表（留空待添加）
+        val openContacts = {
+            startActivity(Intent(this, ContactsActivity::class.java))
+        }
+        findViewById<View>(R.id.cardContact1).setOnClickListener { openContacts() }
+        findViewById<View>(R.id.cardContact2).setOnClickListener { openContacts() }
+        findViewById<View>(R.id.cardContact3).setOnClickListener { openContacts() }
+        findViewById<View>(R.id.cardContact4).setOnClickListener { openContacts() }
+        findViewById<View>(R.id.btnAdd).setOnClickListener { openContacts() }
+
         updateClock()
     }
 
-    private fun requestPermissionsIfNeeded() {
-        val toRequest = neededPermissions.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-        if (toRequest.isNotEmpty()) {
-            requestLauncher.launch(toRequest.toTypedArray())
-        }
-    }
-
-    private fun setupUi() {
-        findViewById<Button>(R.id.btnDialer).setOnClickListener {
-            startActivity(Intent(this, DialerActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnContacts).setOnClickListener {
-            startActivity(Intent(this, ContactsActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnSms).setOnClickListener {
-            startActivity(Intent(this, SmsActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnSettings).setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        }
-    }
-
     private fun updateClock() {
-        val tv = findViewById<TextView>(R.id.tvClock)
-        tv.text = android.text.format.DateFormat.format("HH:mm", java.util.Date())
+        val cal = Calendar.getInstance()
+        val now = Date()
+        tvTime.text = DateFormat.format("HH:mm", now)
+        tvAmPm.text = if (cal.get(Calendar.HOUR_OF_DAY) < 12)
+            getString(R.string.home_am) else getString(R.string.home_pm)
+        val m = cal.get(Calendar.MONTH) + 1
+        val d = cal.get(Calendar.DAY_OF_MONTH)
+        tvDate.text = "${m}月${d}日 ${weekdays[cal.get(Calendar.DAY_OF_WEEK) - 1]}"
+        tvLunar.text = LunarUtil.getLunar(now)
     }
 
     override fun onResume() {
         super.onResume()
         updateClock()
+        handler.post(clockRunnable)
+        registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+    }
+
+    override fun onPause() {
+        super.onPause()
+        handler.removeCallbacks(clockRunnable)
+        try {
+            unregisterReceiver(batteryReceiver)
+        } catch (_: Exception) {
+        }
     }
 }

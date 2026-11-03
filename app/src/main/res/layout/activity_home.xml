@@ -1,50 +1,187 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:padding="12dp"
+    android:padding="16dp"
+    android:background="@color/bg_navy"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/tvClock"
-        android:text="--:--"
-        android:textSize="48sp"
-        android:textStyle="bold"
-        android:textColor="@color/primary"
-        android:gravity="center"
-        android:padding="12dp"
+    <!-- 顶部蓝色时间卡 -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_round_blue"
+        android:padding="20dp">
 
-    <Button
-        android:id="@+id/btnDialer"
-        style="@style/BigButton"
-        android:text="@string/home_dialer"
+        <ImageView
+            android:id="@+id/ivWidget"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="end|top"
+            android:src="@drawable/ic_quad"
+            android:contentDescription="@string/home_settings" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingEnd="44dp">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="bottom">
+
+                <TextView
+                    android:id="@+id/tvTime"
+                    android:text="--:--"
+                    android:textSize="64sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_on_blue" />
+
+                <TextView
+                    android:id="@+id/tvAmPm"
+                    android:text="@string/home_am"
+                    android:textSize="22sp"
+                    android:textColor="@color/text_on_blue"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginBottom="12dp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvDate"
+                android:text=""
+                android:textSize="18sp"
+                android:textColor="@color/text_on_blue"
+                android:layout_marginTop="6dp" />
+
+            <TextView
+                android:id="@+id/tvLunar"
+                android:text=""
+                android:textSize="16sp"
+                android:textColor="@color/text_on_blue_dim"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- 2x2 联系人卡片 -->
+    <GridLayout
+        android:id="@+id/gridContacts"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:columnCount="2"
+        android:rowCount="2"
+        android:useDefaultMargins="true"
+        android:layout_marginTop="14dp">
 
-    <Button
-        android:id="@+id/btnContacts"
-        style="@style/BigButton"
-        android:text="@string/home_contacts"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        <LinearLayout
+            android:id="@+id/cardContact1"
+            style="@style/ContactCard">
+            <ImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:src="@drawable/ic_person" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/contact_add"
+                android:textSize="18sp"
+                android:textColor="@color/text_on_blue"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
 
-    <Button
-        android:id="@+id/btnSms"
-        style="@style/BigButton"
-        android:text="@string/home_sms"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        <LinearLayout
+            android:id="@+id/cardContact2"
+            style="@style/ContactCard">
+            <ImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:src="@drawable/ic_person" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/contact_add"
+                android:textSize="18sp"
+                android:textColor="@color/text_on_blue"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
 
-    <Button
-        android:id="@+id/btnSettings"
-        style="@style/BigButton"
-        android:text="@string/home_settings"
+        <LinearLayout
+            android:id="@+id/cardContact3"
+            style="@style/ContactCard">
+            <ImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:src="@drawable/ic_person" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/contact_add"
+                android:textSize="18sp"
+                android:textColor="@color/text_on_blue"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/cardContact4"
+            style="@style/ContactCard">
+            <ImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:src="@drawable/ic_person" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/contact_add"
+                android:textSize="18sp"
+                android:textColor="@color/text_on_blue"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+    </GridLayout>
+
+    <!-- 电量卡 -->
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_round_blue_dark"
+        android:padding="16dp"
+        android:layout_marginTop="14dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_battery" />
+
+        <TextView
+            android:text="@string/home_battery"
+            android:textSize="20sp"
+            android:textColor="@color/text_on_blue"
+            android:layout_marginStart="12dp" />
+
+        <TextView
+            android:id="@+id/tvBattery"
+            android:text="--"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_on_blue"
+            android:layout_marginStart="12dp" />
+    </LinearLayout>
+
+    <!-- 底部加号 -->
+    <FrameLayout
+        android:id="@+id/btnAdd"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@drawable/bg_round_blue"
+        android:layout_marginTop="14dp">
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_plus"
+            android:layout_gravity="center" />
+    </FrameLayout>
 </LinearLayout>

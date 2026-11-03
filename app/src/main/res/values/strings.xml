@@ -6,6 +6,10 @@
     <string name="home_contacts">联系人</string>
     <string name="home_sms">短信</string>
     <string name="home_settings">设置</string>
+    <string name="home_am">上午</string>
+    <string name="home_pm">下午</string>
+    <string name="home_battery">电量</string>
+    <string name="contact_add">添加联系人</string>
 
     <string name="dialer_title">拨号</string>
     <string name="dialer_call">拨打</string>
