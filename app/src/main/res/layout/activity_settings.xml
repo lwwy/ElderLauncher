@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:text="@string/settings_title"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView android:text="@string/set_hourly" android:textSize="26sp"
+            android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content" />
+        <Switch android:id="@+id/swHourly" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView android:text="@string/set_incoming" android:textSize="26sp"
+            android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content" />
+        <Switch android:id="@+id/swIncoming" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView android:text="@string/set_lowbattery" android:textSize="26sp"
+            android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content" />
+        <Switch android:id="@+id/swLow" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView android:text="@string/set_sms" android:textSize="26sp"
+            android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content" />
+        <Switch android:id="@+id/swSms" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnDefault"
+        style="@style/BigButton"
+        android:text="@string/set_default_launcher"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:text="@string/set_default_tip"
+        android:textSize="18sp"
+        android:textColor="@color/text_hint"
+        android:padding="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</LinearLayout>
