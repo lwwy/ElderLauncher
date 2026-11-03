@@ -13,24 +13,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 class HomeActivity : AppCompatActivity() {
 
     private val neededPermissions: List<String>
-        get() {
-            val list = mutableListOf(
-                Manifest.permission.CALL_PHONE,
-                Manifest.permission.READ_CONTACTS,
-                Manifest.permission.READ_SMS,
-                Manifest.permission.SEND_SMS,
-                Manifest.permission.RECEIVE_SMS,
-                Manifest.permission.READ_PHONE_STATE,
-                Manifest.permission.ANSWER_PHONE_CALLS
-            )
-            if (android.os.Build.VERSION.SDK_INT >= 33) {
-                list.add(Manifest.permission.READ_MEDIA_IMAGES)
-                list.add(Manifest.permission.POST_NOTIFICATIONS)
-            } else {
-                list.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-            }
-            return list
-        }
+        get() = listOf(
+            Manifest.permission.CALL_PHONE,
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.READ_SMS,
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.ANSWER_PHONE_CALLS
+        )
 
     private val requestLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {}
@@ -40,7 +30,6 @@ class HomeActivity : AppCompatActivity() {
         setContentView(R.layout.activity_home)
 
         TtsManager.init(this)
-        Scheduler.scheduleHourly(this)
         requestPermissionsIfNeeded()
         setupUi()
         updateClock()
@@ -64,12 +53,6 @@ class HomeActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.btnSms).setOnClickListener {
             startActivity(Intent(this, SmsActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnAlbum).setOnClickListener {
-            startActivity(Intent(this, AlbumActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnBlock).setOnClickListener {
-            startActivity(Intent(this, BlockListActivity::class.java))
         }
         findViewById<Button>(R.id.btnSettings).setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))

@@ -7,20 +7,9 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
-    <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
-    <!-- 存储：相册（按系统版本区分） -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"
-        android:minSdkVersion="33" />
-
-    <!-- Android 13+ 通知权限 -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"
-        android:minSdkVersion="33" />
 
     <!-- 注意：本应用为纯本地应用，不使用 INTERNET 权限 -->
 
@@ -48,21 +37,16 @@
         <activity android:name=".DialerActivity" android:exported="false" />
         <activity android:name=".ContactsActivity" android:exported="false" />
         <activity android:name=".SmsActivity" android:exported="false" />
-        <activity android:name=".AlbumActivity" android:exported="false" />
-        <activity android:name=".BlockListActivity" android:exported="false" />
         <activity android:name=".SettingsActivity" android:exported="false" />
 
-        <receiver android:name=".receiver.BootReceiver" android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-
-        <receiver android:name=".receiver.ClockReceiver" android:exported="true">
-            <intent-filter>
-                <action android:name="com.example.elderlauncher.ACTION_HOURLY" />
-            </intent-filter>
-        </receiver>
+        <!-- 来电大卡片：锁屏可弹、单实例 -->
+        <activity
+            android:name=".IncomingCallActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true" />
 
         <receiver android:name=".receiver.BatteryReceiver" android:exported="true">
             <intent-filter>
@@ -74,12 +58,6 @@
         <receiver android:name=".receiver.CallStateReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE" />
-            </intent-filter>
-        </receiver>
-
-        <receiver android:name=".receiver.SmsReceiver" android:exported="true">
-            <intent-filter>
-                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
     </application>

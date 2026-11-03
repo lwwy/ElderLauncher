@@ -7,4 +7,6 @@
     <color name="card">#FFFFFF</color>
     <color name="text_dark">#222222</color>
     <color name="text_hint">#888888</color>
+    <color name="answer_green">#2E7D32</color>
+    <color name="hangup_red">#C62828</color>
 </resources>

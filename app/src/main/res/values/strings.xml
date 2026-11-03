@@ -5,8 +5,6 @@
     <string name="home_dialer">拨号</string>
     <string name="home_contacts">联系人</string>
     <string name="home_sms">短信</string>
-    <string name="home_album">相册</string>
-    <string name="home_block">拦截</string>
     <string name="home_settings">设置</string>
 
     <string name="dialer_title">拨号</string>
@@ -21,25 +19,20 @@
     <string name="sms_send">发送</string>
     <string name="sms_hint">输入要发送的内容</string>
 
-    <string name="album_title">相册</string>
-    <string name="album_empty">没有读取到照片</string>
-    <string name="album_slideshow">幻灯片</string>
-    <string name="album_stop">停止</string>
-
-    <string name="block_title">骚扰拦截</string>
-    <string name="block_hint">输入要拦截的号码</string>
-    <string name="block_add">添加</string>
-    <string name="block_empty">暂无拦截号码</string>
-    <string name="block_tip">来电号码在列表中时将自动挂断并语音提示</string>
-
     <string name="settings_title">设置</string>
-    <string name="set_hourly">整点报时</string>
     <string name="set_incoming">来电播报</string>
     <string name="set_lowbattery">低电量播报</string>
-    <string name="set_sms">新短信播报</string>
+
+    <string name="incoming_title">来电</string>
+    <string name="incoming_call">来电</string>
+    <string name="incoming_answer">接听</string>
+    <string name="incoming_hangup">挂断</string>
+
     <string name="set_default_launcher">设为默认桌面</string>
     <string name="set_default_tip">在系统设置中将“老人桌面”设为默认桌面，开机即进入本应用</string>
+    <string name="set_default_dialer">设为默认电话应用</string>
+    <string name="set_default_dialer_tip">Android 10+ 上设为默认电话应用，可保证来电大卡片与接听/挂断可靠生效</string>
 
-    <string name="perm_hint">本应用需要电话、通讯录、短信、存储等权限才能使用对应功能，请全部允许</string>
+    <string name="perm_hint">本应用需要电话、通讯录、短信等权限才能使用对应功能，请全部允许</string>
     <string name="grant">去授权</string>
 </resources>

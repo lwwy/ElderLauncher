@@ -1,50 +1,37 @@
 package com.example.elderlauncher.receiver
 
-import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
-import android.telecom.TelecomManager
 import android.telephony.TelephonyManager
-import androidx.core.content.ContextCompat
 import com.example.elderlauncher.ContactsHelper
 import com.example.elderlauncher.Prefs
 import com.example.elderlauncher.TtsManager
 
-/** 来电播报 + 骚扰号码自动挂断（本地拦截，不出网） */
+/** 来电时弹出大卡片（接听/挂断），并按设置播报来电人（纯本地，不出网） */
 class CallStateReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != TelephonyManager.ACTION_PHONE_STATE_CHANGED) return
-        val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
+        val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE) ?: return
+        if (state != TelephonyManager.EXTRA_STATE_RINGING) return
+
         val number = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
-        if (state == TelephonyManager.EXTRA_STATE_RINGING && number != null) {
-            if (Prefs.blockSet(context).contains(normalize(number))) {
-                TtsManager.speakNow(context, "已拦截骚扰来电")
-                hangup(context)
-                return
-            }
-            if (!Prefs.enabled(context, Prefs.ANN_INCOMING)) return
-            val name = ContactsHelper.lookupName(context, number)
+        val name = if (!number.isNullOrEmpty()) ContactsHelper.lookupName(context, number) else null
+
+        if (Prefs.enabled(context, Prefs.ANN_INCOMING) && !number.isNullOrEmpty()) {
             val who = if (name.isNullOrEmpty()) "未知号码" else name
             TtsManager.speakNow(context, "来电，$who")
         }
-    }
 
-    private fun normalize(n: String): String = n.replace("[^0-9]".toRegex(), "")
-
-    private fun hangup(context: Context) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ANSWER_PHONE_CALLS)
-            != PackageManager.PERMISSION_GRANTED
-        ) return
+        val i = Intent(context, IncomingCallActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_USER_ACTION)
+            putExtra("number", number ?: "")
+            putExtra("name", name ?: "")
+        }
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                val tm = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-                tm.endCall()
-            }
-        } catch (e: Exception) {
-            // 部分机型/系统不支持程序化挂断，忽略
+            context.startActivity(i)
+        } catch (_: Exception) {
+            // 后台启动活动被系统限制时忽略，设置页可引导设为默认电话应用
         }
     }
 }
