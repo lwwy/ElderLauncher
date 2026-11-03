@@ -51,4 +51,7 @@
     <!-- 电量卡（绿色，呼应图片） -->
     <color name="colorBatteryBg">#143526</color>
     <color name="colorBatteryFg">#86EBA6</color>
+    <!-- 电量低于 20%：优雅的 Material 红 + 深红酒红底 -->
+    <color name="colorBatteryLow">#E5484D</color>
+    <color name="colorBatteryLowBg">#2A1518</color>
 </resources>

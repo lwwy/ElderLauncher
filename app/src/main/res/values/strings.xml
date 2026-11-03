@@ -2,16 +2,9 @@
 <resources>
     <string name="app_name">老人桌面</string>
 
-    <string name="home_dialer">拨号</string>
-    <string name="home_contacts">联系人</string>
-    <string name="home_sms">短信</string>
     <string name="home_settings">设置</string>
-    <string name="home_am">上午</string>
-    <string name="home_pm">下午</string>
     <string name="home_battery">电量</string>
     <string name="contact_add">添加联系人</string>
-    <string name="contact_pick_title">选择常用联系人</string>
-    <string name="fav_removed">已移除该联系人</string>
 
     <!-- 联系人编辑 -->
     <string name="edit_contact_title">编辑联系人</string>
@@ -34,14 +27,6 @@
     <string name="dialer_call">拨打</string>
     <string name="dialer_delete">删除</string>
 
-    <string name="contacts_title">联系人</string>
-    <string name="contacts_empty">没有读取到联系人，请授予通讯录权限</string>
-
-    <string name="sms_title">短信</string>
-    <string name="sms_empty">没有短信</string>
-    <string name="sms_send">发送</string>
-    <string name="sms_hint">输入要发送的内容</string>
-
     <string name="settings_title">设置</string>
     <string name="set_incoming">来电播报</string>
     <string name="set_lowbattery">低电量播报</string>
@@ -58,27 +43,16 @@
     <string name="set_default_dialer_toast">正在打开系统“默认应用”设置，请选择“电话应用”</string>
     <string name="set_default_dialer_failed">无法打开系统设置，请手动进入“设置 → 应用 → 默认应用”选择电话应用</string>
 
-    <string name="perm_hint">本应用需要电话、通讯录、短信等权限才能使用对应功能，请全部允许</string>
-    <string name="grant">去授权</string>
-
     <!-- 常用联系人管理（设置页） -->
     <string name="set_fav_title">常用联系人</string>
     <string name="set_fav_tip">在下方编辑桌面上的联系人（最多 3 个），可设置姓名、电话与头像</string>
     <string name="fav_slot">联系人 %1$d</string>
     <string name="fav_not_set">未添加</string>
-    <string name="fav_choose">选择</string>
-    <string name="fav_clear">清除</string>
 
-    <!-- 无障碍 / 自动接听 -->
-    <string name="accessibility_title">无障碍模式</string>
+    <!-- 设置分区标题 -->
     <string name="section_call">来电与通话</string>
     <string name="section_permission">权限与保活</string>
     <string name="section_default">默认应用</string>
-    <string name="auto_answer">自动接听来电</string>
-    <string name="auto_answer_tip">开启后，来电将在设定秒数后自动接听，方便眼神不好的老人</string>
-    <string name="auto_answer_delay">自动接听延迟</string>
-    <string name="delay_sec">%1$d 秒</string>
-    <string name="incall_auto_answering">%1$d 秒后自动接听…</string>
 
     <!-- 自启动 / 保活 -->
     <string name="autostart_title">自启动与后台</string>

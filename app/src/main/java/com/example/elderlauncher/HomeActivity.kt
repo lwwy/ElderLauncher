@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.material.card.MaterialCardView
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -25,6 +26,9 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var tvDate: TextView
     private lateinit var tvLunar: TextView
     private lateinit var tvBattery: TextView
+    private lateinit var tvBatteryLabel: TextView
+    private lateinit var imgBattery: ImageView
+    private lateinit var cardBattery: MaterialCardView
 
     private val cardIds = intArrayOf(
         R.id.cardContact1, R.id.cardContact2, R.id.cardContact3
@@ -58,7 +62,7 @@ class HomeActivity : AppCompatActivity() {
             val level = i?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
             val scale = i?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
             val pct = if (level >= 0 && scale > 0) level * 100 / scale else -1
-            tvBattery.text = if (pct >= 0) pct.toString() else "--"
+            updateBattery(pct)
         }
     }
 
@@ -71,6 +75,9 @@ class HomeActivity : AppCompatActivity() {
         tvDate = findViewById(R.id.tvDate)
         tvLunar = findViewById(R.id.tvLunar)
         tvBattery = findViewById(R.id.tvBattery)
+        tvBatteryLabel = findViewById(R.id.tvBatteryLabel)
+        imgBattery = findViewById(R.id.imgBattery)
+        cardBattery = findViewById(R.id.cardBattery)
 
         // 设置入口：右上角齿轮（看护人使用）
         findViewById<android.view.View>(R.id.btnSettings).setOnClickListener {
@@ -141,6 +148,26 @@ class HomeActivity : AppCompatActivity() {
                 phones[i] = contact.phone
             }
         }
+    }
+
+    /** 更新电量显示：低于 20% 用优雅的 Material 红，否则用正常绿色 */
+    private fun updateBattery(pct: Int) {
+        if (pct < 0) {
+            tvBattery.text = "--"
+            return
+        }
+        tvBattery.text = pct.toString()
+        val low = pct < 20
+        val fg = ContextCompat.getColor(
+            this, if (low) R.color.colorBatteryLow else R.color.colorBatteryFg
+        )
+        val bg = ContextCompat.getColor(
+            this, if (low) R.color.colorBatteryLowBg else R.color.colorBatteryBg
+        )
+        cardBattery.setCardBackgroundColor(bg)
+        imgBattery.setColorFilter(fg, android.graphics.PorterDuff.Mode.SRC_IN)
+        tvBattery.setTextColor(fg)
+        tvBatteryLabel.setTextColor(fg)
     }
 
     private fun call(number: String) {

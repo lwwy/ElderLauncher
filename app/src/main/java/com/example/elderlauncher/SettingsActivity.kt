@@ -12,7 +12,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.switchmaterial.SwitchMaterial
 
@@ -29,30 +28,6 @@ class SettingsActivity : AppCompatActivity() {
         swLow.isChecked = Prefs.enabled(this, Prefs.ANN_LOW)
         swIncoming.setOnCheckedChangeListener { _, v -> Prefs.set(this, Prefs.ANN_INCOMING, v) }
         swLow.setOnCheckedChangeListener { _, v -> Prefs.set(this, Prefs.ANN_LOW, v) }
-
-        // 无障碍：自动接听
-        val swAuto = findViewById<SwitchMaterial>(R.id.swAutoAnswer)
-        val delayGroup = findViewById<MaterialButtonToggleGroup>(R.id.delayGroup)
-        findViewById<MaterialButton>(R.id.btnDelay3).text = "3 秒"
-        findViewById<MaterialButton>(R.id.btnDelay5).text = "5 秒"
-        findViewById<MaterialButton>(R.id.btnDelay10).text = "10 秒"
-        swAuto.isChecked = Prefs.autoAnswer(this)
-        swAuto.setOnCheckedChangeListener { _, v -> Prefs.set(this, Prefs.AUTO_ANSWER, v) }
-        when (Prefs.autoAnswerDelay(this)) {
-            3 -> delayGroup.check(R.id.btnDelay3)
-            10 -> delayGroup.check(R.id.btnDelay10)
-            else -> delayGroup.check(R.id.btnDelay5)
-        }
-        delayGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (isChecked) {
-                val d = when (checkedId) {
-                    R.id.btnDelay3 -> 3
-                    R.id.btnDelay10 -> 10
-                    else -> 5
-                }
-                Prefs.setInt(this, Prefs.AUTO_ANSWER_DELAY, d)
-            }
-        }
 
         // 常用联系人（本地可编辑）
         buildContactRows()

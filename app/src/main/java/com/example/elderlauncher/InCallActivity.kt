@@ -1,5 +1,6 @@
 package com.example.elderlauncher
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.telecom.Call
@@ -11,7 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 
 /**
  * 全屏来电/通话大卡片：高对比、大字号。
- * 振铃时显示「接听 / 挂断」，接通后仅显示「挂断」，挂断或空闲自动关闭。
+ * 振铃时显示「接听 / 挂断」，接通后仅显示「挂断」；
+ * 通话结束（挂断/对方挂断）后自动回到老人桌面。
  */
 class InCallActivity : AppCompatActivity() {
     private var call: Call? = null
@@ -45,6 +47,7 @@ class InCallActivity : AppCompatActivity() {
             window.decorView.postDelayed({
                 c = ElderInCallService.currentCall()
                 if (c == null) {
+                    returnToHome()
                     finish()
                 } else {
                     attach(c!!)
@@ -69,11 +72,15 @@ class InCallActivity : AppCompatActivity() {
     }
 
     private fun updateUi(state: Int) {
+        if (isFinishing || isDestroyed) return
         val btnAnswer = findViewById<Button>(R.id.btnAnswer)
         when (state) {
             Call.STATE_RINGING -> btnAnswer.visibility = android.view.View.VISIBLE
             Call.STATE_ACTIVE, Call.STATE_DIALING -> btnAnswer.visibility = android.view.View.GONE
-            Call.STATE_DISCONNECTED, Call.STATE_DISCONNECTING -> finish()
+            Call.STATE_DISCONNECTING, Call.STATE_DISCONNECTED -> {
+                returnToHome()
+                finish()
+            }
         }
     }
 
@@ -89,7 +96,24 @@ class InCallActivity : AppCompatActivity() {
             call?.disconnect()
         } catch (_: Exception) {
         }
+        returnToHome()
         finish()
+    }
+
+    /** 通话结束后回到老人桌面（本应用主界面） */
+    private fun returnToHome() {
+        try {
+            startActivity(
+                Intent(this, HomeActivity::class.java).apply {
+                    addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                                Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    )
+                }
+            )
+        } catch (_: Exception) {
+        }
     }
 
     override fun onDestroy() {

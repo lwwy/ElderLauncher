@@ -108,59 +108,6 @@
                         android:id="@+id/swLow"
                         android:layout_width="wrap_content" android:layout_height="wrap_content" />
                 </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?attr/colorOutline" />
-
-                <LinearLayout
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="12dp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView android:text="@string/auto_answer" android:textSize="22sp"
-                        android:textStyle="bold" android:textColor="?attr/colorOnSurface"
-                        android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content" />
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/swAutoAnswer"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content" />
-                </LinearLayout>
-
-                <TextView android:text="@string/auto_answer_tip" android:textSize="14sp"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:paddingStart="12dp" android:paddingEnd="12dp" />
-
-                <TextView android:text="@string/auto_answer_delay" android:textSize="16sp"
-                    android:textColor="?attr/colorOnSurface"
-                    android:layout_marginTop="8dp"
-                    android:paddingStart="12dp" android:paddingEnd="12dp" />
-
-                <com.google.android.material.button.MaterialButtonToggleGroup
-                    android:id="@+id/delayGroup"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:singleSelection="true"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginEnd="12dp">
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDelay3"
-                        style="?attr/materialButtonOutlinedStyle"
-                        android:layout_width="0dp" android:layout_height="wrap_content"
-                        android:layout_weight="1" android:text="@string/delay_sec" />
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDelay5"
-                        style="?attr/materialButtonOutlinedStyle"
-                        android:layout_width="0dp" android:layout_height="wrap_content"
-                        android:layout_weight="1" android:text="@string/delay_sec" />
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDelay10"
-                        style="?attr/materialButtonOutlinedStyle"
-                        android:layout_width="0dp" android:layout_height="wrap_content"
-                        android:layout_weight="1" android:text="@string/delay_sec" />
-                </com.google.android.material.button.MaterialButtonToggleGroup>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

@@ -56,8 +56,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ContactsActivity" android:exported="false" />
-        <activity android:name=".SmsActivity" android:exported="false" />
         <activity android:name=".SettingsActivity" android:exported="false" />
         <activity
             android:name=".ContactEditActivity"
