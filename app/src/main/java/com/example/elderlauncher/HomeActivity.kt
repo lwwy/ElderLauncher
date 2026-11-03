@@ -13,7 +13,6 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -74,7 +73,7 @@ class HomeActivity : AppCompatActivity() {
             tvBattery = findViewById(R.id.tvBattery)
 
             // 时间卡右上角四圆点图标 -> 设置
-            findViewById<ImageView>(R.id.ivWidget).setOnClickListener {
+            findViewById<View>(R.id.ivWidget).setOnClickListener {
                 startActivity(Intent(this, SettingsActivity::class.java))
             }
 
