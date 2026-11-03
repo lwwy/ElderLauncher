@@ -43,4 +43,32 @@
 
     <string name="perm_hint">本应用需要电话、通讯录、短信等权限才能使用对应功能，请全部允许</string>
     <string name="grant">去授权</string>
+
+    <!-- 常用联系人管理（设置页） -->
+    <string name="set_fav_title">常用联系人</string>
+    <string name="set_fav_tip">在下方添加或移除桌面上的“一键拨号”联系人（最多 4 个）</string>
+    <string name="fav_slot">联系人 %1$d</string>
+    <string name="fav_not_set">未添加</string>
+    <string name="fav_choose">选择</string>
+    <string name="fav_clear">清除</string>
+
+    <!-- 无障碍 / 自动接听 -->
+    <string name="accessibility_title">无障碍模式</string>
+    <string name="auto_answer">自动接听来电</string>
+    <string name="auto_answer_tip">开启后，来电将在设定秒数后自动接听，方便眼神不好的老人</string>
+    <string name="auto_answer_delay">自动接听延迟</string>
+    <string name="delay_sec">%1$d 秒</string>
+    <string name="incall_auto_answering">%1$d 秒后自动接听…</string>
+
+    <!-- 自启动 / 保活 -->
+    <string name="autostart_title">自启动与后台</string>
+    <string name="btn_autostart">自启动权限</string>
+    <string name="autostart_tip">开启自启动与后台运行，手机重启后自动进入桌面</string>
+    <string name="btn_battery">忽略电池优化</string>
+    <string name="battery_tip">允许后台运行，避免被系统清理导致来电异常</string>
+    <string name="keepalive_notice">老人桌面正在后台运行，保持来电与通话正常</string>
+    <string name="autostart_opened">正在打开自启动设置，请允许“老人桌面”自启动与后台运行</string>
+    <string name="autostart_failed">未能自动打开自启动设置，请到“设置 → 应用 → 老人桌面”中手动开启自启动与后台运行</string>
+    <string name="battery_done">已请求忽略电池优化，请在弹窗中点击“允许”</string>
+    <string name="home_empty_hint">请在“设置 → 常用联系人”中添加</string>
 </resources>

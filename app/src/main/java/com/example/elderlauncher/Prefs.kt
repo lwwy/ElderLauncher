@@ -10,6 +10,9 @@ object Prefs {
     const val ANN_INCOMING = "ann_incoming"   // 来电播报
     const val ANN_LOW = "ann_lowbattery"      // 低电量播报
 
+    const val AUTO_ANSWER = "auto_answer"          // 无障碍：自动接听
+    const val AUTO_ANSWER_DELAY = "auto_answer_delay" // 自动接听延迟（秒）
+
     private fun sp(ctx: Context): SharedPreferences =
         ctx.getSharedPreferences(NAME, Context.MODE_PRIVATE)
 
@@ -18,6 +21,15 @@ object Prefs {
 
     fun set(ctx: Context, key: String, value: Boolean) =
         sp(ctx).edit().putBoolean(key, value).apply()
+
+    // 整型偏好（自动接听延迟等）
+    fun getInt(ctx: Context, key: String, def: Int): Int = sp(ctx).getInt(key, def)
+    fun setInt(ctx: Context, key: String, value: Int) =
+        sp(ctx).edit().putInt(key, value).apply()
+
+    // 无障碍：自动接听
+    fun autoAnswer(ctx: Context): Boolean = enabled(ctx, AUTO_ANSWER, false)
+    fun autoAnswerDelay(ctx: Context): Int = getInt(ctx, AUTO_ANSWER_DELAY, 5)
 
     // 首页 4 个常用联系人（收藏），存储格式 "name|number"，空串表示未设置
     private val FAV_KEYS = arrayOf("fav_0", "fav_1", "fav_2", "fav_3")

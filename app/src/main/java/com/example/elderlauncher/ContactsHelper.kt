@@ -1,6 +1,10 @@
 package com.example.elderlauncher
 
+import android.content.ContentUris
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.provider.ContactsContract
 import android.util.Log
 
@@ -53,6 +57,34 @@ object ContactsHelper {
             }
         } catch (e: Exception) {
             Log.e("ContactsHelper", "lookup failed", e)
+            null
+        }
+    }
+
+    /** 按号码加载联系人头像（圆形裁剪前的原始位图），无头像返回 null */
+    fun getPhotoBitmap(context: Context, number: String): Bitmap? {
+        val norm = normalize(number)
+        if (norm.isEmpty()) return null
+        return try {
+            val lookup = ContactsContract.PhoneLookup.CONTENT_FILTER_URI.buildUpon()
+                .appendPath(Uri.encode(number))
+                .build()
+            val id = context.contentResolver.query(
+                lookup,
+                arrayOf(ContactsContract.PhoneLookup._ID),
+                null, null, null
+            )?.use { c ->
+                if (c.moveToFirst()) c.getLong(0) else null
+            } ?: return null
+            val contactUri = ContentUris.withAppendedId(
+                ContactsContract.Contacts.CONTENT_URI, id
+            )
+            val stream = ContactsContract.Contacts.openContactPhotoInputStream(
+                context.contentResolver, contactUri, true
+            )
+            stream?.use { BitmapFactory.decodeStream(it) }
+        } catch (e: Exception) {
+            Log.e("ContactsHelper", "photo failed", e)
             null
         }
     }

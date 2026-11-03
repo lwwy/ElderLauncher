@@ -3,7 +3,6 @@ package com.example.elderlauncher
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -62,7 +61,6 @@ class DialerActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CALL_PHONE), 1)
             return
         }
-        val i = Intent(Intent.ACTION_CALL, Uri.parse("tel:$number"))
-        startActivity(i)
+        TelecomHelper.placeCall(this, number)
     }
 }

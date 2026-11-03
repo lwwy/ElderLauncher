@@ -1,22 +1,20 @@
 package com.example.elderlauncher
 
 import android.Manifest
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.net.Uri
+import android.graphics.Bitmap
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -32,10 +30,16 @@ class HomeActivity : AppCompatActivity() {
     private val cardIds = intArrayOf(
         R.id.cardContact1, R.id.cardContact2, R.id.cardContact3, R.id.cardContact4
     )
+    private val avatarIds = intArrayOf(
+        R.id.imgAvatar1, R.id.imgAvatar2, R.id.imgAvatar3, R.id.imgAvatar4
+    )
     private val nameIds = intArrayOf(
         R.id.tvName1, R.id.tvName2, R.id.tvName3, R.id.tvName4
     )
-    private var pendingSlot = -1
+
+    // 时间卡连点 5 次进入设置（防误触）
+    private var tapCount = 0
+    private var lastTapTime = 0L
 
     private val handler = Handler(Looper.getMainLooper())
     private val weekdays = arrayOf(
@@ -49,8 +53,8 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private val batteryReceiver = object : BroadcastReceiver() {
-        override fun onReceive(c: Context?, i: Intent?) {
+    private val batteryReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(c: android.content.Context?, i: android.content.Intent?) {
             val level = i?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
             val scale = i?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
             val pct = if (level >= 0 && scale > 0) level * 100 / scale else -1
@@ -69,76 +73,69 @@ class HomeActivity : AppCompatActivity() {
         tvLunar = findViewById(R.id.tvLunar)
         tvBattery = findViewById(R.id.tvBattery)
 
-        // 时间卡右上角四圆点图标 -> 设置
-        findViewById<View>(R.id.ivWidget).setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
+        // 时间卡：连点 5 次进入设置（正常误触不会触发）
+        findViewById<android.view.View>(R.id.cardTime).setOnClickListener {
+            val now = System.currentTimeMillis()
+            tapCount = if (now - lastTapTime > 1500) 1 else tapCount + 1
+            lastTapTime = now
+            if (tapCount >= 5) {
+                tapCount = 0
+                startActivity(Intent(this, SettingsActivity::class.java))
+            }
         }
 
-        // 2x2 收藏联系人卡片
+        // 2x2 联系人卡片：仅点击已添加头像 → 一键拨号
         for (i in cardIds.indices) {
-            val card = findViewById<View>(cardIds[i])
+            val card = findViewById<android.view.View>(cardIds[i])
             card.setOnClickListener { onCardClick(i) }
-            card.setOnLongClickListener { onCardLongClick(i); true }
-        }
-        // 底部加号 -> 选择联系人填入第一个空位
-        findViewById<View>(R.id.btnAdd).setOnClickListener {
-            val empty = (0 until cardIds.size).firstOrNull {
-                Prefs.getFavorite(this, it).isEmpty()
-            } ?: 0
-            showPicker(empty)
         }
 
         updateClock()
+
+        // 启动后台保活前台服务（保证来电/通话不被系统回收）
+        KeepAliveService.start(this)
+        // 注册为系统可拨号账号（设为默认电话应用后由系统路由来电/去电）
+        TelecomHelper.register(this)
+        requestNotifPermission()
     }
 
     private fun onCardClick(i: Int) {
         val fav = Prefs.getFavorite(this, i)
         if (fav.isEmpty()) {
-            showPicker(i)
-        } else {
-            call(fav.substringAfter("|"))
-        }
-    }
-
-    private fun onCardLongClick(i: Int) {
-        if (Prefs.getFavorite(this, i).isNotEmpty()) {
-            Prefs.clearFavorite(this, i)
-            refreshContacts()
-            Toast.makeText(this, R.string.fav_removed, Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    /** 应用内联系人选择弹窗，选定后写入指定收藏位（避免 singleTask 主页用 startActivityForResult 的兼容问题） */
-    private fun showPicker(slot: Int) {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            pendingSlot = slot
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), 3)
+            Toast.makeText(this, R.string.home_empty_hint, Toast.LENGTH_SHORT).show()
             return
         }
-        val contacts = ContactsHelper.listContacts(this)
-        if (contacts.isEmpty()) {
-            Toast.makeText(this, R.string.contacts_empty, Toast.LENGTH_SHORT).show()
-            return
-        }
-        val names = contacts.map { it.first }.toTypedArray()
-        AlertDialog.Builder(this)
-            .setTitle(R.string.contact_pick_title)
-            .setItems(names) { _, which ->
-                val (name, number) = contacts[which]
-                Prefs.setFavorite(this, slot, "$name|$number")
-                refreshContacts()
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+        call(fav.substringAfter("|"))
     }
 
     private fun refreshContacts() {
         for (i in nameIds.indices) {
             val fav = Prefs.getFavorite(this, i)
             val tv = findViewById<TextView>(nameIds[i])
-            tv.text = if (fav.isEmpty()) getString(R.string.contact_add) else fav.substringBefore("|")
+            val img = findViewById<ImageView>(avatarIds[i])
+            if (fav.isEmpty()) {
+                tv.text = getString(R.string.fav_not_set)
+                img.setImageResource(R.drawable.ic_person)
+                img.setColorFilter(
+                    ContextCompat.getColor(this, R.color.colorOnSurfaceVariant),
+                    android.graphics.PorterDuff.Mode.SRC_IN
+                )
+            } else {
+                val name = fav.substringBefore("|")
+                val number = fav.substringAfter("|")
+                tv.text = name
+                val photo: Bitmap? = ContactsHelper.getPhotoBitmap(this, number)
+                if (photo != null) {
+                    img.clearColorFilter()
+                    img.setImageBitmap(photo)
+                } else {
+                    img.setImageResource(R.drawable.ic_person)
+                    img.setColorFilter(
+                        ContextCompat.getColor(this, R.color.colorOnSurfaceVariant),
+                        android.graphics.PorterDuff.Mode.SRC_IN
+                    )
+                }
+            }
         }
     }
 
@@ -150,22 +147,7 @@ class HomeActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CALL_PHONE), 1)
             return
         }
-        startActivity(Intent(Intent.ACTION_CALL, Uri.parse("tel:$number")))
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 3 && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
-            && pendingSlot >= 0
-        ) {
-            val slot = pendingSlot
-            pendingSlot = -1
-            showPicker(slot)
-        }
+        TelecomHelper.placeCall(this, number)
     }
 
     private fun updateClock() {
@@ -180,12 +162,23 @@ class HomeActivity : AppCompatActivity() {
         tvLunar.text = LunarUtil.getLunar(now)
     }
 
+    private fun requestNotifPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 2
+            )
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         updateClock()
         refreshContacts()
         handler.post(clockRunnable)
-        registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        registerReceiver(batteryReceiver, android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED))
     }
 
     override fun onPause() {

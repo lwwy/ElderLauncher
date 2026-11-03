@@ -10,6 +10,11 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
 
+    <!-- 自启动与后台保活 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- 注意：本应用为纯本地应用，不使用 INTERNET 权限 -->
 
     <application
@@ -49,18 +54,45 @@
                 <data android:scheme="tel" />
             </intent-filter>
         </activity>
+
         <activity android:name=".ContactsActivity" android:exported="false" />
         <activity android:name=".SmsActivity" android:exported="false" />
         <activity android:name=".SettingsActivity" android:exported="false" />
 
-        <!-- 来电大卡片：锁屏可弹、单实例 -->
+        <!-- 来电/通话大卡片：锁屏可弹、单实例 -->
         <activity
-            android:name=".IncomingCallActivity"
+            android:name=".InCallActivity"
             android:exported="false"
             android:launchMode="singleTask"
             android:excludeFromRecents="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true" />
+
+        <!-- 通话连接服务（成为默认电话应用所必需） -->
+        <service
+            android:name=".ElderConnectionService"
+            android:exported="false"
+            android:permission="android.permission.BIND_CONNECTION_SERVICE">
+            <intent-filter>
+                <action android:name="android.telecom.ConnectionService" />
+            </intent-filter>
+        </service>
+
+        <!-- 通话界面服务 -->
+        <service
+            android:name=".ElderInCallService"
+            android:exported="false"
+            android:permission="android.permission.BIND_INCALL_SERVICE">
+            <intent-filter>
+                <action android:name="android.telecom.InCallService" />
+            </intent-filter>
+        </service>
+
+        <!-- 后台保活前台服务（通话相关，类型 phone） -->
+        <service
+            android:name=".KeepAliveService"
+            android:exported="false"
+            android:foregroundServiceType="phone" />
 
         <receiver android:name=".receiver.BatteryReceiver" android:exported="true">
             <intent-filter>
@@ -72,6 +104,18 @@
         <receiver android:name=".receiver.CallStateReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 开机自启：拉起桌面并启动保活服务 -->
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
     </application>

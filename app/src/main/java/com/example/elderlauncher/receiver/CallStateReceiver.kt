@@ -5,11 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.telephony.TelephonyManager
 import com.example.elderlauncher.ContactsHelper
-import com.example.elderlauncher.IncomingCallActivity
 import com.example.elderlauncher.Prefs
 import com.example.elderlauncher.TtsManager
 
-/** 来电时弹出大卡片（接听/挂断），并按设置播报来电人（纯本地，不出网） */
+/**
+ * 来电播报：纯本地 TTS 朗读来电人（不出网）。
+ * 来电“大卡片”界面由 ElderInCallService 接管，这里不再弹 Activity，避免重复界面。
+ */
 class CallStateReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != TelephonyManager.ACTION_PHONE_STATE_CHANGED) return
@@ -22,17 +24,6 @@ class CallStateReceiver : BroadcastReceiver() {
         if (Prefs.enabled(context, Prefs.ANN_INCOMING) && !number.isNullOrEmpty()) {
             val who = if (name.isNullOrEmpty()) "未知号码" else name
             TtsManager.speakNow(context, "来电，$who")
-        }
-
-        val i = Intent(context, IncomingCallActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_USER_ACTION)
-            putExtra("number", number ?: "")
-            putExtra("name", name ?: "")
-        }
-        try {
-            context.startActivity(i)
-        } catch (_: Exception) {
-            // 后台启动活动被系统限制时忽略，设置页可引导设为默认电话应用
         }
     }
 }

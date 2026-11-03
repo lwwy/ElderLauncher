@@ -7,83 +7,67 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 顶部时间卡（Material 卡片，蓝色主色容器） -->
+    <!-- 顶部时间卡（Material 卡片，蓝色主色容器）；连点 5 次进入设置（防误触） -->
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardTime"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardBackgroundColor="?attr/colorPrimaryContainer"
         app:cardCornerRadius="24dp"
         app:contentPadding="20dp">
 
-        <FrameLayout
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <!-- 右上角设置入口（Material 图标按钮） -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/ivWidget"
-                style="@style/Widget.Material3.Button.IconButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="end|top"
-                app:icon="@drawable/ic_quad"
-                app:iconTint="?attr/colorOnPrimaryContainer"
-                android:contentDescription="@string/home_settings" />
-
             <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="match_parent"
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingEnd="56dp">
-
-                <LinearLayout
-                    android:orientation="horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="bottom">
-
-                    <TextView
-                        android:id="@+id/tvTime"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="--:--"
-                        android:textSize="64sp"
-                        android:textStyle="bold"
-                        android:textColor="?attr/colorOnPrimaryContainer" />
-
-                    <TextView
-                        android:id="@+id/tvAmPm"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/home_am"
-                        android:textSize="22sp"
-                        android:textColor="?attr/colorOnPrimaryContainer"
-                        android:layout_marginStart="10dp"
-                        android:layout_marginBottom="12dp" />
-                </LinearLayout>
+                android:gravity="bottom">
 
                 <TextView
-                    android:id="@+id/tvDate"
+                    android:id="@+id/tvTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text=""
-                    android:textSize="18sp"
-                    android:textColor="?attr/colorOnPrimaryContainer"
-                    android:layout_marginTop="6dp" />
+                    android:text="--:--"
+                    android:textSize="64sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnPrimaryContainer" />
 
                 <TextView
-                    android:id="@+id/tvLunar"
+                    android:id="@+id/tvAmPm"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text=""
-                    android:textSize="16sp"
+                    android:text="@string/home_am"
+                    android:textSize="22sp"
                     android:textColor="?attr/colorOnPrimaryContainer"
-                    android:layout_marginTop="2dp" />
+                    android:layout_marginStart="10dp"
+                    android:layout_marginBottom="12dp" />
             </LinearLayout>
-        </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="18sp"
+                android:textColor="?attr/colorOnPrimaryContainer"
+                android:layout_marginTop="6dp" />
+
+            <TextView
+                android:id="@+id/tvLunar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="16sp"
+                android:textColor="?attr/colorOnPrimaryContainer"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- 2x2 收藏联系人卡片 -->
+    <!-- 2x2 常用联系人卡片（仅点击头像一键拨号） -->
     <GridLayout
         android:id="@+id/gridContacts"
         android:layout_width="match_parent"
@@ -102,19 +86,23 @@
                 android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
-                <ImageView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/imgAvatar1"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
+                    android:scaleType="centerCrop"
                     android:src="@drawable/ic_person"
-                    app:tint="?attr/colorOnSurfaceVariant" />
+                    app:tint="?attr/colorOnSurfaceVariant"
+                    app:shapeAppearanceOverlay="@style/AvatarCircle" />
                 <TextView
                     android:id="@+id/tvName1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/contact_add"
-                    android:textSize="18sp"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
                     android:textColor="?attr/colorOnSurface"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="10dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -126,19 +114,23 @@
                 android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
-                <ImageView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/imgAvatar2"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
+                    android:scaleType="centerCrop"
                     android:src="@drawable/ic_person"
-                    app:tint="?attr/colorOnSurfaceVariant" />
+                    app:tint="?attr/colorOnSurfaceVariant"
+                    app:shapeAppearanceOverlay="@style/AvatarCircle" />
                 <TextView
                     android:id="@+id/tvName2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/contact_add"
-                    android:textSize="18sp"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
                     android:textColor="?attr/colorOnSurface"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="10dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -150,19 +142,23 @@
                 android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
-                <ImageView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/imgAvatar3"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
+                    android:scaleType="centerCrop"
                     android:src="@drawable/ic_person"
-                    app:tint="?attr/colorOnSurfaceVariant" />
+                    app:tint="?attr/colorOnSurfaceVariant"
+                    app:shapeAppearanceOverlay="@style/AvatarCircle" />
                 <TextView
                     android:id="@+id/tvName3"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/contact_add"
-                    android:textSize="18sp"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
                     android:textColor="?attr/colorOnSurface"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="10dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -174,19 +170,23 @@
                 android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
-                <ImageView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/imgAvatar4"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
+                    android:scaleType="centerCrop"
                     android:src="@drawable/ic_person"
-                    app:tint="?attr/colorOnSurfaceVariant" />
+                    app:tint="?attr/colorOnSurfaceVariant"
+                    app:shapeAppearanceOverlay="@style/AvatarCircle" />
                 <TextView
                     android:id="@+id/tvName4"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/contact_add"
-                    android:textSize="18sp"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
                     android:textColor="?attr/colorOnSurface"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="10dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </GridLayout>
@@ -233,15 +233,4 @@
                 android:layout_marginStart="12dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
-
-    <!-- 底部添加按钮（Material 填充按钮） -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnAdd"
-        style="@style/BigButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/contact_add"
-        app:icon="@drawable/ic_plus"
-        app:iconGravity="textStart"
-        android:layout_marginTop="14dp" />
 </LinearLayout>
