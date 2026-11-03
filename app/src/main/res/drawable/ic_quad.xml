@@ -3,8 +3,8 @@
     android:height="40dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <circle android:cx="8" android:cy="8" android:r="4" android:fillColor="#F44336" />
-    <circle android:cx="16" android:cy="8" android:r="4" android:fillColor="#9C27B0" />
-    <circle android:cx="8" android:cy="16" android:r="4" android:fillColor="#4CAF50" />
-    <circle android:cx="16" android:cy="16" android:r="4" android:fillColor="#2196F3" />
+    <path android:fillColor="#F44336" android:pathData="M4,8 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 Z" />
+    <path android:fillColor="#9C27B0" android:pathData="M12,8 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 Z" />
+    <path android:fillColor="#4CAF50" android:pathData="M4,16 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 Z" />
+    <path android:fillColor="#2196F3" android:pathData="M12,16 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 Z" />
 </vector>
