@@ -15,7 +15,6 @@
         <item name="colorOnTertiary">@color/colorOnTertiary</item>
         <item name="colorTertiaryContainer">@color/colorTertiaryContainer</item>
         <item name="colorOnTertiaryContainer">@color/colorOnTertiaryContainer</item>
-        <item name="colorBackground">@color/colorBackground</item>
         <item name="colorOnBackground">@color/colorOnBackground</item>
         <item name="colorSurface">@color/colorSurface</item>
         <item name="colorOnSurface">@color/colorOnSurface</item>
@@ -50,7 +49,7 @@
     </style>
 
     <!-- 首页 2x2 收藏联系人卡片（MaterialCardView） -->
-    <style name="ContactCard" parent="Widget.Material3.CardView">
+    <style name="ContactCard" parent="Widget.Material3.CardView.Filled">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">0dp</item>
         <item name="android:layout_columnWeight">1</item>
