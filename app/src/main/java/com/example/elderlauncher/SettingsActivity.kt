@@ -64,12 +64,14 @@ class SettingsActivity : AppCompatActivity() {
             val contact = LocalContacts.get(this, i)
             val name = contact?.name?.takeIf { it.isNotEmpty() } ?: getString(R.string.fav_not_set)
 
-            val avatarOverlay = com.google.android.material.shape.ShapeAppearanceModel
-                .builder(this@SettingsActivity, R.style.AvatarThumb, 0)
-                .build()
             val avatar = ShapeableImageView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(56, 56).apply { marginEnd = 14 }
-                setShapeAppearanceOverlay(avatarOverlay)
+                shapeAppearanceModel = com.google.android.material.shape.ShapeAppearanceModel.builder()
+                    .setAllCorners(
+                        com.google.android.material.shape.CornerFamily.ROUNDED,
+                        12 * resources.displayMetrics.density
+                    )
+                    .build()
                 scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
                 setImageResource(R.drawable.ic_person)
                 colorFilter = android.graphics.PorterDuffColorFilter(
