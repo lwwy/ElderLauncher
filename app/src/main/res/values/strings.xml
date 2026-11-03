@@ -37,7 +37,9 @@
     <string name="set_default_launcher">设为默认桌面</string>
     <string name="set_default_tip">在系统设置中将“老人桌面”设为默认桌面，开机即进入本应用</string>
     <string name="set_default_dialer">设为默认电话应用</string>
-    <string name="set_default_dialer_tip">Android 10+ 上设为默认电话应用，可保证来电大卡片与接听/挂断可靠生效</string>
+    <string name="set_default_dialer_tip">点击下方按钮打开系统默认应用设置，手动将“老人桌面”设为默认电话应用</string>
+    <string name="set_default_dialer_toast">正在打开系统“默认应用”设置，请选择“电话应用”</string>
+    <string name="set_default_dialer_failed">无法打开系统设置，请手动进入“设置 → 应用 → 默认应用”选择电话应用</string>
 
     <string name="perm_hint">本应用需要电话、通讯录、短信等权限才能使用对应功能，请全部允许</string>
     <string name="grant">去授权</string>

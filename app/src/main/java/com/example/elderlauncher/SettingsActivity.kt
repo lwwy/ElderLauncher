@@ -1,11 +1,10 @@
 package com.example.elderlauncher
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.telecom.TelecomManager
 import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.switchmaterial.SwitchMaterial
 
@@ -29,14 +28,13 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
-        // Android 10+ 上，设为默认电话应用可保证来电大卡片与接听/挂断可靠生效
+        // 设为默认电话应用：跳到系统“默认应用”设置页，由用户手动选择，避免强制接管导致通话异常
         findViewById<Button>(R.id.btnDefaultDialer).setOnClickListener {
             try {
-                val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER)
-                    .putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
-                startActivity(intent)
+                Toast.makeText(this, R.string.set_default_dialer_toast, Toast.LENGTH_LONG).show()
+                startActivity(Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))
             } catch (e: Exception) {
-                startActivity(Intent(Settings.ACTION_SETTINGS))
+                Toast.makeText(this, R.string.set_default_dialer_failed, Toast.LENGTH_LONG).show()
             }
         }
     }

@@ -34,7 +34,21 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".DialerActivity" android:exported="false" />
+        <!-- 拨号器：导出并声明 DIAL/CALL，使其成为系统可选默认电话应用 -->
+        <activity
+            android:name=".DialerActivity"
+            android:exported="true"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.DIAL" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.CALL" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="tel" />
+            </intent-filter>
+        </activity>
         <activity android:name=".ContactsActivity" android:exported="false" />
         <activity android:name=".SmsActivity" android:exported="false" />
         <activity android:name=".SettingsActivity" android:exported="false" />
