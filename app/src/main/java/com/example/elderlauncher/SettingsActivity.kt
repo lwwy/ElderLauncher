@@ -6,16 +6,16 @@ import android.os.Bundle
 import android.provider.Settings
 import android.telecom.TelecomManager
 import android.widget.Button
-import android.widget.Switch
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.switchmaterial.SwitchMaterial
 
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
-        val swIncoming = findViewById<Switch>(R.id.swIncoming)
-        val swLow = findViewById<Switch>(R.id.swLow)
+        val swIncoming = findViewById<SwitchMaterial>(R.id.swIncoming)
+        val swLow = findViewById<SwitchMaterial>(R.id.swLow)
         swIncoming.isChecked = Prefs.enabled(this, Prefs.ANN_INCOMING)
         swLow.isChecked = Prefs.enabled(this, Prefs.ANN_LOW)
         swIncoming.setOnCheckedChangeListener { _, v -> Prefs.set(this, Prefs.ANN_INCOMING, v) }

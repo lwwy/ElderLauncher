@@ -1,68 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="16dp"
+    android:background="?attr/colorBackground"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:text="@string/settings_title"
         android:textSize="30sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:padding="8dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:textColor="?attr/colorOnSurface"
+        android:padding="8dp" />
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="12dp"
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <TextView android:text="@string/set_incoming" android:textSize="26sp"
-            android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content" />
-        <Switch android:id="@+id/swIncoming" android:layout_width="wrap_content" android:layout_height="wrap_content" />
-    </LinearLayout>
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="16dp"
+        app:strokeColor="?attr/colorOutline"
+        app:strokeWidth="1dp"
+        app:contentPadding="4dp"
+        android:layout_marginTop="8dp">
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="12dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <TextView android:text="@string/set_lowbattery" android:textSize="26sp"
-            android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content" />
-        <Switch android:id="@+id/swLow" android:layout_width="wrap_content" android:layout_height="wrap_content" />
-    </LinearLayout>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-    <Button
+            <LinearLayout
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="12dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView android:text="@string/set_incoming" android:textSize="22sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content" />
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/swIncoming"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="12dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView android:text="@string/set_lowbattery" android:textSize="22sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content" />
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/swLow"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnDefault"
         style="@style/BigButton"
-        android:text="@string/set_default_launcher"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="@string/set_default_launcher"
+        android:layout_marginTop="16dp" />
 
     <TextView
-        android:text="@string/set_default_tip"
-        android:textSize="18sp"
-        android:textColor="@color/text_hint"
-        android:padding="12dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="@string/set_default_tip"
+        android:textSize="16sp"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:padding="12dp" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnDefaultDialer"
         style="@style/BigButton"
-        android:text="@string/set_default_dialer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="@string/set_default_dialer" />
 
     <TextView
-        android:text="@string/set_default_dialer_tip"
-        android:textSize="18sp"
-        android:textColor="@color/text_hint"
-        android:padding="12dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="@string/set_default_dialer_tip"
+        android:textSize="16sp"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:padding="12dp" />
 </LinearLayout>

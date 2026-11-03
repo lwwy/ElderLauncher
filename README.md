@@ -15,6 +15,12 @@
 | 来电大卡片 | 全屏来电界面，仅「接听 / 挂断」两个大按钮，参考老人桌面 UI |
 | 语音播报 | 设备自带 TTS 引擎：来电播报、低电量播报（开关可在设置中关闭） |
 
+## 设计风格
+
+- 采用 **Material Design 3（Material You）** 深色主题，蓝色主色调。
+- 卡片统一使用 `MaterialCardView`，按钮统一使用 `MaterialButton`，开关使用 `SwitchMaterial`。
+- 启动图标为 Material 风格自适应图标（蓝色圆角底色 + 白色电话图形），并附带各密度 legacy 图标。
+
 
 ### 方式一：GitHub Actions（推荐，零本地环境）
 
@@ -39,7 +45,7 @@
 
 ## 技术栈
 
-- Kotlin + AndroidX (AppCompat)
+- Kotlin + AndroidX + Material Design 3 (`com.google.android.material:material:1.12.0`)
 - minSdk 24 / targetSdk 34 / compileSdk 34
 - AGP 8.2.2 + Gradle 8.2 + Kotlin 1.9.22
 

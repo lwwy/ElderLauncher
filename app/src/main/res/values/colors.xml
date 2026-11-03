@@ -1,20 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#FF3B6C</color>
-    <color name="primary_dark">#C2185B</color>
-    <color name="accent">#FF6F91</color>
-    <color name="bg">#FFFDF6</color>
-    <color name="card">#FFFFFF</color>
-    <color name="text_dark">#222222</color>
-    <color name="text_hint">#888888</color>
-    <color name="answer_green">#2E7D32</color>
+    <!-- ===== Material 3 深色方案（蓝色主色） ===== -->
+    <!-- 背景与表面 -->
+    <color name="colorBackground">#0F1115</color>
+    <color name="colorOnBackground">#E2E2E9</color>
+    <color name="colorSurface">#1A1C22</color>
+    <color name="colorOnSurface">#E3E2E6</color>
+    <color name="colorSurfaceVariant">#2A2E37</color>
+    <color name="colorOnSurfaceVariant">#C3C6CF</color>
+    <color name="colorSurfaceContainer">#1E2128</color>
+    <color name="colorSurfaceContainerHigh">#282C34</color>
+    <color name="colorSurfaceContainerHighest">#33373F</color>
+    <color name="colorOutline">#44474E</color>
+    <color name="colorOutlineVariant">#2A2E37</color>
+    <color name="colorInverseSurface">#E3E2E6</color>
+    <color name="colorInverseOnSurface">#2A2E37</color>
+
+    <!-- 主色 Primary（蓝） -->
+    <color name="colorPrimary">#AEC6FF</color>
+    <color name="colorOnPrimary">#0B2F66</color>
+    <color name="colorPrimaryContainer">#284786</color>
+    <color name="colorOnPrimaryContainer">#D9E2FF</color>
+    <color name="colorInversePrimary">#4F6BED</color>
+
+    <!-- 次要色 Secondary -->
+    <color name="colorSecondary">#BEC6DC</color>
+    <color name="colorOnSecondary">#283141</color>
+    <color name="colorSecondaryContainer">#3E4759</color>
+    <color name="colorOnSecondaryContainer">#DAE2F9</color>
+
+    <!-- 第三色 Tertiary -->
+    <color name="colorTertiary">#DDBCE4</color>
+    <color name="colorOnTertiary">#3F2844</color>
+    <color name="colorTertiaryContainer">#573E5C</color>
+    <color name="colorOnTertiaryContainer">#FAD8FF</color>
+
+    <!-- 错误色 Error -->
+    <color name="colorError">#FFB4AB</color>
+    <color name="colorOnError">#690005</color>
+    <color name="colorErrorContainer">#93000A</color>
+    <color name="colorOnErrorContainer">#FFDAD6</color>
+
+    <!-- 语义色（保留：来电大卡片接听/挂断） -->
+    <color name="answer_green">#2E9E5B</color>
     <color name="hangup_red">#C62828</color>
 
-    <!-- 老人桌面深色主题 -->
-    <color name="bg_navy">#2E3F52</color>
-    <color name="card_blue">#3A8EF6</color>
-    <color name="card_blue_dark">#3D6FB5</color>
-    <color name="contact_bg">#3C5A73</color>
-    <color name="text_on_blue">#FFFFFF</color>
-    <color name="text_on_blue_dim">#BBD4FF</color>
+    <!-- 应用图标背景（品牌蓝） -->
+    <color name="ic_launcher_background">#3A6FF6</color>
 </resources>

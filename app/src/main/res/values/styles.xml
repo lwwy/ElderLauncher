@@ -1,32 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.ElderLauncher" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/card_blue</item>
-        <item name="colorPrimaryDark">@color/card_blue_dark</item>
-        <item name="colorAccent">@color/card_blue</item>
-        <item name="android:windowBackground">@color/bg_navy</item>
-        <item name="android:textSize">22sp</item>
-        <item name="android:textColor">@color/text_on_blue</item>
+    <!-- 全局主题：Material Design 3 深色（蓝色主色） -->
+    <style name="Theme.ElderLauncher" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- M3 颜色角色 -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+        <item name="colorPrimaryContainer">@color/colorPrimaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/colorOnPrimaryContainer</item>
+        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorOnSecondary">@color/colorOnSecondary</item>
+        <item name="colorSecondaryContainer">@color/colorSecondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/colorOnSecondaryContainer</item>
+        <item name="colorTertiary">@color/colorTertiary</item>
+        <item name="colorOnTertiary">@color/colorOnTertiary</item>
+        <item name="colorTertiaryContainer">@color/colorTertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/colorOnTertiaryContainer</item>
+        <item name="colorBackground">@color/colorBackground</item>
+        <item name="colorOnBackground">@color/colorOnBackground</item>
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="colorOnSurface">@color/colorOnSurface</item>
+        <item name="colorSurfaceVariant">@color/colorSurfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/colorOnSurfaceVariant</item>
+        <item name="colorSurfaceContainer">@color/colorSurfaceContainer</item>
+        <item name="colorSurfaceContainerHigh">@color/colorSurfaceContainerHigh</item>
+        <item name="colorSurfaceContainerHighest">@color/colorSurfaceContainerHighest</item>
+        <item name="colorOutline">@color/colorOutline</item>
+        <item name="colorOutlineVariant">@color/colorOutlineVariant</item>
+        <item name="colorError">@color/colorError</item>
+        <item name="colorOnError">@color/colorOnError</item>
+        <item name="colorErrorContainer">@color/colorErrorContainer</item>
+        <item name="colorOnErrorContainer">@color/colorOnErrorContainer</item>
+
+        <item name="android:colorBackground">@color/colorBackground</item>
+        <item name="android:windowBackground">@color/colorBackground</item>
+        <item name="android:statusBarColor">@color/colorBackground</item>
+        <item name="android:navigationBarColor">@color/colorBackground</item>
+        <item name="android:editTextColor">@color/colorOnSurface</item>
+        <item name="android:textColor">@color/colorOnSurface</item>
     </style>
 
-    <!-- 大字号主按钮（其他页面仍用） -->
-    <style name="BigButton" parent="Widget.AppCompat.Button">
+    <!-- 大字号主按钮（Material 3 填充按钮） -->
+    <style name="BigButton" parent="Widget.Material3.Button">
         <item name="android:textSize">30sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@android:color/white</item>
-        <item name="android:backgroundTint">@color/primary</item>
-        <item name="android:layout_margin">8dp</item>
         <item name="android:padding">20dp</item>
+        <item name="android:layout_margin">8dp</item>
+        <item name="android:minHeight">64dp</item>
+        <item name="cornerRadius">16dp</item>
     </style>
 
-    <!-- 首页 2x2 联系人卡片 -->
-    <style name="ContactCard">
+    <!-- 首页 2x2 收藏联系人卡片（MaterialCardView） -->
+    <style name="ContactCard" parent="Widget.Material3.CardView">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">0dp</item>
         <item name="android:layout_columnWeight">1</item>
         <item name="android:layout_rowWeight">1</item>
-        <item name="android:background">@drawable/bg_round_contact</item>
-        <item name="android:gravity">center</item>
-        <item name="android:orientation">vertical</item>
+        <item name="cardBackgroundColor">?attr/colorSurfaceVariant</item>
+        <item name="cardCornerRadius">24dp</item>
+        <item name="cardElevation">1dp</item>
+        <item name="contentPadding">12dp</item>
+        <item name="strokeColor">?attr/colorOutline</item>
+        <item name="strokeWidth">1dp</item>
     </style>
 </resources>

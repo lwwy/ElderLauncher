@@ -8,11 +8,11 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.Button
 import android.widget.GridView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.google.android.material.button.MaterialButton
 
 class DialerActivity : AppCompatActivity() {
 
@@ -31,7 +31,7 @@ class DialerActivity : AppCompatActivity() {
             override fun getItem(i: Int) = keys[i]
             override fun getItemId(i: Int) = i.toLong()
             override fun getView(i: Int, convertView: View?, parent: ViewGroup?): View {
-                val b = Button(this@DialerActivity)
+                val b = MaterialButton(this@DialerActivity)
                 b.text = keys[i]
                 b.textSize = 32f
                 b.setOnClickListener { append(keys[i]) }

@@ -1,79 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="@color/bg_navy"
+    android:background="?attr/colorBackground"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 顶部蓝色时间卡 -->
-    <FrameLayout
+    <!-- 顶部时间卡（Material 卡片，蓝色主色容器） -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_round_blue"
-        android:padding="20dp">
+        app:cardBackgroundColor="?attr/colorPrimaryContainer"
+        app:cardCornerRadius="24dp"
+        app:contentPadding="20dp">
 
-        <ImageView
-            android:id="@+id/ivWidget"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_gravity="end|top"
-            android:src="@drawable/ic_quad"
-            android:contentDescription="@string/home_settings" />
-
-        <LinearLayout
-            android:orientation="vertical"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingEnd="44dp">
+            android:layout_height="wrap_content">
+
+            <!-- 右上角设置入口（Material 图标按钮） -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/ivWidget"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="end|top"
+                app:icon="@drawable/ic_quad"
+                app:iconTint="?attr/colorOnPrimaryContainer"
+                android:contentDescription="@string/home_settings" />
 
             <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="wrap_content"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="bottom">
+                android:paddingEnd="56dp">
 
-                <TextView
-                    android:id="@+id/tvTime"
+                <LinearLayout
+                    android:orientation="horizontal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="--:--"
-                    android:textSize="64sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_on_blue" />
+                    android:gravity="bottom">
+
+                    <TextView
+                        android:id="@+id/tvTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--:--"
+                        android:textSize="64sp"
+                        android:textStyle="bold"
+                        android:textColor="?attr/colorOnPrimaryContainer" />
+
+                    <TextView
+                        android:id="@+id/tvAmPm"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/home_am"
+                        android:textSize="22sp"
+                        android:textColor="?attr/colorOnPrimaryContainer"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginBottom="12dp" />
+                </LinearLayout>
 
                 <TextView
-                    android:id="@+id/tvAmPm"
+                    android:id="@+id/tvDate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/home_am"
-                    android:textSize="22sp"
-                    android:textColor="@color/text_on_blue"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginBottom="12dp" />
+                    android:text=""
+                    android:textSize="18sp"
+                    android:textColor="?attr/colorOnPrimaryContainer"
+                    android:layout_marginTop="6dp" />
+
+                <TextView
+                    android:id="@+id/tvLunar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="16sp"
+                    android:textColor="?attr/colorOnPrimaryContainer"
+                    android:layout_marginTop="2dp" />
             </LinearLayout>
+        </FrameLayout>
+    </com.google.android.material.card.MaterialCardView>
 
-            <TextView
-                android:id="@+id/tvDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textSize="18sp"
-                android:textColor="@color/text_on_blue"
-                android:layout_marginTop="6dp" />
-
-            <TextView
-                android:id="@+id/tvLunar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textSize="16sp"
-                android:textColor="@color/text_on_blue_dim"
-                android:layout_marginTop="2dp" />
-        </LinearLayout>
-    </FrameLayout>
-
-    <!-- 2x2 联系人卡片 -->
+    <!-- 2x2 收藏联系人卡片 -->
     <GridLayout
         android:id="@+id/gridContacts"
         android:layout_width="match_parent"
@@ -84,120 +94,154 @@
         android:useDefaultMargins="true"
         android:layout_marginTop="14dp">
 
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardContact1"
             style="@style/ContactCard">
-            <ImageView
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:src="@drawable/ic_person" />
-            <TextView
-                android:id="@+id/tvName1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/contact_add"
-                android:textSize="18sp"
-                android:textColor="@color/text_on_blue"
-                android:layout_marginTop="8dp" />
-        </LinearLayout>
+            <LinearLayout
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <ImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@drawable/ic_person"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+                <TextView
+                    android:id="@+id/tvName1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/contact_add"
+                    android:textSize="18sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardContact2"
             style="@style/ContactCard">
-            <ImageView
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:src="@drawable/ic_person" />
-            <TextView
-                android:id="@+id/tvName2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/contact_add"
-                android:textSize="18sp"
-                android:textColor="@color/text_on_blue"
-                android:layout_marginTop="8dp" />
-        </LinearLayout>
+            <LinearLayout
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <ImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@drawable/ic_person"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+                <TextView
+                    android:id="@+id/tvName2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/contact_add"
+                    android:textSize="18sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardContact3"
             style="@style/ContactCard">
-            <ImageView
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:src="@drawable/ic_person" />
-            <TextView
-                android:id="@+id/tvName3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/contact_add"
-                android:textSize="18sp"
-                android:textColor="@color/text_on_blue"
-                android:layout_marginTop="8dp" />
-        </LinearLayout>
+            <LinearLayout
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <ImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@drawable/ic_person"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+                <TextView
+                    android:id="@+id/tvName3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/contact_add"
+                    android:textSize="18sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardContact4"
             style="@style/ContactCard">
-            <ImageView
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:src="@drawable/ic_person" />
-            <TextView
-                android:id="@+id/tvName4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/contact_add"
-                android:textSize="18sp"
-                android:textColor="@color/text_on_blue"
-                android:layout_marginTop="8dp" />
-        </LinearLayout>
+            <LinearLayout
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <ImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@drawable/ic_person"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+                <TextView
+                    android:id="@+id/tvName4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/contact_add"
+                    android:textSize="18sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </GridLayout>
 
     <!-- 电量卡 -->
-    <LinearLayout
-        android:orientation="horizontal"
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_round_blue_dark"
-        android:padding="16dp"
-        android:layout_marginTop="14dp"
-        android:gravity="center_vertical">
-
-        <ImageView
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:src="@drawable/ic_battery" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/home_battery"
-            android:textSize="20sp"
-            android:textColor="@color/text_on_blue"
-            android:layout_marginStart="12dp" />
-
-        <TextView
-            android:id="@+id/tvBattery"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="--"
-            android:textSize="32sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_on_blue"
-            android:layout_marginStart="12dp" />
-    </LinearLayout>
-
-    <!-- 底部加号 -->
-    <FrameLayout
-        android:id="@+id/btnAdd"
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:background="@drawable/bg_round_blue"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="24dp"
+        app:strokeColor="?attr/colorOutline"
+        app:strokeWidth="1dp"
+        app:contentPadding="16dp"
         android:layout_marginTop="14dp">
-        <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_plus"
-            android:layout_gravity="center" />
-    </FrameLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_battery"
+                app:tint="?attr/colorOnSurface" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/home_battery"
+                android:textSize="20sp"
+                android:textColor="?attr/colorOnSurface"
+                android:layout_marginStart="12dp" />
+
+            <TextView
+                android:id="@+id/tvBattery"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="--"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
+                android:layout_marginStart="12dp" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- 底部添加按钮（Material 填充按钮） -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAdd"
+        style="@style/BigButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/contact_add"
+        app:icon="@drawable/ic_plus"
+        app:iconGravity="textStart"
+        android:layout_marginTop="14dp" />
 </LinearLayout>
