@@ -48,9 +48,9 @@
     <!-- 应用图标背景（品牌蓝） -->
     <color name="ic_launcher_background">#3A6FF6</color>
 
-    <!-- 电量卡（绿色，呼应图片） -->
-    <color name="colorBatteryBg">#143526</color>
-    <color name="colorBatteryFg">#86EBA6</color>
+    <!-- 电量卡（正常态：与桌面联系人卡片同色系，中性协调，不抢眼） -->
+    <color name="colorBatteryNormalBg">#2A2E37</color>
+    <color name="colorBatteryNormalFg">#E3E2E6</color>
     <!-- 电量低于 20%：优雅的 Material 红 + 深红酒红底 -->
     <color name="colorBatteryLow">#E5484D</color>
     <color name="colorBatteryLowBg">#2A1518</color>

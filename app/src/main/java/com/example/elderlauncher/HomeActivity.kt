@@ -150,7 +150,7 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    /** 更新电量显示：低于 20% 用优雅的 Material 红，否则用正常绿色 */
+    /** 更新电量显示：低于 20% 用优雅的 Material 红提示，否则用桌面同色系的中性正常色 */
     private fun updateBattery(pct: Int) {
         if (pct < 0) {
             tvBattery.text = "--"
@@ -159,10 +159,10 @@ class HomeActivity : AppCompatActivity() {
         tvBattery.text = pct.toString()
         val low = pct < 20
         val fg = ContextCompat.getColor(
-            this, if (low) R.color.colorBatteryLow else R.color.colorBatteryFg
+            this, if (low) R.color.colorBatteryLow else R.color.colorBatteryNormalFg
         )
         val bg = ContextCompat.getColor(
-            this, if (low) R.color.colorBatteryLowBg else R.color.colorBatteryBg
+            this, if (low) R.color.colorBatteryLowBg else R.color.colorBatteryNormalBg
         )
         cardBattery.setCardBackgroundColor(bg)
         imgBattery.setColorFilter(fg, android.graphics.PorterDuff.Mode.SRC_IN)

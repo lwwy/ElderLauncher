@@ -161,14 +161,14 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 电量卡片（绿色，图标 + 文字 + 数字） -->
+        <!-- 电量卡片（正常态中性色，低于20%自动转红） -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardBattery"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_columnWeight="1"
             android:layout_rowWeight="1"
-            app:cardBackgroundColor="@color/colorBatteryBg"
+            app:cardBackgroundColor="@color/colorBatteryNormalBg"
             app:cardCornerRadius="24dp"
             app:cardElevation="1dp"
             app:contentPadding="16dp">
@@ -184,7 +184,7 @@
                     android:layout_width="56dp"
                     android:layout_height="56dp"
                     android:src="@drawable/ic_battery"
-                    app:tint="@color/colorBatteryFg" />
+                    app:tint="@color/colorBatteryNormalFg" />
 
                 <LinearLayout
                     android:orientation="vertical"
@@ -195,7 +195,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/home_battery"
                         android:textSize="20sp"
-                        android:textColor="@color/colorBatteryFg" />
+                        android:textColor="@color/colorBatteryNormalFg" />
                     <TextView
                         android:id="@+id/tvBattery"
                         android:layout_width="wrap_content"
@@ -203,7 +203,7 @@
                         android:text="--"
                         android:textSize="44sp"
                         android:textStyle="bold"
-                        android:textColor="@color/colorBatteryFg" />
+                        android:textColor="@color/colorBatteryNormalFg" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
