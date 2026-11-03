@@ -35,6 +35,8 @@
 
                 <TextView
                     android:id="@+id/tvTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="--:--"
                     android:textSize="64sp"
                     android:textStyle="bold"
@@ -42,6 +44,8 @@
 
                 <TextView
                     android:id="@+id/tvAmPm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="@string/home_am"
                     android:textSize="22sp"
                     android:textColor="@color/text_on_blue"
@@ -51,6 +55,8 @@
 
             <TextView
                 android:id="@+id/tvDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text=""
                 android:textSize="18sp"
                 android:textColor="@color/text_on_blue"
@@ -58,6 +64,8 @@
 
             <TextView
                 android:id="@+id/tvLunar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text=""
                 android:textSize="16sp"
                 android:textColor="@color/text_on_blue_dim"
@@ -161,6 +169,8 @@
             android:src="@drawable/ic_battery" />
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="@string/home_battery"
             android:textSize="20sp"
             android:textColor="@color/text_on_blue"
@@ -168,6 +178,8 @@
 
         <TextView
             android:id="@+id/tvBattery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="--"
             android:textSize="32sp"
             android:textStyle="bold"
