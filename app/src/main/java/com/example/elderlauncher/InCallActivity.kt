@@ -41,20 +41,20 @@ class InCallActivity : AppCompatActivity() {
     }
 
     private fun bindCall() {
-        var c = ElderInCallService.currentCall()
-        if (c == null) {
+        val current = ElderInCallService.currentCall()
+        if (current == null) {
             // 服务尚未把 Call 引用传递过来，稍后重试
             window.decorView.postDelayed({
-                c = ElderInCallService.currentCall()
+                val c = ElderInCallService.currentCall()
                 if (c == null) {
                     returnToHome()
                     finish()
                 } else {
-                    attach(c!!)
+                    attach(c)
                 }
             }, 300)
         } else {
-            attach(c)
+            attach(current)
         }
     }
 
