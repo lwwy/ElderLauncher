@@ -10,6 +10,8 @@
     <string name="home_pm">下午</string>
     <string name="home_battery">电量</string>
     <string name="contact_add">添加联系人</string>
+    <string name="contact_pick_title">选择常用联系人</string>
+    <string name="fav_removed">已移除该联系人</string>
 
     <string name="dialer_title">拨号</string>
     <string name="dialer_call">拨打</string>

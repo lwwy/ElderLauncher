@@ -84,6 +84,7 @@
                 android:layout_height="56dp"
                 android:src="@drawable/ic_person" />
             <TextView
+                android:id="@+id/tvName1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/contact_add"
@@ -100,6 +101,7 @@
                 android:layout_height="56dp"
                 android:src="@drawable/ic_person" />
             <TextView
+                android:id="@+id/tvName2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/contact_add"
@@ -116,6 +118,7 @@
                 android:layout_height="56dp"
                 android:src="@drawable/ic_person" />
             <TextView
+                android:id="@+id/tvName3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/contact_add"
@@ -132,6 +135,7 @@
                 android:layout_height="56dp"
                 android:src="@drawable/ic_person" />
             <TextView
+                android:id="@+id/tvName4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/contact_add"

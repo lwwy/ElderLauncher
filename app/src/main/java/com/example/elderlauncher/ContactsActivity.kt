@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.provider.ContactsContract
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.ListView
@@ -45,18 +44,7 @@ class ContactsActivity : AppCompatActivity() {
 
     private fun load() {
         list.clear()
-        val uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
-        val proj = arrayOf(
-            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-            ContactsContract.CommonDataKinds.Phone.NUMBER
-        )
-        contentResolver.query(uri, proj, null, null, null)?.use { c ->
-            while (c.moveToNext()) {
-                val name = c.getString(0) ?: ""
-                val num = c.getString(1) ?: ""
-                list.add("$name|$num")
-            }
-        }
+        ContactsHelper.listContacts(this).forEach { (name, num) -> list.add("$name|$num") }
         adapter.notifyDataSetChanged()
         tvEmpty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
     }
