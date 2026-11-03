@@ -5,6 +5,7 @@
     <!-- 电话 / 联系人 / 短信：本地功能所需 -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
@@ -58,6 +59,10 @@
         <activity android:name=".ContactsActivity" android:exported="false" />
         <activity android:name=".SmsActivity" android:exported="false" />
         <activity android:name=".SettingsActivity" android:exported="false" />
+        <activity
+            android:name=".ContactEditActivity"
+            android:exported="false"
+            android:label="@string/edit_contact_title" />
 
         <!-- 来电/通话大卡片：锁屏可弹、单实例 -->
         <activity
@@ -100,6 +105,17 @@
                 <action android:name="android.intent.action.BATTERY_OKAY" />
             </intent-filter>
         </receiver>
+
+        <!-- 文件提供器：用于拍照时临时保存图片 -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
         <receiver android:name=".receiver.CallStateReceiver" android:exported="true">
             <intent-filter>

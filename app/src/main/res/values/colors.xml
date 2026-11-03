@@ -47,4 +47,8 @@
 
     <!-- 应用图标背景（品牌蓝） -->
     <color name="ic_launcher_background">#3A6FF6</color>
+
+    <!-- 电量卡（绿色，呼应图片） -->
+    <color name="colorBatteryBg">#143526</color>
+    <color name="colorBatteryFg">#86EBA6</color>
 </resources>

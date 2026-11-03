@@ -67,4 +67,16 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>
+
+    <!-- 圆角矩形头像（用于首页联系人卡片，呼应图片） -->
+    <style name="AvatarRounded">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <!-- 设置页小头像缩略图 -->
+    <style name="AvatarThumb">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
 </resources>

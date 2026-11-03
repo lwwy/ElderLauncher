@@ -13,6 +13,23 @@
     <string name="contact_pick_title">选择常用联系人</string>
     <string name="fav_removed">已移除该联系人</string>
 
+    <!-- 联系人编辑 -->
+    <string name="edit_contact_title">编辑联系人</string>
+    <string name="choose_avatar">点击头像或从下方选择图片</string>
+    <string name="from_album">从相册选择</string>
+    <string name="take_photo">拍照</string>
+    <string name="contact_name_hint">姓名</string>
+    <string name="contact_phone_hint">电话号码</string>
+    <string name="save_contact">保存</string>
+    <string name="delete_contact">删除</string>
+    <string name="contact_empty_name">请填写姓名</string>
+    <string name="contact_empty_phone">请填写电话号码</string>
+    <string name="avatar_failed">图片读取失败，请重试</string>
+    <string name="camera_denied">未授予相机权限，无法拍照</string>
+    <string name="contact_saved">已保存</string>
+    <string name="contact_deleted">已删除</string>
+    <string name="edit_contact">编辑</string>
+
     <string name="dialer_title">拨号</string>
     <string name="dialer_call">拨打</string>
     <string name="dialer_delete">删除</string>
@@ -46,7 +63,7 @@
 
     <!-- 常用联系人管理（设置页） -->
     <string name="set_fav_title">常用联系人</string>
-    <string name="set_fav_tip">在下方添加或移除桌面上的“一键拨号”联系人（最多 4 个）</string>
+    <string name="set_fav_tip">在下方编辑桌面上的联系人（最多 3 个），可设置姓名、电话与头像</string>
     <string name="fav_slot">联系人 %1$d</string>
     <string name="fav_not_set">未添加</string>
     <string name="fav_choose">选择</string>
@@ -54,6 +71,9 @@
 
     <!-- 无障碍 / 自动接听 -->
     <string name="accessibility_title">无障碍模式</string>
+    <string name="section_call">来电与通话</string>
+    <string name="section_permission">权限与保活</string>
+    <string name="section_default">默认应用</string>
     <string name="auto_answer">自动接听来电</string>
     <string name="auto_answer_tip">开启后，来电将在设定秒数后自动接听，方便眼神不好的老人</string>
     <string name="auto_answer_delay">自动接听延迟</string>

@@ -1,9 +1,7 @@
 package com.example.elderlauncher
 
-import android.Manifest
 import android.content.ComponentName
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -11,30 +9,26 @@ import android.provider.Settings
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
+import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.switchmaterial.SwitchMaterial
 
 class SettingsActivity : AppCompatActivity() {
-    private var pendingSlot = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
+        // 来电 / 低电量 播报
         val swIncoming = findViewById<SwitchMaterial>(R.id.swIncoming)
         val swLow = findViewById<SwitchMaterial>(R.id.swLow)
         swIncoming.isChecked = Prefs.enabled(this, Prefs.ANN_INCOMING)
         swLow.isChecked = Prefs.enabled(this, Prefs.ANN_LOW)
         swIncoming.setOnCheckedChangeListener { _, v -> Prefs.set(this, Prefs.ANN_INCOMING, v) }
         swLow.setOnCheckedChangeListener { _, v -> Prefs.set(this, Prefs.ANN_LOW, v) }
-
-        // 常用联系人管理
-        buildFavRows()
 
         // 无障碍：自动接听
         val swAuto = findViewById<SwitchMaterial>(R.id.swAutoAnswer)
@@ -60,6 +54,9 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
+        // 常用联系人（本地可编辑）
+        buildContactRows()
+
         // 自启动权限 / 电池优化
         findViewById<MaterialButton>(R.id.btnAutostart).setOnClickListener { openAutostart() }
         findViewById<MaterialButton>(R.id.btnBattery).setOnClickListener { ignoreBattery() }
@@ -84,13 +81,32 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    /** 在设置页渲染 4 个常用联系人槽位（选择 / 清除） */
-    private fun buildFavRows() {
+    /** 在设置页渲染 3 个常用联系人行（头像 + 姓名 + 编辑） */
+    private fun buildContactRows() {
         val container = findViewById<LinearLayout>(R.id.favContainer)
         container.removeAllViews()
-        for (i in 0 until 4) {
-            val fav = Prefs.getFavorite(this, i)
-            val name = if (fav.isEmpty()) getString(R.string.fav_not_set) else fav.substringBefore("|")
+        for (i in 0 until LocalContacts.COUNT) {
+            val contact = LocalContacts.get(this, i)
+            val name = contact?.name?.takeIf { it.isNotEmpty() } ?: getString(R.string.fav_not_set)
+
+            val avatarOverlay = com.google.android.material.shape.ShapeAppearanceModel
+                .builder(this@SettingsActivity, R.style.AvatarThumb, 0)
+                .build()
+            val avatar = ShapeableImageView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(56, 56).apply { marginEnd = 14 }
+                setShapeAppearanceOverlay(avatarOverlay)
+                scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                setImageResource(R.drawable.ic_person)
+                colorFilter = android.graphics.PorterDuffColorFilter(
+                    ContextCompat.getColor(this@SettingsActivity, R.color.colorOnSurfaceVariant),
+                    android.graphics.PorterDuff.Mode.SRC_IN
+                )
+                val bmp = LocalContacts.loadAvatar(this@SettingsActivity, i)
+                if (bmp != null) {
+                    clearColorFilter()
+                    setImageBitmap(bmp)
+                }
+            }
 
             val tv = TextView(this).apply {
                 text = String.format(getString(R.string.fav_slot), i + 1) + "：$name"
@@ -98,14 +114,21 @@ class SettingsActivity : AppCompatActivity() {
                 setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.colorOnSurface))
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
-            val choose = MaterialButton(this).apply {
-                text = getString(R.string.fav_choose)
-                setOnClickListener { pickContact(i) }
+
+            val edit = MaterialButton(this).apply {
+                text = getString(R.string.edit_contact)
+                setOnClickListener {
+                    startActivity(
+                        Intent(this@SettingsActivity, ContactEditActivity::class.java)
+                            .putExtra(ContactEditActivity.EXTRA_SLOT, i)
+                    )
+                }
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply { marginStart = 12 }
             }
+
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
@@ -114,54 +137,11 @@ class SettingsActivity : AppCompatActivity() {
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply { topMargin = 12 }
             }
+            row.addView(avatar)
             row.addView(tv)
-            row.addView(choose)
-
-            if (fav.isNotEmpty()) {
-                val clear = MaterialButton(this).apply {
-                    text = getString(R.string.fav_clear)
-                    setOnClickListener {
-                        Prefs.clearFavorite(this@SettingsActivity, i)
-                        buildFavRows()
-                    }
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                    ).apply { marginStart = 12 }
-                }
-                row.addView(clear)
-            }
+            row.addView(edit)
             container.addView(row)
         }
-    }
-
-    private fun pickContact(slot: Int) {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            pendingSlot = slot
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), 100)
-            return
-        }
-        showPicker(slot)
-    }
-
-    private fun showPicker(slot: Int) {
-        val contacts = ContactsHelper.listContacts(this)
-        if (contacts.isEmpty()) {
-            Toast.makeText(this, R.string.contacts_empty, Toast.LENGTH_SHORT).show()
-            return
-        }
-        val names = contacts.map { it.first }.toTypedArray()
-        AlertDialog.Builder(this)
-            .setTitle(R.string.contact_pick_title)
-            .setItems(names) { _, which ->
-                val (name, number) = contacts[which]
-                Prefs.setFavorite(this, slot, "$name|$number")
-                buildFavRows()
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
     }
 
     private fun openAutostart() {
@@ -204,21 +184,6 @@ class SettingsActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.battery_done, Toast.LENGTH_LONG).show()
         } catch (_: Exception) {
             Toast.makeText(this, R.string.autostart_failed, Toast.LENGTH_LONG).show()
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 100 && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
-            && pendingSlot >= 0
-        ) {
-            val slot = pendingSlot
-            pendingSlot = -1
-            showPicker(slot)
         }
     }
 }
