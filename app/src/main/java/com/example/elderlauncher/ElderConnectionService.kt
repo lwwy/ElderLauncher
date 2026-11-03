@@ -30,9 +30,9 @@ class ElderConnectionService : ConnectionService() {
             }
         }
         conn.setConnectionCapabilities(
-            Connection.CAPABILITY_ANSWER or
-                    Connection.CAPABILITY_DISCONNECT or
-                    Connection.CAPABILITY_REJECT
+            Connection.CAPABILITY_SUPPORT_HOLD or
+                    Connection.CAPABILITY_HOLD or
+                    Connection.CAPABILITY_MUTE
         )
         conn.setAddress(request.address, TelecomManager.PRESENTATION_ALLOWED)
         conn.setRinging()
@@ -49,7 +49,9 @@ class ElderConnectionService : ConnectionService() {
                 destroy()
             }
         }
-        conn.setConnectionCapabilities(Connection.CAPABILITY_DISCONNECT)
+        conn.setConnectionCapabilities(
+            Connection.CAPABILITY_SUPPORT_HOLD or Connection.CAPABILITY_HOLD
+        )
         conn.setAddress(request.address, TelecomManager.PRESENTATION_ALLOWED)
         conn.setDialing()
         return conn

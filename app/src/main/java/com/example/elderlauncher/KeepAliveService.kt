@@ -44,7 +44,7 @@ class KeepAliveService : Service() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 startForeground(
                     NOTIF_ID, notification,
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
                 )
             } else {
                 startForeground(NOTIF_ID, notification)

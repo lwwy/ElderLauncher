@@ -91,11 +91,11 @@
             </intent-filter>
         </service>
 
-        <!-- 后台保活前台服务（通话相关，类型 phone） -->
+        <!-- 后台保活前台服务（通话相关，类型 phoneCall） -->
         <service
             android:name=".KeepAliveService"
             android:exported="false"
-            android:foregroundServiceType="phone" />
+            android:foregroundServiceType="phoneCall" />
 
         <receiver android:name=".receiver.BatteryReceiver" android:exported="true">
             <intent-filter>
