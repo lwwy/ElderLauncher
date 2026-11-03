@@ -11,7 +11,6 @@ import android.os.BatteryManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -37,7 +36,6 @@ class HomeActivity : AppCompatActivity() {
         R.id.tvName1, R.id.tvName2, R.id.tvName3, R.id.tvName4
     )
     private var pendingSlot = -1
-    private var initialized = false
 
     private val handler = Handler(Looper.getMainLooper())
     private val weekdays = arrayOf(
@@ -62,40 +60,35 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        try {
-            setContentView(R.layout.activity_home)
-            TtsManager.init(this)
+        setContentView(R.layout.activity_home)
+        TtsManager.init(this)
 
-            tvTime = findViewById(R.id.tvTime)
-            tvAmPm = findViewById(R.id.tvAmPm)
-            tvDate = findViewById(R.id.tvDate)
-            tvLunar = findViewById(R.id.tvLunar)
-            tvBattery = findViewById(R.id.tvBattery)
+        tvTime = findViewById(R.id.tvTime)
+        tvAmPm = findViewById(R.id.tvAmPm)
+        tvDate = findViewById(R.id.tvDate)
+        tvLunar = findViewById(R.id.tvLunar)
+        tvBattery = findViewById(R.id.tvBattery)
 
-            // 时间卡右上角四圆点图标 -> 设置
-            findViewById<View>(R.id.ivWidget).setOnClickListener {
-                startActivity(Intent(this, SettingsActivity::class.java))
-            }
-
-            // 2x2 收藏联系人卡片
-            for (i in cardIds.indices) {
-                val card = findViewById<View>(cardIds[i])
-                card.setOnClickListener { onCardClick(i) }
-                card.setOnLongClickListener { onCardLongClick(i); true }
-            }
-            // 底部加号 -> 选择联系人填入第一个空位
-            findViewById<View>(R.id.btnAdd).setOnClickListener {
-                val empty = (0 until cardIds.size).firstOrNull {
-                    Prefs.getFavorite(this, it).isEmpty()
-                } ?: 0
-                showPicker(empty)
-            }
-
-            updateClock()
-            initialized = true
-        } catch (e: Throwable) {
-            showError(e)
+        // 时间卡右上角四圆点图标 -> 设置
+        findViewById<View>(R.id.ivWidget).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
+
+        // 2x2 收藏联系人卡片
+        for (i in cardIds.indices) {
+            val card = findViewById<View>(cardIds[i])
+            card.setOnClickListener { onCardClick(i) }
+            card.setOnLongClickListener { onCardLongClick(i); true }
+        }
+        // 底部加号 -> 选择联系人填入第一个空位
+        findViewById<View>(R.id.btnAdd).setOnClickListener {
+            val empty = (0 until cardIds.size).firstOrNull {
+                Prefs.getFavorite(this, it).isEmpty()
+            } ?: 0
+            showPicker(empty)
+        }
+
+        updateClock()
     }
 
     private fun onCardClick(i: Int) {
@@ -189,32 +182,10 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (!initialized) return
-        try {
-            updateClock()
-            refreshContacts()
-            handler.post(clockRunnable)
-            registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-        } catch (e: Throwable) {
-            showError(e)
-        }
-    }
-
-    /** 临时诊断：把启动崩溃的具体错误显示在屏幕上，便于无电脑环境下定位（根因修复后移除） */
-    private fun showError(e: Throwable) {
-        Log.e("ElderLauncher", "startup crash", e)
-        val sb = StringBuilder()
-        sb.append(e.javaClass.name).append(": ").append(e.message ?: "无错误信息").append("\n\n")
-        e.stackTrace.take(15).forEach { sb.append("  at ").append(it).append("\n") }
-        try {
-            AlertDialog.Builder(this)
-                .setTitle("启动出错（请截图发我）")
-                .setMessage(sb.toString())
-                .setPositiveButton(android.R.string.ok, null)
-                .show()
-        } catch (_: Throwable) {
-            Toast.makeText(this, sb.toString(), Toast.LENGTH_LONG).show()
-        }
+        updateClock()
+        refreshContacts()
+        handler.post(clockRunnable)
+        registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
     }
 
     override fun onPause() {
