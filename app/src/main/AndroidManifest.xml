@@ -17,6 +17,14 @@
 
     <!-- 注意：本应用为纯本地应用，不使用 INTERNET 权限 -->
 
+    <!-- Android 11+ 包可见性：不声明的话 queryIntentServices 看不到其他应用的
+         TTS 引擎服务，会误判为「系统没有语音引擎」导致播报不可用。 -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:name=".ElderApp"
         android:allowBackup="true"

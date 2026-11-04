@@ -2,12 +2,16 @@ package com.example.elderlauncher
 
 import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.button.MaterialButton
@@ -44,6 +48,11 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
+        // 恢复系统桌面：取消本应用的默认桌面，回到手机原来的桌面
+        findViewById<MaterialButton>(R.id.btnRestoreHome).setOnClickListener {
+            restoreSystemHome()
+        }
+
         // 播报测试：点一下就能听到实际效果，便于确认系统语音引擎是否正常
         findViewById<MaterialButton>(R.id.btnTestIncoming).setOnClickListener {
             testAnnounce(getString(R.string.test_incoming_text))
@@ -53,17 +62,105 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    /** 播放一次示例播报，并在引擎不可用时给出提示 */
+    /** 取消老人桌面的默认桌面设置，回到系统桌面 */
+    private fun restoreSystemHome() {
+        try {
+            // 清除本应用作为 HOME 的首选记录（对绝大多数 ROM 生效）
+            packageManager.clearPackagePreferredActivities(packageName)
+            CrashLogger.trace("已清除本应用的默认桌面首选记录")
+        } catch (e: Exception) {
+            CrashLogger.trace("清除默认桌面首选失败：${e.message}")
+        }
+
+        val stillDefault = try {
+            val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+            val resolved = packageManager.resolveActivity(home, PackageManager.MATCH_DEFAULT_ONLY)
+            resolved?.activityInfo?.packageName == packageName
+        } catch (e: Exception) {
+            false
+        }
+
+        if (stillDefault) {
+            // 部分 ROM（含 HyperOS）用角色管理默认桌面，App 无法自行放弃角色，只能引导用户改
+            Toast.makeText(this, R.string.restore_system_home_failed, Toast.LENGTH_LONG).show()
+            try {
+                startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
+            } catch (e: Exception) {
+                try {
+                    startActivity(Intent(Settings.ACTION_SETTINGS))
+                } catch (_: Exception) {
+                }
+            }
+        } else {
+            Toast.makeText(this, R.string.restore_system_home_ok, Toast.LENGTH_LONG).show()
+            // 直接打开系统桌面，让用户立刻看到效果
+            try {
+                startActivity(
+                    Intent(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_HOME)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            } catch (e: Exception) {
+                CrashLogger.trace("打开系统桌面失败：${e.message}")
+            }
+        }
+    }
+
+    /**
+     * 播放一次示例播报。
+     * 注意：TTS 初始化是异步的，HyperOS 等 ROM 首次冷启动可能耗时 3~5 秒，
+     * 过早判定会误报「未检测到语音引擎」，所以这里给 5 秒宽限，并且失败时
+     * 给出可操作的对话框（去系统设置 / 重试），而不是一句无从下手的 Toast。
+     */
     private fun testAnnounce(text: String) {
+        if (!TtsManager.hasEngine(this)) {
+            showTtsDialog(getString(R.string.tts_no_engine), text)
+            return
+        }
         TtsManager.speakNow(this, text)
         Toast.makeText(this, R.string.test_playing, Toast.LENGTH_SHORT).show()
-        if (!TtsManager.isReady()) {
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                if (!TtsManager.isReady()) {
-                    Toast.makeText(this, R.string.tts_unavailable, Toast.LENGTH_LONG).show()
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (!TtsManager.isReady()) {
+                val msg = if (TtsManager.langMissing) {
+                    getString(R.string.tts_no_lang)
+                } else {
+                    getString(R.string.tts_unavailable) +
+                        (TtsManager.lastError?.let { "\n\n($it)" } ?: "")
                 }
-            }, 2000)
+                showTtsDialog(msg, text)
+            }
+        }, 5000)
+    }
+
+    private fun showTtsDialog(message: String, retryText: String) {
+        if (isFinishing || isDestroyed) return
+        AlertDialog.Builder(this)
+            .setTitle(R.string.tts_failed_title)
+            .setMessage(message)
+            .setPositiveButton(R.string.tts_go_settings) { _, _ -> openTtsSettings() }
+            .setNeutralButton(R.string.tts_retry) { _, _ ->
+                // 释放后重新初始化，避免上次 ERROR 后永久不可用
+                TtsManager.shutdown()
+                Toast.makeText(this, R.string.tts_retrying, Toast.LENGTH_SHORT).show()
+                testAnnounce(retryText)
+            }
+            .setNegativeButton(R.string.tts_cancel, null)
+            .show()
+    }
+
+    private fun openTtsSettings() {
+        val candidates = listOf(
+            Intent("com.android.settings.TTS_SETTINGS"),
+            Intent(Settings.ACTION_SETTINGS)
+        )
+        for (intent in candidates) {
+            try {
+                startActivity(intent)
+                return
+            } catch (_: Exception) {
+            }
         }
+        Toast.makeText(this, R.string.tts_unavailable, Toast.LENGTH_LONG).show()
     }
 
     /** 交换联系人槽位（桌面按槽位顺序渲染，返回桌面即生效） */

@@ -38,11 +38,22 @@
 
     <string name="set_default_launcher">设为默认桌面</string>
     <string name="set_default_tip">在系统设置中将“老人桌面”设为默认桌面，开机即进入本应用</string>
+    <string name="restore_system_home">恢复系统桌面</string>
+    <string name="restore_system_home_tip">取消老人桌面的默认桌面设置，回到手机原来的桌面。适合临时使用或需要进入系统桌面时</string>
+    <string name="restore_system_home_ok">已取消老人桌面的默认桌面设置，按 Home 键即可回到系统桌面</string>
+    <string name="restore_system_home_failed">未能自动取消，已为你打开系统桌面设置，请手动选择其他桌面</string>
     <string name="btn_test">测试</string>
     <string name="test_incoming_text">来电，张三</string>
     <string name="test_low_text">电量不足，请插上充电器</string>
     <string name="test_playing">正在播放测试语音…</string>
     <string name="tts_unavailable">系统语音引擎不可用，请到系统设置里检查「文字转语音」输出</string>
+    <string name="tts_no_engine">这台手机没有安装语音引擎，点击「去设置」安装或开启一个语音引擎（如“系统语音引擎”“Google 文字转语音”）</string>
+    <string name="tts_no_lang">语音引擎缺少中文语音数据，播报可能没有声音。点击「去设置」下载中文语音包</string>
+    <string name="tts_failed_title">语音播报不可用</string>
+    <string name="tts_go_settings">去设置</string>
+    <string name="tts_cancel">知道了</string>
+    <string name="tts_retry">重试</string>
+    <string name="tts_retrying">正在重新连接语音引擎…</string>
     <string name="move_up">上移</string>
     <string name="move_down">下移</string>
 

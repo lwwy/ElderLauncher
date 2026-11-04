@@ -48,6 +48,15 @@
         <item name="cornerRadius">16dp</item>
     </style>
 
+    <!-- 描边按钮：用于“恢复系统桌面”这类次要/逆向操作，视觉上不与主按钮抢焦点 -->
+    <style name="BigButton.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textSize">22sp</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:layout_margin">8dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="cornerRadius">16dp</item>
+    </style>
+
     <!-- 首页 2x2 收藏联系人卡片（MaterialCardView）
          只保留外观属性；尺寸由布局里的 layout_width/height/weight 决定，
          避免 0dp+weight 写在 style 里、GridView 权重不生效时卡片高度塌成 0。 -->

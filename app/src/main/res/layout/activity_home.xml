@@ -122,25 +122,25 @@
                         android:scaleType="centerCrop"
                         android:src="@drawable/ic_person"
                         app:shapeAppearanceOverlay="@style/AvatarRounded" />
-                    <LinearLayout
-                        android:id="@+id/nameBox1"
+                    <!-- 姓名：去掉原来的黑色半透明底条，只留白字；用极轻的文字投影
+                         保证浅色照片上也能看清（不是背景遮罩）。 -->
+                    <TextView
+                        android:id="@+id/tvName1"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="bottom"
-                        android:background="#B3000000"
+                        android:padding="10dp"
                         android:gravity="center"
-                        android:padding="6dp">
-                        <TextView
-                            android:id="@+id/tvName1"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/contact_add"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textColor="@android:color/white"
-                            android:ellipsize="end"
-                            android:maxLines="1" />
-                    </LinearLayout>
+                        android:text="@string/contact_add"
+                        android:textSize="21sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white"
+                        android:shadowColor="#99000000"
+                        android:shadowDx="0"
+                        android:shadowDy="1"
+                        android:shadowRadius="5"
+                        android:ellipsize="end"
+                        android:maxLines="1" />
                 </FrameLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -161,25 +161,23 @@
                         android:scaleType="centerCrop"
                         android:src="@drawable/ic_person"
                         app:shapeAppearanceOverlay="@style/AvatarRounded" />
-                    <LinearLayout
-                        android:id="@+id/nameBox2"
+                    <TextView
+                        android:id="@+id/tvName2"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="bottom"
-                        android:background="#B3000000"
+                        android:padding="10dp"
                         android:gravity="center"
-                        android:padding="6dp">
-                        <TextView
-                            android:id="@+id/tvName2"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/contact_add"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textColor="@android:color/white"
-                            android:ellipsize="end"
-                            android:maxLines="1" />
-                    </LinearLayout>
+                        android:text="@string/contact_add"
+                        android:textSize="21sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white"
+                        android:shadowColor="#99000000"
+                        android:shadowDx="0"
+                        android:shadowDy="1"
+                        android:shadowRadius="5"
+                        android:ellipsize="end"
+                        android:maxLines="1" />
                 </FrameLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
@@ -208,25 +206,23 @@
                         android:scaleType="centerCrop"
                         android:src="@drawable/ic_person"
                         app:shapeAppearanceOverlay="@style/AvatarRounded" />
-                    <LinearLayout
-                        android:id="@+id/nameBox3"
+                    <TextView
+                        android:id="@+id/tvName3"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="bottom"
-                        android:background="#B3000000"
+                        android:padding="10dp"
                         android:gravity="center"
-                        android:padding="6dp">
-                        <TextView
-                            android:id="@+id/tvName3"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/contact_add"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textColor="@android:color/white"
-                            android:ellipsize="end"
-                            android:maxLines="1" />
-                    </LinearLayout>
+                        android:text="@string/contact_add"
+                        android:textSize="21sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white"
+                        android:shadowColor="#99000000"
+                        android:shadowDx="0"
+                        android:shadowDy="1"
+                        android:shadowRadius="5"
+                        android:ellipsize="end"
+                        android:maxLines="1" />
                 </FrameLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -240,7 +236,7 @@
                 app:cardBackgroundColor="@color/colorBatteryNormalBg"
                 app:cardCornerRadius="0dp"
                 app:cardElevation="0dp"
-                app:contentPadding="12dp">
+                app:contentPadding="10dp">
 
                 <LinearLayout
                     android:orientation="vertical"
@@ -253,7 +249,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/home_battery"
-                        android:textSize="15sp"
+                        android:textSize="14sp"
                         android:textColor="@color/colorBatteryNormalFg" />
 
                     <TextView
@@ -261,7 +257,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="--"
-                        android:textSize="60sp"
+                        android:textSize="52sp"
                         android:textStyle="bold"
                         android:includeFontPadding="false"
                         android:textColor="@color/colorBatteryNormalFg" />
@@ -270,9 +266,9 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- 底部留白：让卡片不再顶满整屏，视觉上更透气 -->
+    <!-- 底部留白：把卡片区高度收一收（上下变小、左右不变），视觉更透气 -->
     <View
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.34" />
+        android:layout_weight="0.56" />
 </LinearLayout>
