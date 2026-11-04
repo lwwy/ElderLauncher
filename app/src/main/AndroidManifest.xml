@@ -20,6 +20,7 @@
     <!-- 注意：本应用为纯本地应用，不使用 INTERNET 权限 -->
 
     <application
+        android:name=".ElderApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"

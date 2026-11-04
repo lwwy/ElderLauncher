@@ -22,6 +22,7 @@ class KeepAliveService : Service() {
         private const val NOTIF_ID = 1001
 
         fun start(context: Context) {
+            CrashLogger.trace("KeepAliveService.start 被调用")
             val i = Intent(context, KeepAliveService::class.java)
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -29,7 +30,9 @@ class KeepAliveService : Service() {
                 } else {
                     context.startService(i)
                 }
-            } catch (_: Exception) {
+                CrashLogger.trace("startForegroundService 调用成功")
+            } catch (e: Exception) {
+                CrashLogger.trace("startForegroundService 抛出: ${e.javaClass.name}: ${e.message}")
             }
         }
     }
@@ -38,7 +41,9 @@ class KeepAliveService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        CrashLogger.trace("KeepAliveService.onCreate 开始")
         createChannel()
+        CrashLogger.trace("通知渠道创建完成")
         val notification = buildNotification()
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -48,15 +53,20 @@ class KeepAliveService : Service() {
                     NOTIF_ID, notification,
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
                 )
+                CrashLogger.trace("startForeground(dataSync) 成功")
             } else {
                 startForeground(NOTIF_ID, notification)
+                CrashLogger.trace("startForeground(旧版本) 成功")
             }
         } catch (e: Exception) {
+            CrashLogger.trace("startForeground(dataSync) 失败: ${e.javaClass.name}: ${e.message}")
             // 兜底：即使带类型失败，也务必以“无类型”方式成功转前台，
             // 否则由 startForegroundService 启动的服务会触发 RemoteServiceException 崩溃。
             try {
                 startForeground(NOTIF_ID, notification)
-            } catch (_: Exception) {
+                CrashLogger.trace("startForeground(无类型兜底) 成功")
+            } catch (e2: Exception) {
+                CrashLogger.trace("startForeground(无类型兜底) 也失败: ${e2.javaClass.name}: ${e2.message}")
             }
         }
     }

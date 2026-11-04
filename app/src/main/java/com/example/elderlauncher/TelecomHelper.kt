@@ -28,7 +28,9 @@ object TelecomHelper {
                 .setIcon(Icon.createWithResource(context, R.drawable.ic_launcher_foreground))
                 .build()
             tm.registerPhoneAccount(account)
+            CrashLogger.trace("registerPhoneAccount 成功")
         } catch (e: Exception) {
+            CrashLogger.trace("registerPhoneAccount 失败: ${e.javaClass.name}: ${e.message}")
             Log.e("TelecomHelper", "register failed", e)
         }
     }

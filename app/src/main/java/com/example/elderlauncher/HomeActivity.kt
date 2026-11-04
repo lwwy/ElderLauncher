@@ -68,8 +68,12 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CrashLogger.trace("HomeActivity.onCreate 开始")
         setContentView(R.layout.activity_home)
+        CrashLogger.trace("setContentView 完成")
+
         TtsManager.init(this)
+        CrashLogger.trace("TtsManager.init 完成")
 
         tvTime = findViewById(R.id.tvTime)
         tvDate = findViewById(R.id.tvDate)
@@ -78,6 +82,7 @@ class HomeActivity : AppCompatActivity() {
         tvBatteryLabel = findViewById(R.id.tvBatteryLabel)
         imgBattery = findViewById(R.id.imgBattery)
         cardBattery = findViewById(R.id.cardBattery)
+        CrashLogger.trace("findViewById 完成")
 
         // 设置入口：右上角齿轮（看护人使用）
         findViewById<android.view.View>(R.id.btnSettings).setOnClickListener {
@@ -100,14 +105,27 @@ class HomeActivity : AppCompatActivity() {
             val card = findViewById<android.view.View>(cardIds[i])
             card.setOnClickListener { onCardClick(i) }
         }
+        CrashLogger.trace("点击事件绑定完成")
 
         updateClock()
+        CrashLogger.trace("updateClock 完成")
 
         // 启动后台保活前台服务（保证来电/通话不被系统回收）
-        KeepAliveService.start(this)
+        // 安全模式：上次启动异常时本次跳过，确保能进桌面
+        val app = application as? ElderApp
+        if (app?.skipKeepAliveOnce == true) {
+            CrashLogger.trace("安全模式：本次跳过 KeepAliveService")
+        } else {
+            KeepAliveService.start(this)
+            CrashLogger.trace("KeepAliveService.start 调用完成")
+        }
+
         // 注册为系统可拨号账号（设为默认电话应用后由系统路由来电/去电）
         TelecomHelper.register(this)
+        CrashLogger.trace("TelecomHelper.register 完成")
+
         requestNotifPermission()
+        CrashLogger.trace("HomeActivity.onCreate 结束")
     }
 
     private fun onCardClick(i: Int) {
@@ -204,6 +222,7 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        CrashLogger.trace("HomeActivity.onResume 开始")
         updateClock()
         refreshContacts()
         handler.post(clockRunnable)
@@ -211,6 +230,8 @@ class HomeActivity : AppCompatActivity() {
             batteryReceiver,
             android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED)
         )
+        // 走到这里说明桌面已完整显示，标记本次启动成功
+        CrashLogger.markSessionReady()
     }
 
     override fun onPause() {
