@@ -56,6 +56,12 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    /** 每次回到设置页都重建联系人列表，确保编辑/保存后实时刷新头像与姓名 */
+    override fun onResume() {
+        super.onResume()
+        buildContactRows()
+    }
+
     /** 在设置页渲染 3 个常用联系人行（头像 + 姓名 + 编辑） */
     private fun buildContactRows() {
         val container = findViewById<LinearLayout>(R.id.favContainer)

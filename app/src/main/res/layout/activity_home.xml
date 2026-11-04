@@ -7,58 +7,68 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 顶部：时间（左） + 设置入口（右上角） -->
-    <LinearLayout
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+    <!-- 顶部：蓝色时间卡片（设置入口叠在右上角） -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="14dp">
 
-        <LinearLayout
-            android:id="@+id/timeBlock"
-            android:orientation="vertical"
-            android:layout_width="0dp"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardTime"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1">
+            app:cardBackgroundColor="@color/colorTimeCard"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="1dp"
+            app:contentPadding="20dp">
 
-            <TextView
-                android:id="@+id/tvTime"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/timeBlock"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="--:--"
-                android:textSize="64sp"
-                android:textStyle="bold"
-                android:textColor="@color/colorTime" />
+                android:paddingEnd="56dp">
 
-            <TextView
-                android:id="@+id/tvDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textSize="18sp"
-                android:textColor="@color/colorTime"
-                android:layout_marginTop="2dp" />
+                <TextView
+                    android:id="@+id/tvTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--:--"
+                    android:textSize="64sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white" />
 
-            <TextView
-                android:id="@+id/tvLunar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textSize="16sp"
-                android:textColor="@color/colorTime" />
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/tvDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="18sp"
+                    android:textColor="@android:color/white"
+                    android:layout_marginTop="2dp" />
+
+                <TextView
+                    android:id="@+id/tvLunar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- 设置入口：右上角（看护人使用） -->
         <ImageButton
             android:id="@+id/btnSettings"
             android:layout_width="56dp"
             android:layout_height="56dp"
+            android:layout_gravity="top|end"
             android:src="@drawable/ic_settings"
             android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="?attr/colorOnSurface"
+            app:tint="@android:color/white"
             android:contentDescription="@string/home_settings"
             android:scaleType="centerInside" />
-    </LinearLayout>
+    </FrameLayout>
 
     <!-- 2x2：三个联系人卡片 + 一个电量卡片 -->
     <GridLayout
