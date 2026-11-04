@@ -166,6 +166,156 @@ object CrashLogger {
         }
     }
 
+    /**
+     * 生成一份可直接发给开发者的诊断报告：
+     * 版本 / 设备 / 功能开关 / 语音引擎状态 / 权限 / 崩溃列表 / 运行轨迹。
+     * 只包含运行状态，不含联系人号码、照片、通话内容等隐私数据。
+     *
+     * @return 生成的文本文件（位于应用缓存目录，可通过 FileProvider 分享）
+     */
+    fun exportDiagnostic(context: Context): File? {
+        if (!ENABLED) return null
+        val text = buildDiagnostic(context)
+        return try {
+            val dir = File(context.cacheDir, "diagnostics")
+            if (!dir.exists()) dir.mkdirs()
+            val f = File(dir, "diag-${fileFmt.format(Date())}.txt")
+            f.writeText(text)
+            // 同时落一份到公共「下载」目录，万一分享面板没有目标也能手动取
+            try {
+                writeToDownloads(context, f.name, text)
+            } catch (_: Throwable) {
+            }
+            f
+        } catch (t: Throwable) {
+            Log.e(TAG, "导出诊断日志失败", t)
+            null
+        }
+    }
+
+    private fun buildDiagnostic(ctx: Context): String {
+        val sb = StringBuilder()
+        sb.appendLine("========== 老人桌面 · 诊断日志 ==========")
+        sb.appendLine("导出时间: ${fullFmt.format(Date())}")
+        sb.appendLine("应用版本: ${appVersion(ctx)}")
+        sb.appendLine("包名: ${ctx.packageName}")
+        sb.appendLine("设备: ${Build.MANUFACTURER} ${Build.MODEL} (${Build.DEVICE})")
+        sb.appendLine("系统: Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+        sb.appendLine("ABI: ${Build.SUPPORTED_ABIS?.joinToString() ?: "-"}")
+        sb.appendLine()
+
+        sb.appendLine("---------- 功能开关 ----------")
+        sb.appendLine("来电播报: ${onOff(Prefs.enabled(ctx, Prefs.ANN_INCOMING))}")
+        sb.appendLine("低电量播报: ${onOff(Prefs.enabled(ctx, Prefs.ANN_LOW))}")
+        sb.appendLine("默认桌面: ${if (isDefaultHome(ctx)) "是" else "否"}")
+        sb.appendLine("常用联系人: ${contactSummary(ctx)}")
+        sb.appendLine()
+
+        sb.appendLine("---------- 语音播报 ----------")
+        sb.appendLine("系统语音引擎: ${if (TtsManager.hasEngine(ctx)) "已安装" else "未检测到"}")
+        sb.appendLine("初始化状态: ${if (TtsManager.isReady()) "就绪" else "未就绪"}")
+        sb.appendLine("中文语音数据: ${if (TtsManager.langMissing) "缺失" else "正常/未知"}")
+        sb.appendLine("最近错误: ${TtsManager.lastError ?: "无"}")
+        sb.appendLine()
+
+        sb.appendLine("---------- 权限状态 ----------")
+        val perms = listOf(
+            "CALL_PHONE" to android.Manifest.permission.CALL_PHONE,
+            "READ_CONTACTS" to android.Manifest.permission.READ_CONTACTS,
+            "CAMERA" to android.Manifest.permission.CAMERA,
+            "READ_PHONE_STATE" to android.Manifest.permission.READ_PHONE_STATE,
+            "ANSWER_PHONE_CALLS" to android.Manifest.permission.ANSWER_PHONE_CALLS,
+            "POST_NOTIFICATIONS" to "android.permission.POST_NOTIFICATIONS"
+        )
+        for ((label, p) in perms) {
+            sb.appendLine("$label: ${permState(ctx, p)}")
+        }
+        sb.appendLine("通知使用权: ${if (hasNotificationListener(ctx)) "已开启" else "未开启"}")
+        sb.appendLine()
+
+        sb.appendLine("---------- 崩溃记录 ----------")
+        val crashLines = crashFiles(ctx)
+        if (crashLines.isEmpty()) sb.appendLine("(无)") else crashLines.forEach { sb.appendLine(it) }
+        sb.appendLine()
+
+        sb.appendLine("---------- 运行轨迹（最近 400 行）----------")
+        sb.appendLine(readTraceTail(ctx))
+        sb.appendLine("========== 结束 ==========")
+        return sb.toString()
+    }
+
+    private fun onOff(v: Boolean) = if (v) "开启" else "关闭"
+
+    private fun isDefaultHome(ctx: Context): Boolean = try {
+        val intent = android.content.Intent(android.content.Intent.ACTION_MAIN)
+            .addCategory(android.content.Intent.CATEGORY_HOME)
+        val resolved = ctx.packageManager.resolveActivity(
+            intent,
+            android.content.pm.PackageManager.MATCH_DEFAULT_ONLY
+        )
+        resolved?.activityInfo?.packageName == ctx.packageName
+    } catch (_: Throwable) {
+        false
+    }
+
+    /** 只统计已填几个联系人，不写入姓名/号码，避免隐私外泄 */
+    private fun contactSummary(ctx: Context): String {
+        val filled = (0 until LocalContacts.COUNT).count {
+            !LocalContacts.get(ctx, it)?.name.isNullOrEmpty()
+        }
+        return "$filled / ${LocalContacts.COUNT} 已设置"
+    }
+
+    private fun permState(ctx: Context, permission: String): String = try {
+        if (androidx.core.content.ContextCompat.checkSelfPermission(ctx, permission) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) "已授权" else "未授权"
+    } catch (_: Throwable) {
+        "未知"
+    }
+
+    /**
+     * 通知使用权（读取通知栏）是否开启。保活服务依赖它做兜底，
+     * 属关键排查项，但查询失败不影响日志生成。
+     */
+    private fun hasNotificationListener(ctx: Context): Boolean {
+        return try {
+            val enabled = android.provider.Settings.Secure.getString(
+                ctx.contentResolver, "enabled_notification_listeners"
+            )
+            enabled != null && enabled.contains(ctx.packageName)
+        } catch (_: Throwable) {
+            false
+        }
+    }
+
+    private fun crashFiles(ctx: Context): List<String> = try {
+        val dir = dirFor(ctx)
+        (dir.list() ?: emptyArray())
+            .filter { it.startsWith("crash-") }
+            .sortedDescending()
+            .take(8)
+            .map { name ->
+                val f = File(dir, name)
+                "  $name  (${f.length() / 1024} KB, ${timeFmt.format(Date(f.lastModified()))})"
+            }
+    } catch (_: Throwable) {
+        emptyList()
+    }
+
+    private fun readTraceTail(ctx: Context): String {
+        return try {
+            val f = File(dirFor(ctx), TRACE_FILE)
+            if (!f.exists()) {
+                "(无轨迹记录)"
+            } else {
+                f.readLines().takeLast(400).joinToString("\n")
+            }
+        } catch (_: Throwable) {
+            "(读取轨迹失败)"
+        }
+    }
+
     // ---------------------------------------------------------------- 内部实现
 
     private fun prefs(ctx: Context) =

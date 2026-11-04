@@ -90,8 +90,8 @@
     </FrameLayout>
 
     <!-- 2x2：三个联系人卡片 + 一个电量卡片。
-         用两层 LinearLayout 而不是 GridLayout：尺寸只依赖 weight，不依赖 GridLayout
-         的行列权重测量，任何屏幕上都不会出现高度塌成 0 导致卡片"消失"。 -->
+         每个联系人卡片内部为「头像区(weight=1) + 固定高度姓名条」，
+         头像只占上方、姓名独占下方，任何图片比例下都不会压到文字。 -->
     <LinearLayout
         android:id="@+id/gridContacts"
         android:orientation="vertical"
@@ -112,36 +112,44 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:layout_marginEnd="6dp">
-                <FrameLayout
+                <LinearLayout
+                    android:orientation="vertical"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/imgAvatar1"
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/ic_person"
-                        app:shapeAppearanceOverlay="@style/AvatarRounded" />
-                    <!-- 姓名：去掉原来的黑色半透明底条，只留白字；用极轻的文字投影
-                         保证浅色照片上也能看清（不是背景遮罩）。 -->
+                        android:layout_height="0dp"
+                        android:layout_weight="1">
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/imgAvatar1"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ic_person"
+                            app:shapeAppearanceOverlay="@style/AvatarRounded" />
+                        <!-- 无头像时显示的占位人像，固定 92dp 居中，不再铺满整卡 -->
+                        <ImageView
+                            android:id="@+id/ivPlaceholder1"
+                            android:layout_width="92dp"
+                            android:layout_height="92dp"
+                            android:layout_gravity="center"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_person"
+                            app:tint="@color/colorOnSurfaceVariant" />
+                    </FrameLayout>
                     <TextView
                         android:id="@+id/tvName1"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom"
-                        android:padding="10dp"
+                        android:layout_height="42dp"
                         android:gravity="center"
+                        android:paddingHorizontal="6dp"
                         android:text="@string/contact_add"
-                        android:textSize="21sp"
+                        android:textSize="20sp"
                         android:textStyle="bold"
                         android:textColor="@android:color/white"
-                        android:shadowColor="#99000000"
-                        android:shadowDx="0"
-                        android:shadowDy="1"
-                        android:shadowRadius="5"
                         android:ellipsize="end"
                         android:maxLines="1" />
-                </FrameLayout>
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
@@ -151,34 +159,43 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:layout_marginStart="6dp">
-                <FrameLayout
+                <LinearLayout
+                    android:orientation="vertical"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/imgAvatar2"
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/ic_person"
-                        app:shapeAppearanceOverlay="@style/AvatarRounded" />
+                        android:layout_height="0dp"
+                        android:layout_weight="1">
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/imgAvatar2"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ic_person"
+                            app:shapeAppearanceOverlay="@style/AvatarRounded" />
+                        <ImageView
+                            android:id="@+id/ivPlaceholder2"
+                            android:layout_width="92dp"
+                            android:layout_height="92dp"
+                            android:layout_gravity="center"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_person"
+                            app:tint="@color/colorOnSurfaceVariant" />
+                    </FrameLayout>
                     <TextView
                         android:id="@+id/tvName2"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom"
-                        android:padding="10dp"
+                        android:layout_height="42dp"
                         android:gravity="center"
+                        android:paddingHorizontal="6dp"
                         android:text="@string/contact_add"
-                        android:textSize="21sp"
+                        android:textSize="20sp"
                         android:textStyle="bold"
                         android:textColor="@android:color/white"
-                        android:shadowColor="#99000000"
-                        android:shadowDx="0"
-                        android:shadowDy="1"
-                        android:shadowRadius="5"
                         android:ellipsize="end"
                         android:maxLines="1" />
-                </FrameLayout>
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
@@ -196,34 +213,43 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:layout_marginEnd="6dp">
-                <FrameLayout
+                <LinearLayout
+                    android:orientation="vertical"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/imgAvatar3"
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/ic_person"
-                        app:shapeAppearanceOverlay="@style/AvatarRounded" />
+                        android:layout_height="0dp"
+                        android:layout_weight="1">
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/imgAvatar3"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ic_person"
+                            app:shapeAppearanceOverlay="@style/AvatarRounded" />
+                        <ImageView
+                            android:id="@+id/ivPlaceholder3"
+                            android:layout_width="92dp"
+                            android:layout_height="92dp"
+                            android:layout_gravity="center"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_person"
+                            app:tint="@color/colorOnSurfaceVariant" />
+                    </FrameLayout>
                     <TextView
                         android:id="@+id/tvName3"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom"
-                        android:padding="10dp"
+                        android:layout_height="42dp"
                         android:gravity="center"
+                        android:paddingHorizontal="6dp"
                         android:text="@string/contact_add"
-                        android:textSize="21sp"
+                        android:textSize="20sp"
                         android:textStyle="bold"
                         android:textColor="@android:color/white"
-                        android:shadowColor="#99000000"
-                        android:shadowDx="0"
-                        android:shadowDy="1"
-                        android:shadowRadius="5"
                         android:ellipsize="end"
                         android:maxLines="1" />
-                </FrameLayout>
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <!-- 电量卡片：去掉电池图标，只留「电量」小字 + 大数字 -->

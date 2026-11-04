@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.switchmaterial.SwitchMaterial
@@ -53,12 +54,46 @@ class SettingsActivity : AppCompatActivity() {
             restoreSystemHome()
         }
 
+        // 导出诊断日志：生成一份可读文本，直接分享给开发者排查
+        findViewById<MaterialButton>(R.id.btnExportLog).setOnClickListener {
+            exportDiagnosticLog()
+        }
+
         // 播报测试：点一下就能听到实际效果，便于确认系统语音引擎是否正常
         findViewById<MaterialButton>(R.id.btnTestIncoming).setOnClickListener {
             testAnnounce(getString(R.string.test_incoming_text))
         }
         findViewById<MaterialButton>(R.id.btnTestLow).setOnClickListener {
             testAnnounce(getString(R.string.test_low_text))
+        }
+    }
+
+    /** 生成诊断日志并唤起系统分享面板，用户可直接发给开发者 */
+    private fun exportDiagnosticLog() {
+        Toast.makeText(this, R.string.export_log_doing, Toast.LENGTH_SHORT).show()
+        CrashLogger.trace("用户手动导出诊断日志")
+        val file = CrashLogger.exportDiagnostic(this)
+        if (file == null) {
+            Toast.makeText(this, R.string.export_log_failed, Toast.LENGTH_LONG).show()
+            return
+        }
+        try {
+            val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, getString(R.string.export_log))
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(send, getString(R.string.export_log_chooser)))
+        } catch (e: Exception) {
+            // 分享不可用时至少告诉用户文件在哪（同时已落一份到「下载」目录）
+            CrashLogger.trace("分享诊断日志失败：${e.message}")
+            Toast.makeText(
+                this,
+                getString(R.string.export_log_saved, file.absolutePath),
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 

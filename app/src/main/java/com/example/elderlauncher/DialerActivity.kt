@@ -31,9 +31,11 @@ class DialerActivity : AppCompatActivity() {
             override fun getItem(i: Int) = keys[i]
             override fun getItemId(i: Int) = i.toLong()
             override fun getView(i: Int, convertView: View?, parent: ViewGroup?): View {
-                val b = MaterialButton(this@DialerActivity)
+                // 复用 GridView 回收的按钮，避免每次滑动都新建 View
+                val b = (convertView as? MaterialButton) ?: MaterialButton(this@DialerActivity).apply {
+                    textSize = 32f
+                }
                 b.text = keys[i]
-                b.textSize = 32f
                 b.setOnClickListener { append(keys[i]) }
                 return b
             }

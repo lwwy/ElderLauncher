@@ -21,16 +21,17 @@
             android:textColor="?attr/colorOnSurface"
             android:padding="8dp" />
 
-        <!-- 头像 -->
+        <!-- 头像：FrameLayout 没有 gravity 属性，居中必须写在子 View 的 layout_gravity 上，
+             否则默认按左上角摆放，看起来偏左。 -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
             android:layout_marginTop="12dp">
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/imgAvatar"
                 android:layout_width="150dp"
                 android:layout_height="150dp"
+                android:layout_gravity="center"
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_person"
                 app:shapeAppearanceOverlay="@style/AvatarRounded"

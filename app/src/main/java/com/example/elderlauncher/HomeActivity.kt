@@ -4,12 +4,12 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.content.res.ColorStateList
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -40,6 +40,9 @@ class HomeActivity : AppCompatActivity() {
     )
     private val nameIds = intArrayOf(
         R.id.tvName1, R.id.tvName2, R.id.tvName3
+    )
+    private val placeholderIds = intArrayOf(
+        R.id.ivPlaceholder1, R.id.ivPlaceholder2, R.id.ivPlaceholder3
     )
     private val phones = arrayOfNulls<String>(3)
 
@@ -74,8 +77,12 @@ class HomeActivity : AppCompatActivity() {
         setContentView(R.layout.activity_home)
         CrashLogger.trace("setContentView 完成")
 
-        TtsManager.init(this)
-        CrashLogger.trace("TtsManager.init 完成")
+        // 预热语音引擎：TTS 初始化要拉起引擎服务，放在首屏渲染之后再做，
+        // 避免拖慢冷启动；首次来电播报前也能就绪。
+        handler.postDelayed({
+            TtsManager.init(applicationContext)
+            CrashLogger.trace("TtsManager.init 完成（延迟预热）")
+        }, 3000)
 
         tvTime = findViewById(R.id.tvTime)
         tvDate = findViewById(R.id.tvDate)
@@ -136,28 +143,31 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun refreshContacts() {
-        val placeholderTint = ColorStateList.valueOf(
-            ContextCompat.getColor(this, R.color.colorOnSurfaceVariant)
-        )
         for (i in nameIds.indices) {
             val tv = findViewById<TextView>(nameIds[i])
             val img = findViewById<ImageView>(avatarIds[i])
+            val placeholder = findViewById<ImageView>(placeholderIds[i])
             val contact = LocalContacts.get(this, i)
             if (contact == null || contact.name.isEmpty()) {
                 tv.text = getString(R.string.contact_add)
-                img.imageTintList = placeholderTint
-                img.setImageResource(R.drawable.ic_person)
+                // 无联系人：隐藏铺满的背景层，只显示居中的小人像 + 姓名
+                img.setImageDrawable(null)
+                img.visibility = View.INVISIBLE
+                placeholder.visibility = View.VISIBLE
                 phones[i] = null
             } else {
                 tv.text = contact.name
                 val bmp: Bitmap? = LocalContacts.loadAvatar(this, i)
                 if (bmp != null) {
-                    // 真实头像：清除着色（否则会被灰色罩染成“空白”）
+                    // 真实头像：铺满头像区，隐藏占位小人像
                     img.imageTintList = null
                     img.setImageBitmap(bmp)
+                    img.visibility = View.VISIBLE
+                    placeholder.visibility = View.GONE
                 } else {
-                    img.imageTintList = placeholderTint
-                    img.setImageResource(R.drawable.ic_person)
+                    img.setImageDrawable(null)
+                    img.visibility = View.INVISIBLE
+                    placeholder.visibility = View.VISIBLE
                 }
                 phones[i] = contact.phone
             }

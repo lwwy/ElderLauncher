@@ -27,7 +27,7 @@
 
     <application
         android:name=".ElderApp"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
@@ -97,7 +97,9 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
-        <receiver android:name=".receiver.BatteryReceiver" android:exported="true">
+        <!-- 系统广播接收器：只接收系统发出的广播，不对外暴露，
+             避免第三方应用伪造「电量不足/来电」触发播报 -->
+        <receiver android:name=".receiver.BatteryReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BATTERY_LOW" />
                 <action android:name="android.intent.action.BATTERY_OKAY" />
@@ -115,7 +117,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <receiver android:name=".receiver.CallStateReceiver" android:exported="true">
+        <receiver android:name=".receiver.CallStateReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>
@@ -125,7 +127,7 @@
         <receiver
             android:name=".receiver.BootReceiver"
             android:enabled="true"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
