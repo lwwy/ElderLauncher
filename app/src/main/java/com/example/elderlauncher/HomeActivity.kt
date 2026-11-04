@@ -20,12 +20,14 @@ import com.google.android.material.card.MaterialCardView
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var tvTime: TextView
     private lateinit var tvDate: TextView
     private lateinit var tvLunar: TextView
+    private lateinit var tvAmpm: TextView
     private lateinit var tvBattery: TextView
     private lateinit var tvBatteryLabel: TextView
     private lateinit var imgBattery: ImageView
@@ -79,6 +81,7 @@ class HomeActivity : AppCompatActivity() {
         tvTime = findViewById(R.id.tvTime)
         tvDate = findViewById(R.id.tvDate)
         tvLunar = findViewById(R.id.tvLunar)
+        tvAmpm = findViewById(R.id.tvAmpm)
         tvBattery = findViewById(R.id.tvBattery)
         tvBatteryLabel = findViewById(R.id.tvBatteryLabel)
         imgBattery = findViewById(R.id.imgBattery)
@@ -201,7 +204,8 @@ class HomeActivity : AppCompatActivity() {
     private fun updateClock() {
         val cal = Calendar.getInstance()
         val now = Date()
-        tvTime.text = SimpleDateFormat("HH:mm").format(now)
+        tvTime.text = SimpleDateFormat("hh:mm", Locale.CHINA).format(now)
+        tvAmpm.text = SimpleDateFormat("a", Locale.CHINA).format(now)
         val m = cal.get(Calendar.MONTH) + 1
         val d = cal.get(Calendar.DAY_OF_MONTH)
         tvDate.text = "${m}月${d}日 ${weekdays[cal.get(Calendar.DAY_OF_WEEK) - 1]}"

@@ -57,6 +57,6 @@
 
     <!-- 首页时间文字（恢复为蓝色） -->
     <color name="colorTime">#64B5F6</color>
-    <!-- 顶部时间卡片：整张蓝色（与原始版本一致） -->
-    <color name="colorTimeCard">#1E88E5</color>
+    <!-- 顶部时间卡片：整张藏青蓝（与原始版本参考图一致） -->
+    <color name="colorTimeCard">#1565C0</color>
 </resources>
