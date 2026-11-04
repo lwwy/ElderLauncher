@@ -1,5 +1,6 @@
 package com.example.elderlauncher
 
+import android.app.role.RoleManager
 import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
@@ -16,6 +17,10 @@ import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.switchmaterial.SwitchMaterial
 
 class SettingsActivity : AppCompatActivity() {
+
+    companion object {
+        private const val REQ_DIALER_ROLE = 1001
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,14 +50,57 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
-        // 设为默认电话应用（跳系统默认应用设置页，由用户手动选择）
+        // 设为默认电话应用：API 29+ 直接弹系统角色选择框（需 DIAL 带 tel scheme 才有候选资格），
+        // 其余情况回退到系统"默认应用"设置页由用户手动选择。
         findViewById<MaterialButton>(R.id.btnDefaultDialer).setOnClickListener {
-            try {
-                Toast.makeText(this, R.string.set_default_dialer_toast, Toast.LENGTH_LONG).show()
-                startActivity(Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))
-            } catch (e: Exception) {
-                Toast.makeText(this, R.string.set_default_dialer_failed, Toast.LENGTH_LONG).show()
+            requestDialerRole()
+        }
+    }
+
+    private fun isDefaultDialer(): Boolean = try {
+        val tm = getSystemService(TELECOM_SERVICE) as android.telecom.TelecomManager
+        tm.defaultDialerPackage == packageName
+    } catch (e: Exception) {
+        false
+    }
+
+    private fun requestDialerRole() {
+        if (isDefaultDialer()) {
+            Toast.makeText(this, R.string.set_default_dialer_already, Toast.LENGTH_SHORT).show()
+            return
+        }
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val rm = getSystemService(RoleManager::class.java)
+                if (rm != null && rm.isRoleAvailable(RoleManager.ROLE_DIALER)) {
+                    startActivityForResult(
+                        rm.createRequestRoleIntent(RoleManager.ROLE_DIALER),
+                        REQ_DIALER_ROLE
+                    )
+                    return
+                }
             }
+        } catch (e: Exception) {
+            CrashLogger.trace("请求拨号器角色失败: ${e.javaClass.name}: ${e.message}")
+        }
+        // 回退：打开系统默认应用设置页
+        try {
+            Toast.makeText(this, R.string.set_default_dialer_toast, Toast.LENGTH_LONG).show()
+            startActivity(Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))
+        } catch (e: Exception) {
+            Toast.makeText(this, R.string.set_default_dialer_failed, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQ_DIALER_ROLE) {
+            val ok = isDefaultDialer()
+            Toast.makeText(
+                this,
+                if (ok) R.string.set_default_dialer_ok else R.string.set_default_dialer_failed,
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 

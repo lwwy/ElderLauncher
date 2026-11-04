@@ -8,3 +8,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Gradle / Android 构建产物
+build/
+**/build/
+*.apk

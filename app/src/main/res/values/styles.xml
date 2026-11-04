@@ -48,12 +48,10 @@
         <item name="cornerRadius">16dp</item>
     </style>
 
-    <!-- 首页 2x2 收藏联系人卡片（MaterialCardView） -->
+    <!-- 首页 2x2 收藏联系人卡片（MaterialCardView）
+         只保留外观属性；尺寸由布局里的 layout_width/height/weight 决定，
+         避免 0dp+weight 写在 style 里、GridView 权重不生效时卡片高度塌成 0。 -->
     <style name="ContactCard" parent="Widget.Material3.CardView.Filled">
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">0dp</item>
-        <item name="android:layout_columnWeight">1</item>
-        <item name="android:layout_rowWeight">1</item>
         <item name="cardBackgroundColor">?attr/colorSurfaceVariant</item>
         <item name="cardCornerRadius">24dp</item>
         <item name="cardElevation">1dp</item>
