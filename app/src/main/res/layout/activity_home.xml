@@ -65,7 +65,7 @@
         android:id="@+id/gridContacts"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="2"
         android:columnCount="2"
         android:rowCount="2"
         android:useDefaultMargins="true"
@@ -81,8 +81,8 @@
                 android:layout_height="match_parent">
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/imgAvatar1"
-                    android:layout_width="110dp"
-                    android:layout_height="110dp"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
                     android:scaleType="centerCrop"
                     android:src="@drawable/ic_person"
                     app:tint="?attr/colorOnSurfaceVariant"
@@ -111,8 +111,8 @@
                 android:layout_height="match_parent">
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/imgAvatar2"
-                    android:layout_width="110dp"
-                    android:layout_height="110dp"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
                     android:scaleType="centerCrop"
                     android:src="@drawable/ic_person"
                     app:tint="?attr/colorOnSurfaceVariant"
@@ -141,8 +141,8 @@
                 android:layout_height="match_parent">
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/imgAvatar3"
-                    android:layout_width="110dp"
-                    android:layout_height="110dp"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
                     android:scaleType="centerCrop"
                     android:src="@drawable/ic_person"
                     app:tint="?attr/colorOnSurfaceVariant"
@@ -181,8 +181,8 @@
 
                 <ImageView
                     android:id="@+id/imgBattery"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:src="@drawable/ic_battery"
                     app:tint="@color/colorBatteryNormalFg" />
 
@@ -210,4 +210,10 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </GridLayout>
+
+    <!-- 底部留白，避免卡片过大、保持首页和谐 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 </LinearLayout>

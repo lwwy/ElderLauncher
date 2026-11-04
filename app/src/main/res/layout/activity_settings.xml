@@ -47,6 +47,8 @@
                 android:layout_height="wrap_content">
                 <TextView android:text="@string/set_fav_tip" android:textSize="14sp"
                     android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp" />
                 <LinearLayout
                     android:id="@+id/favContainer"
@@ -142,6 +144,8 @@
                     android:text="@string/btn_autostart" />
                 <TextView android:text="@string/autostart_tip" android:textSize="14sp"
                     android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:padding="8dp" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnBattery"
@@ -151,6 +155,8 @@
                     android:layout_marginTop="4dp" />
                 <TextView android:text="@string/battery_tip" android:textSize="14sp"
                     android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:padding="8dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -186,6 +192,8 @@
                     android:text="@string/set_default_launcher" />
                 <TextView android:text="@string/set_default_tip" android:textSize="14sp"
                     android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:padding="8dp" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnDefaultDialer"
@@ -195,6 +203,8 @@
                     android:layout_marginTop="4dp" />
                 <TextView android:text="@string/set_default_dialer_tip" android:textSize="14sp"
                     android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:padding="8dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
