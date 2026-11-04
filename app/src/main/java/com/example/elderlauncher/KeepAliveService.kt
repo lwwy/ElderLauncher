@@ -42,15 +42,22 @@ class KeepAliveService : Service() {
         val notification = buildNotification()
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // 使用 dataSync 类型：仅需普通权限，无“默认拨号器”等前置条件，
+                // 避免 Android 14+ 用 phoneCall 类型导致 startForeground 失败进而被系统强杀。
                 startForeground(
                     NOTIF_ID, notification,
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
                 )
             } else {
                 startForeground(NOTIF_ID, notification)
             }
         } catch (e: Exception) {
-            // Android 13+ 未授予通知权限时无法显示前台通知：保活降级，但不影响通话功能
+            // 兜底：即使带类型失败，也务必以“无类型”方式成功转前台，
+            // 否则由 startForegroundService 启动的服务会触发 RemoteServiceException 崩溃。
+            try {
+                startForeground(NOTIF_ID, notification)
+            } catch (_: Exception) {
+            }
         }
     }
 

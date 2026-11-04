@@ -14,6 +14,7 @@
     <!-- 自启动与后台保活 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- 注意：本应用为纯本地应用，不使用 INTERNET 权限 -->
@@ -91,11 +92,11 @@
             </intent-filter>
         </service>
 
-        <!-- 后台保活前台服务（通话相关，类型 phoneCall） -->
+        <!-- 后台保活前台服务（dataSync 类型：通用、无默认拨号器前置条件） -->
         <service
             android:name=".KeepAliveService"
             android:exported="false"
-            android:foregroundServiceType="phoneCall" />
+            android:foregroundServiceType="dataSync" />
 
         <receiver android:name=".receiver.BatteryReceiver" android:exported="true">
             <intent-filter>
