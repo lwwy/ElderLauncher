@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -48,16 +49,17 @@ class ContactEditActivity : AppCompatActivity() {
 
     private fun loadAvatarPreview() {
         val img = findViewById<ShapeableImageView>(R.id.imgAvatar)
+        val placeholderTint = ColorStateList.valueOf(
+            ContextCompat.getColor(this, R.color.colorOnSurfaceVariant)
+        )
         val bmp = LocalContacts.loadAvatar(this, slot)
         if (bmp != null) {
-            img.clearColorFilter()
+            // 真实头像：清除着色（否则照片会被灰色罩染成“空白”）
+            img.imageTintList = null
             img.setImageBitmap(bmp)
         } else {
+            img.imageTintList = placeholderTint
             img.setImageResource(R.drawable.ic_person)
-            img.setColorFilter(
-                ContextCompat.getColor(this, R.color.colorOnSurfaceVariant),
-                android.graphics.PorterDuff.Mode.SRC_IN
-            )
         }
     }
 

@@ -54,4 +54,7 @@
     <!-- 电量低于 20%：优雅的 Material 红 + 深红酒红底 -->
     <color name="colorBatteryLow">#E5484D</color>
     <color name="colorBatteryLowBg">#2A1518</color>
+
+    <!-- 首页时间文字（恢复为蓝色） -->
+    <color name="colorTime">#64B5F6</color>
 </resources>

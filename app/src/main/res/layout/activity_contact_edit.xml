@@ -33,7 +33,6 @@
                 android:layout_height="150dp"
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_person"
-                app:tint="?attr/colorOnSurfaceVariant"
                 app:shapeAppearanceOverlay="@style/AvatarRounded"
                 android:clickable="true"
                 android:focusable="true"

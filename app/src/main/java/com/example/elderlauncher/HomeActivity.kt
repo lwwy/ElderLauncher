@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.content.res.ColorStateList
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
@@ -138,30 +139,28 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun refreshContacts() {
+        val placeholderTint = ColorStateList.valueOf(
+            ContextCompat.getColor(this, R.color.colorOnSurfaceVariant)
+        )
         for (i in nameIds.indices) {
             val tv = findViewById<TextView>(nameIds[i])
             val img = findViewById<ImageView>(avatarIds[i])
             val contact = LocalContacts.get(this, i)
             if (contact == null || contact.name.isEmpty()) {
                 tv.text = getString(R.string.contact_add)
+                img.imageTintList = placeholderTint
                 img.setImageResource(R.drawable.ic_person)
-                img.setColorFilter(
-                    ContextCompat.getColor(this, R.color.colorOnSurfaceVariant),
-                    android.graphics.PorterDuff.Mode.SRC_IN
-                )
                 phones[i] = null
             } else {
                 tv.text = contact.name
                 val bmp: Bitmap? = LocalContacts.loadAvatar(this, i)
                 if (bmp != null) {
-                    img.clearColorFilter()
+                    // 真实头像：清除着色（否则会被灰色罩染成“空白”）
+                    img.imageTintList = null
                     img.setImageBitmap(bmp)
                 } else {
+                    img.imageTintList = placeholderTint
                     img.setImageResource(R.drawable.ic_person)
-                    img.setColorFilter(
-                        ContextCompat.getColor(this, R.color.colorOnSurfaceVariant),
-                        android.graphics.PorterDuff.Mode.SRC_IN
-                    )
                 }
                 phones[i] = contact.phone
             }

@@ -28,7 +28,7 @@
                 android:text="--:--"
                 android:textSize="64sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorOnSurface" />
+                android:textColor="@color/colorTime" />
 
             <TextView
                 android:id="@+id/tvDate"
@@ -36,7 +36,7 @@
                 android:layout_height="wrap_content"
                 android:text=""
                 android:textSize="18sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="@color/colorTime"
                 android:layout_marginTop="2dp" />
 
             <TextView
@@ -45,7 +45,7 @@
                 android:layout_height="wrap_content"
                 android:text=""
                 android:textSize="16sp"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:textColor="@color/colorTime" />
         </LinearLayout>
 
         <!-- 设置入口：右上角（看护人使用） -->
@@ -55,7 +55,7 @@
             android:layout_height="56dp"
             android:src="@drawable/ic_settings"
             android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="?attr/colorOnSurfaceVariant"
+            app:tint="?attr/colorOnSurface"
             android:contentDescription="@string/home_settings"
             android:scaleType="centerInside" />
     </LinearLayout>
@@ -65,7 +65,7 @@
         android:id="@+id/gridContacts"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2"
+        android:layout_weight="1"
         android:columnCount="2"
         android:rowCount="2"
         android:useDefaultMargins="true"
@@ -74,91 +74,106 @@
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardContact1"
             style="@style/ContactCard">
-            <LinearLayout
-                android:orientation="vertical"
-                android:gravity="center"
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/imgAvatar1"
-                    android:layout_width="96dp"
-                    android:layout_height="96dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:scaleType="centerCrop"
                     android:src="@drawable/ic_person"
-                    app:tint="?attr/colorOnSurfaceVariant"
                     app:shapeAppearanceOverlay="@style/AvatarRounded" />
-                <TextView
-                    android:id="@+id/tvName1"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:id="@+id/nameBox1"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/contact_add"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorOnSurface"
-                    android:layout_marginTop="12dp"
-                    android:ellipsize="end"
-                    android:maxLines="1" />
-            </LinearLayout>
+                    android:layout_gravity="bottom"
+                    android:background="#B3000000"
+                    android:gravity="center"
+                    android:padding="6dp">
+                    <TextView
+                        android:id="@+id/tvName1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/contact_add"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white"
+                        android:ellipsize="end"
+                        android:maxLines="1" />
+                </LinearLayout>
+            </FrameLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardContact2"
             style="@style/ContactCard">
-            <LinearLayout
-                android:orientation="vertical"
-                android:gravity="center"
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/imgAvatar2"
-                    android:layout_width="96dp"
-                    android:layout_height="96dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:scaleType="centerCrop"
                     android:src="@drawable/ic_person"
-                    app:tint="?attr/colorOnSurfaceVariant"
                     app:shapeAppearanceOverlay="@style/AvatarRounded" />
-                <TextView
-                    android:id="@+id/tvName2"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:id="@+id/nameBox2"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/contact_add"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorOnSurface"
-                    android:layout_marginTop="12dp"
-                    android:ellipsize="end"
-                    android:maxLines="1" />
-            </LinearLayout>
+                    android:layout_gravity="bottom"
+                    android:background="#B3000000"
+                    android:gravity="center"
+                    android:padding="6dp">
+                    <TextView
+                        android:id="@+id/tvName2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/contact_add"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white"
+                        android:ellipsize="end"
+                        android:maxLines="1" />
+                </LinearLayout>
+            </FrameLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardContact3"
             style="@style/ContactCard">
-            <LinearLayout
-                android:orientation="vertical"
-                android:gravity="center"
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/imgAvatar3"
-                    android:layout_width="96dp"
-                    android:layout_height="96dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:scaleType="centerCrop"
                     android:src="@drawable/ic_person"
-                    app:tint="?attr/colorOnSurfaceVariant"
                     app:shapeAppearanceOverlay="@style/AvatarRounded" />
-                <TextView
-                    android:id="@+id/tvName3"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:id="@+id/nameBox3"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/contact_add"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorOnSurface"
-                    android:layout_marginTop="12dp"
-                    android:ellipsize="end"
-                    android:maxLines="1" />
-            </LinearLayout>
+                    android:layout_gravity="bottom"
+                    android:background="#B3000000"
+                    android:gravity="center"
+                    android:padding="6dp">
+                    <TextView
+                        android:id="@+id/tvName3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/contact_add"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white"
+                        android:ellipsize="end"
+                        android:maxLines="1" />
+                </LinearLayout>
+            </FrameLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <!-- 电量卡片（正常态中性色，低于20%自动转红） -->

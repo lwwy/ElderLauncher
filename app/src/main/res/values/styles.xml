@@ -57,7 +57,7 @@
         <item name="cardBackgroundColor">?attr/colorSurfaceVariant</item>
         <item name="cardCornerRadius">24dp</item>
         <item name="cardElevation">1dp</item>
-        <item name="contentPadding">12dp</item>
+        <item name="contentPadding">0dp</item>
         <item name="strokeColor">?attr/colorOutline</item>
         <item name="strokeWidth">1dp</item>
     </style>
@@ -68,10 +68,10 @@
         <item name="cornerSize">50%</item>
     </style>
 
-    <!-- 圆角矩形头像（用于首页联系人卡片，呼应图片） -->
+    <!-- 圆角矩形头像（用于首页联系人卡片，呼应图片；与卡片圆角一致以便填满） -->
     <style name="AvatarRounded">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">16dp</item>
+        <item name="cornerSize">24dp</item>
     </style>
 
     <!-- 设置页小头像缩略图 -->
