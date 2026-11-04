@@ -30,7 +30,6 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var tvAmpm: TextView
     private lateinit var tvBattery: TextView
     private lateinit var tvBatteryLabel: TextView
-    private lateinit var imgBattery: ImageView
     private lateinit var cardBattery: MaterialCardView
 
     private val cardIds = intArrayOf(
@@ -84,7 +83,6 @@ class HomeActivity : AppCompatActivity() {
         tvAmpm = findViewById(R.id.tvAmpm)
         tvBattery = findViewById(R.id.tvBattery)
         tvBatteryLabel = findViewById(R.id.tvBatteryLabel)
-        imgBattery = findViewById(R.id.imgBattery)
         cardBattery = findViewById(R.id.cardBattery)
         CrashLogger.trace("findViewById 完成")
 
@@ -123,10 +121,6 @@ class HomeActivity : AppCompatActivity() {
             KeepAliveService.start(this)
             CrashLogger.trace("KeepAliveService.start 调用完成")
         }
-
-        // 注册为系统可拨号账号（设为默认电话应用后由系统路由来电/去电）
-        TelecomHelper.register(this)
-        CrashLogger.trace("TelecomHelper.register 完成")
 
         requestNotifPermission()
         CrashLogger.trace("HomeActivity.onCreate 结束")
@@ -185,7 +179,6 @@ class HomeActivity : AppCompatActivity() {
             this, if (low) R.color.colorBatteryLowBg else R.color.colorBatteryNormalBg
         )
         cardBattery.setCardBackgroundColor(bg)
-        imgBattery.setColorFilter(fg, android.graphics.PorterDuff.Mode.SRC_IN)
         tvBattery.setTextColor(fg)
         tvBatteryLabel.setTextColor(fg)
     }

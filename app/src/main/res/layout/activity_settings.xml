@@ -92,6 +92,12 @@
                     <TextView android:text="@string/set_incoming" android:textSize="22sp"
                         android:textColor="?attr/colorOnSurface"
                         android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestIncoming"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/btn_test" />
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/swIncoming"
                         android:layout_width="wrap_content" android:layout_height="wrap_content" />
@@ -106,6 +112,12 @@
                     <TextView android:text="@string/set_lowbattery" android:textSize="22sp"
                         android:textColor="?attr/colorOnSurface"
                         android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestLow"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/btn_test" />
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/swLow"
                         android:layout_width="wrap_content" android:layout_height="wrap_content" />
@@ -191,17 +203,6 @@
                     android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:text="@string/set_default_launcher" />
                 <TextView android:text="@string/set_default_tip" android:textSize="14sp"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="8dp" />
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnDefaultDialer"
-                    style="@style/BigButton"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:text="@string/set_default_dialer"
-                    android:layout_marginTop="4dp" />
-                <TextView android:text="@string/set_default_dialer_tip" android:textSize="14sp"
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

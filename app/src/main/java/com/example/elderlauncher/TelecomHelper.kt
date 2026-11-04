@@ -1,35 +1,30 @@
 package com.example.elderlauncher
 
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.telecom.PhoneAccount
 import android.telecom.PhoneAccountHandle
 import android.telecom.TelecomManager
 import android.util.Log
 
-/** 通话相关工具：注册 PhoneAccount、发起呼出 */
+/**
+ * 通话相关工具：发起呼出。
+ *
+ * 本应用不再注册自己的 PhoneAccount（那个账号没有蜂窝能力，只会让呼出卡在"拨号中"），
+ * 一律走运营商 SIM 账号或系统拨号器。
+ */
 object TelecomHelper {
-    const val ACCOUNT_ID = "elder_account"
-
-    fun getHandle(context: Context): PhoneAccountHandle =
-        PhoneAccountHandle(ComponentName(context, ElderConnectionService::class.java), ACCOUNT_ID)
 
     /**
      * 取一个"真正能打电话"的账号（运营商 SIM）。
-     *
-     * 注意：绝不能返回本应用自己注册的 [ElderConnectionService] 账号——那个账号只是
-     * 为了让系统把本应用识别为拨号器，本身没有蜂窝能力，路由过去只会一直停在"拨号中"。
+     * 排除本应用名下的账号，优先系统给出的 simCallManager。
      */
     fun simAccount(context: Context): PhoneAccountHandle? {
         return try {
             val tm = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
             val accounts = tm.callCapablePhoneAccounts ?: return null
-            // 排除本应用自建的账号，优先系统给出的 simCallManager
             val others = accounts.filter {
                 it.componentName?.packageName != context.packageName
             }
@@ -50,29 +45,11 @@ object TelecomHelper {
         }
     }
 
-    /** 注册本应用为可拨号账号（设为默认电话应用后由系统路由来电/去电） */
-    fun register(context: Context) {
-        try {
-            val tm = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-            val handle = getHandle(context)
-            val account = PhoneAccount.builder(handle, context.getString(R.string.app_name))
-                .setCapabilities(PhoneAccount.CAPABILITY_CALL_PROVIDER)
-                .setIcon(Icon.createWithResource(context, R.drawable.ic_launcher_foreground))
-                .build()
-            tm.registerPhoneAccount(account)
-            CrashLogger.trace("registerPhoneAccount 成功")
-        } catch (e: Exception) {
-            CrashLogger.trace("registerPhoneAccount 失败: ${e.javaClass.name}: ${e.message}")
-            Log.e("TelecomHelper", "register failed", e)
-        }
-    }
-
     /**
      * 发起呼出电话。
      *
-     * 默认电话应用时用 [TelecomManager.placeCall]，但**必须**把 EXTRA_PHONE_ACCOUNT_HANDLE
-     * 指向真实 SIM 账号（而不是本应用的假账号），否则系统会显示"正在拨号"却永远不接通。
-     * 非默认电话应用时退回 ACTION_CALL，交给系统拨号器处理。
+     * 默认电话应用时用 [TelecomManager.placeCall]，并且把 EXTRA_PHONE_ACCOUNT_HANDLE
+     * 指向真实 SIM 账号；否则退回 ACTION_CALL 交给系统拨号器处理。
      */
     fun placeCall(context: Context, number: String) {
         if (number.isBlank()) return

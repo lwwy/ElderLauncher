@@ -37,8 +37,40 @@ object LocalContacts {
     }
 
     fun delete(ctx: Context, i: Int) {
-        sp(ctx).edit().remove(key(i)).apply()
+        removeRecord(ctx, i)
         avatarFile(ctx, i).delete()
+    }
+
+    private fun removeRecord(ctx: Context, i: Int) {
+        sp(ctx).edit().remove(key(i)).apply()
+    }
+
+    /**
+     * 交换两个槽位（联系人 + 头像），用于设置页的排序。
+     * 桌面按槽位 0/1/2 顺序渲染，交换后回到桌面即为新顺序。
+     */
+    fun swap(ctx: Context, a: Int, b: Int) {
+        if (a == b) return
+        val ca = get(ctx, a)
+        val cb = get(ctx, b)
+        swapAvatar(ctx, avatarFile(ctx, a), avatarFile(ctx, b))
+        if (cb != null) set(ctx, a, cb) else removeRecord(ctx, a)
+        if (ca != null) set(ctx, b, ca) else removeRecord(ctx, b)
+    }
+
+    private fun swapAvatar(ctx: Context, fa: File, fb: File) {
+        val tmp = File(ctx.cacheDir, "swap_avatar.tmp")
+        val hasA = fa.exists()
+        val hasB = fb.exists()
+        try {
+            if (hasA) fa.copyTo(tmp, overwrite = true)
+            if (hasB) fb.copyTo(fa, overwrite = true) else fa.delete()
+            if (hasA) tmp.copyTo(fb, overwrite = true) else fb.delete()
+        } catch (_: Exception) {
+            // 头像交换失败不影响姓名/电话的顺序
+        } finally {
+            tmp.delete()
+        }
     }
 
     fun avatarFile(ctx: Context, i: Int): File {

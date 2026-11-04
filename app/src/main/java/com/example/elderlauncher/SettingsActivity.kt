@@ -1,10 +1,8 @@
 package com.example.elderlauncher
 
-import android.app.role.RoleManager
 import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.LinearLayout
@@ -17,10 +15,6 @@ import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.switchmaterial.SwitchMaterial
 
 class SettingsActivity : AppCompatActivity() {
-
-    companion object {
-        private const val REQ_DIALER_ROLE = 1001
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,58 +44,33 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
-        // 设为默认电话应用：API 29+ 直接弹系统角色选择框（需 DIAL 带 tel scheme 才有候选资格），
-        // 其余情况回退到系统"默认应用"设置页由用户手动选择。
-        findViewById<MaterialButton>(R.id.btnDefaultDialer).setOnClickListener {
-            requestDialerRole()
+        // 播报测试：点一下就能听到实际效果，便于确认系统语音引擎是否正常
+        findViewById<MaterialButton>(R.id.btnTestIncoming).setOnClickListener {
+            testAnnounce(getString(R.string.test_incoming_text))
+        }
+        findViewById<MaterialButton>(R.id.btnTestLow).setOnClickListener {
+            testAnnounce(getString(R.string.test_low_text))
         }
     }
 
-    private fun isDefaultDialer(): Boolean = try {
-        val tm = getSystemService(TELECOM_SERVICE) as android.telecom.TelecomManager
-        tm.defaultDialerPackage == packageName
-    } catch (e: Exception) {
-        false
-    }
-
-    private fun requestDialerRole() {
-        if (isDefaultDialer()) {
-            Toast.makeText(this, R.string.set_default_dialer_already, Toast.LENGTH_SHORT).show()
-            return
-        }
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val rm = getSystemService(RoleManager::class.java)
-                if (rm != null && rm.isRoleAvailable(RoleManager.ROLE_DIALER)) {
-                    startActivityForResult(
-                        rm.createRequestRoleIntent(RoleManager.ROLE_DIALER),
-                        REQ_DIALER_ROLE
-                    )
-                    return
+    /** 播放一次示例播报，并在引擎不可用时给出提示 */
+    private fun testAnnounce(text: String) {
+        TtsManager.speakNow(this, text)
+        Toast.makeText(this, R.string.test_playing, Toast.LENGTH_SHORT).show()
+        if (!TtsManager.isReady()) {
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                if (!TtsManager.isReady()) {
+                    Toast.makeText(this, R.string.tts_unavailable, Toast.LENGTH_LONG).show()
                 }
-            }
-        } catch (e: Exception) {
-            CrashLogger.trace("请求拨号器角色失败: ${e.javaClass.name}: ${e.message}")
-        }
-        // 回退：打开系统默认应用设置页
-        try {
-            Toast.makeText(this, R.string.set_default_dialer_toast, Toast.LENGTH_LONG).show()
-            startActivity(Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))
-        } catch (e: Exception) {
-            Toast.makeText(this, R.string.set_default_dialer_failed, Toast.LENGTH_LONG).show()
+            }, 2000)
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQ_DIALER_ROLE) {
-            val ok = isDefaultDialer()
-            Toast.makeText(
-                this,
-                if (ok) R.string.set_default_dialer_ok else R.string.set_default_dialer_failed,
-                Toast.LENGTH_LONG
-            ).show()
-        }
+    /** 交换联系人槽位（桌面按槽位顺序渲染，返回桌面即生效） */
+    private fun moveContact(from: Int, to: Int) {
+        if (to < 0 || to >= LocalContacts.COUNT) return
+        LocalContacts.swap(this, from, to)
+        buildContactRows()
     }
 
     /** 每次回到设置页都重建联系人列表，确保编辑/保存后实时刷新头像与姓名 */
@@ -146,6 +115,33 @@ class SettingsActivity : AppCompatActivity() {
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
 
+            val up = MaterialButton(this).apply {
+                text = "↑"
+                textSize = 18f
+                isEnabled = i > 0
+                minWidth = 0
+                minimumWidth = 0
+                insetTop = 0
+                insetBottom = 0
+                setPadding(0, 0, 0, 0)
+                contentDescription = getString(R.string.move_up)
+                setOnClickListener { moveContact(i, i - 1) }
+                layoutParams = LinearLayout.LayoutParams(dp(44), dp(44)).apply { marginStart = 4 }
+            }
+            val down = MaterialButton(this).apply {
+                text = "↓"
+                textSize = 18f
+                isEnabled = i < LocalContacts.COUNT - 1
+                minWidth = 0
+                minimumWidth = 0
+                insetTop = 0
+                insetBottom = 0
+                setPadding(0, 0, 0, 0)
+                contentDescription = getString(R.string.move_down)
+                setOnClickListener { moveContact(i, i + 1) }
+                layoutParams = LinearLayout.LayoutParams(dp(44), dp(44)).apply { marginStart = 4 }
+            }
+
             val edit = MaterialButton(this).apply {
                 text = getString(R.string.edit_contact)
                 setOnClickListener {
@@ -170,10 +166,14 @@ class SettingsActivity : AppCompatActivity() {
             }
             row.addView(avatar)
             row.addView(tv)
+            row.addView(up)
+            row.addView(down)
             row.addView(edit)
             container.addView(row)
         }
     }
+
+    private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
 
     private fun openAutostart() {
         val pm = packageManager

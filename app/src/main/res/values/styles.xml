@@ -53,8 +53,8 @@
          避免 0dp+weight 写在 style 里、GridView 权重不生效时卡片高度塌成 0。 -->
     <style name="ContactCard" parent="Widget.Material3.CardView.Filled">
         <item name="cardBackgroundColor">?attr/colorSurfaceVariant</item>
-        <item name="cardCornerRadius">24dp</item>
-        <item name="cardElevation">1dp</item>
+        <item name="cardCornerRadius">0dp</item>
+        <item name="cardElevation">0dp</item>
         <item name="contentPadding">0dp</item>
         <item name="strokeColor">?attr/colorOutline</item>
         <item name="strokeWidth">1dp</item>
@@ -66,10 +66,10 @@
         <item name="cornerSize">50%</item>
     </style>
 
-    <!-- 圆角矩形头像（用于首页联系人卡片，呼应图片；与卡片圆角一致以便填满） -->
+    <!-- 直角头像（与首页直角卡片保持一致，避免四角露出卡片底色） -->
     <style name="AvatarRounded">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">24dp</item>
+        <item name="cornerSize">0dp</item>
     </style>
 
     <!-- 设置页小头像缩略图 -->

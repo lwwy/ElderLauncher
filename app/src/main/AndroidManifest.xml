@@ -73,16 +73,6 @@
             android:showWhenLocked="true"
             android:turnScreenOn="true" />
 
-        <!-- 通话连接服务（成为默认电话应用所必需） -->
-        <service
-            android:name=".ElderConnectionService"
-            android:exported="false"
-            android:permission="android.permission.BIND_CONNECTION_SERVICE">
-            <intent-filter>
-                <action android:name="android.telecom.ConnectionService" />
-            </intent-filter>
-        </service>
-
         <!-- 通话界面服务 -->
         <service
             android:name=".ElderInCallService"

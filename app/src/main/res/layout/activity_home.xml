@@ -7,19 +7,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 顶部：蓝色时间卡片（设置入口叠在右上角） -->
+    <!-- 顶部：时间卡片（直角，柔和雾蓝） -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="14dp">
+        android:layout_marginBottom="12dp">
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardTime"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardBackgroundColor="@color/colorTimeCard"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="1dp"
+            app:cardCornerRadius="0dp"
+            app:cardElevation="0dp"
             app:contentPadding="20dp">
 
             <LinearLayout
@@ -74,7 +74,7 @@
         </com.google.android.material.card.MaterialCardView>
 
         <!-- 设置入口：右上角（看护人使用）。
-             注意：必须给 elevation 高于 cardTime（1dp），否则会被卡片按 Z 轴盖住而看不见。 -->
+             给按钮 elevation 高于底部卡片，避免被按 Z 轴盖住而看不见。 -->
         <ImageButton
             android:id="@+id/btnSettings"
             android:layout_width="56dp"
@@ -111,7 +111,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="7dp">
+                android:layout_marginEnd="6dp">
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
@@ -150,7 +150,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginStart="7dp">
+                android:layout_marginStart="6dp">
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
@@ -189,7 +189,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="14dp">
+            android:layout_marginTop="12dp">
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardContact3"
@@ -197,7 +197,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="7dp">
+                android:layout_marginEnd="6dp">
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
@@ -230,54 +230,49 @@
                 </FrameLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- 电量卡片（正常态中性色，低于20%自动转红） -->
+            <!-- 电量卡片：去掉电池图标，只留「电量」小字 + 大数字 -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardBattery"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginStart="7dp"
+                android:layout_marginStart="6dp"
                 app:cardBackgroundColor="@color/colorBatteryNormalBg"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="1dp"
-                app:contentPadding="16dp">
+                app:cardCornerRadius="0dp"
+                app:cardElevation="0dp"
+                app:contentPadding="12dp">
 
                 <LinearLayout
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical|center_horizontal"
+                    android:orientation="vertical"
+                    android:gravity="center"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
 
-                    <ImageView
-                        android:id="@+id/imgBattery"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_battery"
-                        app:tint="@color/colorBatteryNormalFg" />
-
-                    <LinearLayout
-                        android:orientation="vertical"
+                    <TextView
+                        android:id="@+id/tvBatteryLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp">
-                        <TextView
-                            android:id="@+id/tvBatteryLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/home_battery"
-                            android:textSize="20sp"
-                            android:textColor="@color/colorBatteryNormalFg" />
-                        <TextView
-                            android:id="@+id/tvBattery"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textSize="44sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/colorBatteryNormalFg" />
-                    </LinearLayout>
+                        android:text="@string/home_battery"
+                        android:textSize="15sp"
+                        android:textColor="@color/colorBatteryNormalFg" />
+
+                    <TextView
+                        android:id="@+id/tvBattery"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textSize="60sp"
+                        android:textStyle="bold"
+                        android:includeFontPadding="false"
+                        android:textColor="@color/colorBatteryNormalFg" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </LinearLayout>
+
+    <!-- 底部留白：让卡片不再顶满整屏，视觉上更透气 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.34" />
 </LinearLayout>
