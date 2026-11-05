@@ -90,12 +90,11 @@
     <string name="export_log_saved">日志已生成：%1$s\n同时已保存到「下载」目录</string>
     <string name="export_log_failed">导出失败，请稍后重试</string>
 
-    <!-- 自启动 / 保活 -->
+    <!-- 自启动 / 后台运行：国产 ROM 需放行，开机广播与来电广播才能可靠送达 -->
     <string name="btn_autostart">自启动权限</string>
     <string name="autostart_tip">开启自启动与后台运行，手机重启后自动进入桌面</string>
     <string name="btn_battery">忽略电池优化</string>
-    <string name="battery_tip">允许后台运行，避免被系统清理导致来电异常</string>
-    <string name="keepalive_notice">老人桌面正在后台运行，保持来电与通话正常</string>
+    <string name="battery_tip">允许后台运行，保证开机与来电提醒不被系统拦截</string>
     <string name="autostart_opened">正在打开自启动设置，请允许“老人桌面”自启动与后台运行</string>
     <string name="autostart_failed">未能自动打开自启动设置，请到“设置 → 应用 → 老人桌面”中手动开启自启动与后台运行</string>
     <string name="battery_done">已请求忽略电池优化，请在弹窗中点击“允许”</string>

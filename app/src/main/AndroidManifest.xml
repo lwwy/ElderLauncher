@@ -12,11 +12,9 @@
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
-    <!-- 自启动与后台保活 -->
+    <!-- 开机自启：重启后拉起桌面（静态 BOOT_COMPLETED 属隐式广播豁免）。
+         应用无常驻前台服务，故不再声明 FOREGROUND_SERVICE / POST_NOTIFICATIONS 等权限。 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- 注意：本应用为纯本地应用，不使用 INTERNET 权限 -->
 
@@ -94,12 +92,6 @@
                 <action android:name="android.telecom.InCallService" />
             </intent-filter>
         </service>
-
-        <!-- 后台保活前台服务（dataSync 类型：通用、无默认拨号器前置条件） -->
-        <service
-            android:name="com.example.elderlauncher.service.KeepAliveService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
 
         <!-- 系统广播接收器：只接收系统发出的广播，不对外暴露，
              避免第三方应用伪造「电量不足/来电」触发播报 -->

@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.elderlauncher"
         minSdk = 24
         targetSdk = 34
-        versionCode = 12
-        versionName = "1.1.1"
+        versionCode = 14
+        versionName = "1.2.0"
     }
 
     // 固定签名：保证每次构建（换机器/换环境）证书一致，

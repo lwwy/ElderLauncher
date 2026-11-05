@@ -8,6 +8,7 @@ import android.provider.Settings
 import android.speech.tts.TextToSpeech
 import android.telephony.TelephonyManager
 import androidx.test.core.app.ApplicationProvider
+import com.example.elderlauncher.core.LowBatteryAnnouncer
 import com.example.elderlauncher.core.TtsManager
 import com.example.elderlauncher.data.LocalContacts
 import com.example.elderlauncher.data.Prefs
@@ -71,6 +72,7 @@ class P0FixesTest {
     fun setUp() {
         app = ApplicationProvider.getApplicationContext()
         TtsManager.shutdown()      // object 单例，避免用例间互相污染
+        LowBatteryAnnouncer.resetForTest()  // 低电量去重状态同样跨用例，需复位
         ShadowTextToSpeech.reset()
         // 让 TtsManager 能拿到一个"默认引擎"，否则它会判定系统没装引擎而不创建实例
         Settings.Secure.putString(

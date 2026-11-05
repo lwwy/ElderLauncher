@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.example.elderlauncher.R
+import com.example.elderlauncher.phone.CallThrottle
 import com.example.elderlauncher.phone.TelecomHelper
 import com.google.android.material.button.MaterialButton
 
@@ -74,6 +75,9 @@ class DialerActivity : AppCompatActivity() {
 
     private fun call() {
         if (number.isEmpty()) return
+        // 防连点：窗口内的重复点击直接忽略，避免叠出两层系统拨号界面/重复弹权限框。
+        // 授权后的自动重拨走 onCallPermissionResult，不经过这里，不受节流影响。
+        if (!CallThrottle.tryAcquire()) return
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
             != PackageManager.PERMISSION_GRANTED
         ) {

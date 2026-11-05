@@ -4,11 +4,13 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import com.example.elderlauncher.phone.CallThrottle
 import com.example.elderlauncher.ui.DialerActivity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -33,6 +35,13 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = android.app.Application::class)
 class CallPermissionReplayTest {
+
+    // CallThrottle 是进程级单例，用例间会残留；每个用例先复位，
+    // 否则「上一个用例刚点过」会让本用例首次拨号被误挡。
+    @Before
+    fun setUp() {
+        CallThrottle.resetForTest()
+    }
 
     private fun launch(): DialerActivity {
         return Robolectric.buildActivity(DialerActivity::class.java)

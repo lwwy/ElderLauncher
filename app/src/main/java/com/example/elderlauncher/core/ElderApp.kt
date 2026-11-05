@@ -9,28 +9,23 @@ import android.widget.Toast
 /**
  * 全局入口：安装崩溃日志捕获，并在启动时把上次的诊断日志导出到「下载」目录，
  * 方便用文件管理器直接取出后反馈。
+ *
+ * 不再承担任何「保活/安全模式」职责：应用无常驻前台服务，
+ * 来电/通话能力由系统按需拉起的广播接收器与绑定服务提供。
  */
 class ElderApp : Application() {
 
-    /** 上次启动是否没走到桌面就结束了（崩溃或被系统强杀） */
+    /** 上次启动是否没走到桌面就结束了（崩溃或被系统强杀），仅用于导出诊断轨迹 */
     private var lastSessionAbnormal = false
-
-    /**
-     * 安全模式：上次启动异常时，本次先不启动保活前台服务，
-     * 确保至少能进到桌面并把日志留在手机里；成功启动一次后自动恢复正常。
-     */
-    var skipKeepAliveOnce = false
-        private set
 
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
         // 尽早安装捕获器，Application 之后发生的任何崩溃都能记录
         CrashLogger.init(base)
         lastSessionAbnormal = CrashLogger.lastSessionAbnormal(base)
-        skipKeepAliveOnce = lastSessionAbnormal
         CrashLogger.markSessionStart()
         if (lastSessionAbnormal) {
-            CrashLogger.trace("检测到上次启动未完成，本次进入安全模式（跳过保活服务）")
+            CrashLogger.trace("检测到上次启动未完成，已导出运行轨迹供排查")
         }
     }
 

@@ -57,6 +57,8 @@ object Diagnostics {
         sb.appendLine("来电播报: ${onOff(Prefs.enabled(ctx, Prefs.ANN_INCOMING))}")
         sb.appendLine("低电量播报: ${onOff(Prefs.enabled(ctx, Prefs.ANN_LOW))}")
         sb.appendLine("默认桌面: ${if (isDefaultHome(ctx)) "是" else "否"}")
+        // 显式传默认 false：该项默认应为“关闭”（显示齿轮），与 enabled() 的默认 true 相反
+        sb.appendLine("隐藏设置入口: ${onOff(Prefs.enabled(ctx, Prefs.HIDE_HOME_SETTINGS, false))}")
         sb.appendLine("常用联系人: ${contactSummary(ctx)}")
         sb.appendLine()
 
@@ -73,13 +75,11 @@ object Diagnostics {
             "READ_CONTACTS" to android.Manifest.permission.READ_CONTACTS,
             "CAMERA" to android.Manifest.permission.CAMERA,
             "READ_PHONE_STATE" to android.Manifest.permission.READ_PHONE_STATE,
-            "ANSWER_PHONE_CALLS" to "android.permission.ANSWER_PHONE_CALLS",
-            "POST_NOTIFICATIONS" to "android.permission.POST_NOTIFICATIONS"
+            "ANSWER_PHONE_CALLS" to "android.permission.ANSWER_PHONE_CALLS"
         )
         for ((label, p) in perms) {
             sb.appendLine("$label: ${permState(ctx, p)}")
         }
-        sb.appendLine("通知使用权: ${if (hasNotificationListener(ctx)) "已开启" else "未开启"}")
         sb.appendLine()
 
         sb.appendLine("---------- 崩溃记录 ----------")
@@ -121,19 +121,6 @@ object Diagnostics {
         ) "已授权" else "未授权"
     } catch (_: Throwable) {
         "未知"
-    }
-
-    /**
-     * 通知使用权（读取通知栏）是否开启。保活服务依赖它做兜底，
-     * 属关键排查项，但查询失败不影响日志生成。
-     */
-    private fun hasNotificationListener(ctx: Context): Boolean = try {
-        val enabled = android.provider.Settings.Secure.getString(
-            ctx.contentResolver, "enabled_notification_listeners"
-        )
-        enabled != null && enabled.contains(ctx.packageName)
-    } catch (_: Throwable) {
-        false
     }
 
     private fun crashSummary(ctx: Context): List<String> = try {

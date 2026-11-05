@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.BatteryManager
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -21,13 +20,13 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.elderlauncher.R
 import com.example.elderlauncher.core.CrashLogger
-import com.example.elderlauncher.core.ElderApp
+import com.example.elderlauncher.core.LowBatteryAnnouncer
 import com.example.elderlauncher.core.LunarUtil
 import com.example.elderlauncher.core.TtsManager
 import com.example.elderlauncher.data.LocalContacts
 import com.example.elderlauncher.data.Prefs
+import com.example.elderlauncher.phone.CallThrottle
 import com.example.elderlauncher.phone.TelecomHelper
-import com.example.elderlauncher.service.KeepAliveService
 import com.google.android.material.card.MaterialCardView
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -43,6 +42,9 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var tvBattery: TextView
     private lateinit var tvBatteryLabel: TextView
     private lateinit var cardBattery: MaterialCardView
+
+    // 右上角设置齿轮：声明为字段，供 onCreate 绑定点击、并在每次 onResume 重复应用显隐
+    private lateinit var btnSettings: View
 
     private val cardIds = intArrayOf(
         R.id.cardContact1, R.id.cardContact2, R.id.cardContact3
@@ -77,12 +79,6 @@ class HomeActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission()
     ) { granted -> onCallPermissionResult(granted) }
 
-    // 通知权限为可选增强（来电/低电量播报依赖系统 TTS，不依赖通知栏），
-    // 授权与否都不影响主流程，因此回调里无需额外处理。
-    private val notifPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { /* 无需处理 */ }
-
     companion object {
         // 用于 onSaveInstanceState 暂存待拨号码的 key
         private const val KEY_PENDING_CALL = "pending_call_number"
@@ -101,6 +97,11 @@ class HomeActivity : AppCompatActivity() {
             val scale = i?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
             val pct = if (level >= 0 && scale > 0) level * 100 / scale else -1
             updateBattery(pct)
+            // ACTION_BATTERY_CHANGED 是粘性广播，动态注册时会立即回调一次，
+            // 之后电量每变化也会回调。交给统一状态机做「跨阈值只播一次」判定，
+            // 替代在 Android 8+ 基本收不到的静态 ACTION_BATTERY_LOW。
+            val plugged = (i?.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) ?: 0) != 0
+            LowBatteryAnnouncer.onBatteryChanged(this@HomeActivity, pct, plugged)
         }
     }
 
@@ -132,19 +133,13 @@ class HomeActivity : AppCompatActivity() {
         cardBattery = findViewById(R.id.cardBattery)
         CrashLogger.trace("findViewById 完成")
 
-        // 设置入口：右上角齿轮（看护人使用）。
-        // 若用户在设置里开启了“隐藏设置入口”，则隐藏该图标；
-        // 隐藏后仍可用“连点时间区域 5 下”进入设置（见下方 timeBlock 监听）。
-        findViewById<android.view.View>(R.id.btnSettings).apply {
-            visibility = if (Prefs.enabled(this@HomeActivity, Prefs.HIDE_HOME_SETTINGS, false)) {
-                View.GONE
-            } else {
-                View.VISIBLE
-            }
-            setOnClickListener {
-                startActivity(Intent(this@HomeActivity, SettingsActivity::class.java))
-            }
+        // 设置入口：右上角齿轮（看护人使用）。点击监听只绑定一次，
+        // 显隐交给 applySettingsVisibility()，在 onCreate 与每次 onResume 都重新读取开关。
+        btnSettings = findViewById(R.id.btnSettings)
+        btnSettings.setOnClickListener {
+            startActivity(Intent(this@HomeActivity, SettingsActivity::class.java))
         }
+        applySettingsVisibility()
 
         // 时间区：连点 5 次进入设置（隐藏入口）
         findViewById<android.view.View>(R.id.timeBlock).setOnClickListener {
@@ -167,18 +162,6 @@ class HomeActivity : AppCompatActivity() {
         updateClock()
         CrashLogger.trace("updateClock 完成")
 
-        // 启动后台保活前台服务（保证来电/通话不被系统回收）
-        // 安全模式：上次启动异常时本次跳过，确保能进桌面
-        val app = application as? ElderApp
-        if (app?.skipKeepAliveOnce == true) {
-            CrashLogger.trace("安全模式：本次跳过 KeepAliveService")
-        } else {
-            KeepAliveService.start(this)
-            CrashLogger.trace("KeepAliveService.start 调用完成")
-        }
-
-        requestNotifPermission()
-
         // 拦截返回键：本页就是桌面，按返回不应退到别的桌面去。
         // 老人误触返回的概率很高，退出后看到陌生的系统桌面会找不到回来的路，
         // 所以这里直接吞掉这个手势，只给一句提示。
@@ -191,6 +174,20 @@ class HomeActivity : AppCompatActivity() {
         })
 
         CrashLogger.trace("HomeActivity.onCreate 结束")
+    }
+
+    /**
+     * 按“隐藏设置入口”开关刷新右上角齿轮的显隐。
+     *
+     * 桌面是常驻 Activity：从设置页返回只会走 onResume，不会重新 onCreate。
+     * 因此显隐不能只在 onCreate 设置一次，必须在每次 onResume 重新读取开关，
+     * 否则“设置里打开开关 → 返回桌面”时图标不会消失。
+     * 隐藏后仍可用“连点时间区域 5 下”进入设置（见 timeBlock 监听），照顾人不受影响。
+     */
+    private fun applySettingsVisibility() {
+        btnSettings.visibility =
+            if (Prefs.enabled(this, Prefs.HIDE_HOME_SETTINGS, false)) View.GONE
+            else View.VISIBLE
     }
 
     private fun onCardClick(i: Int) {
@@ -255,6 +252,9 @@ class HomeActivity : AppCompatActivity() {
 
     private fun call(number: String) {
         if (number.isEmpty()) return
+        // 防连点：窗口内的重复点击直接忽略，避免叠出两层系统拨号界面/重复弹权限框。
+        // 授权后的自动重拨走 onCallPermissionResult，不经过这里，不受节流影响。
+        if (!CallThrottle.tryAcquire()) return
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
             != PackageManager.PERMISSION_GRANTED
         ) {
@@ -293,15 +293,6 @@ class HomeActivity : AppCompatActivity() {
         tvLunar.text = LunarUtil.getLunar(now)
     }
 
-    private fun requestNotifPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString(KEY_PENDING_CALL, pendingCallNumber)
@@ -310,6 +301,8 @@ class HomeActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         CrashLogger.trace("HomeActivity.onResume 开始")
+        // 从设置页返回桌面只走 onResume，这里必须重新应用开关，隐藏/恢复才能即时生效
+        applySettingsVisibility()
         updateClock()
         refreshContacts()
         handler.post(clockRunnable)
