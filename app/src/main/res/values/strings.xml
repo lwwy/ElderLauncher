@@ -15,10 +15,13 @@
     <string name="contact_phone_hint">电话号码</string>
     <string name="save_contact">保存</string>
     <string name="delete_contact">删除</string>
+    <!-- 删除联系人确认弹窗 -->
+    <string name="confirm_delete_title">确认删除</string>
+    <string name="confirm_delete_msg">确定要删除联系人 %1$s 吗？</string>
+    <string name="cancel">取消</string>
     <string name="contact_empty_name">请填写姓名</string>
     <string name="contact_empty_phone">请填写电话号码</string>
     <string name="avatar_failed">图片读取失败，请重试</string>
-    <string name="camera_denied">未授予相机权限，无法拍照</string>
     <string name="contact_saved">已保存</string>
     <string name="contact_deleted">已删除</string>
     <string name="edit_contact">编辑</string>
@@ -42,7 +45,7 @@
     <string name="restore_system_home_tip">取消老人桌面的默认桌面设置，回到手机原来的桌面。适合临时使用或需要进入系统桌面时</string>
     <string name="restore_system_home_ok">已取消老人桌面的默认桌面设置，按 Home 键即可回到系统桌面</string>
     <string name="restore_system_home_failed">未能自动取消，已为你打开系统桌面设置，请手动选择其他桌面</string>
-    <string name="btn_test">测试</string>
+    <string name="btn_test">▶ 测试</string>
     <!-- 播报文案：来电/低电量播报与设置页「测试」按钮共用同一份，避免两处各写一遍 -->
     <string name="ann_incoming">来电，%1$s</string>
     <string name="ann_unknown_number">未知号码</string>
@@ -96,7 +99,7 @@
     <string name="battery_placeholder" translatable="false">--</string>
     <string name="home_date">%1$d月%2$d日 %3$s</string>
     <!-- 设置页联系人行：序号 + 姓名 -->
-    <string name="contact_row_label">联系人 %1$d：%2$s</string>
     <!-- 首页拦截返回键时的提示（不退出桌面，只给一句反馈） -->
     <string name="home_back_blocked">这已经是桌面首页了</string>
+    <string name="call_perm_denied">未授予电话权限，无法拨号。请在设置中开启“电话”权限</string>
 </resources>

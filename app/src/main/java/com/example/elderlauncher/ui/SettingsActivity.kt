@@ -225,10 +225,10 @@ class SettingsActivity : AppCompatActivity() {
         for (i in 0 until LocalContacts.COUNT) {
             val row = layoutInflater.inflate(R.layout.item_contact_row, container, false)
             val contact = LocalContacts.get(this, i)
+            // 名字标签只显示名字本身（没有就显示“未添加”），避免“联系人N：名字”折行挤占头像空间
             val name = contact?.name?.takeIf { it.isNotEmpty() } ?: getString(R.string.fav_not_set)
 
-            row.findViewById<TextView>(R.id.tvContactLabel).text =
-                getString(R.string.contact_row_label, i + 1, name)
+            row.findViewById<TextView>(R.id.tvContactLabel).text = name
 
             val avatar = row.findViewById<ShapeableImageView>(R.id.imgContactAvatar)
             val bmp = LocalContacts.loadAvatar(this, i)

@@ -103,7 +103,7 @@
         <item name="cornerRadius">@dimen/cornerLarge</item>
     </style>
 
-    <!-- 设置页联系人行的 ↑ ↓ 排序按钮：48dp 触摸目标（无障碍下限） -->
+    <!-- 设置页联系人行的 ↑ ↓ 排序按钮：无背景、无阴影的纯箭头，48dp 触摸目标（无障碍下限） -->
     <style name="MoveButton" parent="Widget.Material3.Button.TextButton">
         <item name="android:layout_width">@dimen/touchTarget</item>
         <item name="android:layout_height">@dimen/touchTarget</item>
@@ -114,6 +114,8 @@
         <item name="android:padding">0dp</item>
         <item name="android:layout_marginStart">4dp</item>
         <item name="android:textSize">@dimen/textLabel</item>
+        <item name="android:backgroundTint">@android:color/transparent</item>
+        <item name="elevation">0dp</item>
     </style>
 
     <!-- ==================== 卡片 / 头像 ==================== -->

@@ -65,6 +65,15 @@ class HomeActivity : AppCompatActivity() {
         "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"
     )
 
+    // 拨号前若权限未授予，先记下待拨号码，待用户在授权弹窗点“允许”后再真正发起，
+    // 避免“首次点击只弹权限框、必须再点一次才拨”的割裂体验。
+    private var pendingCallNumber: String? = null
+
+    companion object {
+        private const val REQ_CALL_PHONE = 1
+        private const val REQ_POST_NOTIF = 2
+    }
+
     private val clockRunnable = object : Runnable {
         override fun run() {
             updateClock()
@@ -222,10 +231,33 @@ class HomeActivity : AppCompatActivity() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CALL_PHONE), 1)
+            pendingCallNumber = number
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.CALL_PHONE), REQ_CALL_PHONE
+            )
             return
         }
         TelecomHelper.placeCall(this, number)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQ_CALL_PHONE) {
+            val number = pendingCallNumber
+            pendingCallNumber = null
+            if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+                && !number.isNullOrEmpty()
+            ) {
+                // 用户刚授予权限，立即发起拨号，无需再次点击
+                TelecomHelper.placeCall(this, number)
+            } else if (!number.isNullOrEmpty()) {
+                Toast.makeText(this, R.string.call_perm_denied, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun updateClock() {
@@ -247,7 +279,7 @@ class HomeActivity : AppCompatActivity() {
             != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 2
+                this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQ_POST_NOTIF
             )
         }
     }

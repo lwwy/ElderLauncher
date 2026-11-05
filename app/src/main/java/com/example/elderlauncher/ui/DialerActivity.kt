@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.GridView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.example.elderlauncher.R
@@ -20,6 +21,12 @@ class DialerActivity : AppCompatActivity() {
     private var number = ""
     private lateinit var tvNumber: TextView
     private val keys = arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#")
+    // 授权后真正发起拨号，避免“首次点击只弹权限框、再点一次才拨”的割裂体验
+    private var pendingNumber: String? = null
+
+    companion object {
+        private const val REQ_CALL_PHONE = 1
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,9 +68,31 @@ class DialerActivity : AppCompatActivity() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CALL_PHONE), 1)
+            pendingNumber = number
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.CALL_PHONE), REQ_CALL_PHONE
+            )
             return
         }
         TelecomHelper.placeCall(this, number)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQ_CALL_PHONE) {
+            val num = pendingNumber
+            pendingNumber = null
+            if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+                && !num.isNullOrEmpty()
+            ) {
+                TelecomHelper.placeCall(this, num)
+            } else if (!num.isNullOrEmpty()) {
+                Toast.makeText(this, R.string.call_perm_denied, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

@@ -1,8 +1,6 @@
 package com.example.elderlauncher.ui
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -13,12 +11,12 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.example.elderlauncher.R
 import com.example.elderlauncher.data.LocalContacts
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.textfield.TextInputEditText
 import java.io.File
@@ -104,12 +102,8 @@ class ContactEditActivity : AppCompatActivity() {
     }
 
     private fun takePhoto() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), REQ_CAMERA_PERM)
-            return
-        }
+        // 调用系统相机 App 拍照不需要本应用声明/申请 CAMERA 权限，
+        // 由系统相机自己处理授权，故直接拉起即可。
         launchCamera()
     }
 
@@ -121,21 +115,6 @@ class ContactEditActivity : AppCompatActivity() {
             addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
         }
         cameraTaker.launch(intent)
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQ_CAMERA_PERM &&
-            grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
-        ) {
-            launchCamera()
-        } else if (requestCode == REQ_CAMERA_PERM) {
-            Toast.makeText(this, R.string.camera_denied, Toast.LENGTH_SHORT).show()
-        }
     }
 
     private fun scaleDown(src: Bitmap, maxPx: Int): Bitmap {
@@ -162,14 +141,21 @@ class ContactEditActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun delete() {
-        LocalContacts.delete(this, slot)
-        Toast.makeText(this, R.string.contact_deleted, Toast.LENGTH_SHORT).show()
-        finish()
+    internal fun delete() {
+        val name = LocalContacts.get(this, slot)?.name?.takeIf { it.isNotEmpty() } ?: "该联系人"
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.confirm_delete_title)
+            .setMessage(getString(R.string.confirm_delete_msg, name))
+            .setNegativeButton(R.string.cancel) { d, _ -> d.dismiss() }
+            .setPositiveButton(R.string.delete_contact) { _, _ ->
+                LocalContacts.delete(this, slot)
+                Toast.makeText(this, R.string.contact_deleted, Toast.LENGTH_SHORT).show()
+                finish()
+            }
+            .show()
     }
 
     companion object {
         const val EXTRA_SLOT = "slot"
-        private const val REQ_CAMERA_PERM = 100
     }
 }
