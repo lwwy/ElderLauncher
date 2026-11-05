@@ -12,6 +12,7 @@ import android.provider.Settings
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -22,11 +23,22 @@ import com.example.elderlauncher.core.Diagnostics
 import com.example.elderlauncher.core.TtsManager
 import com.example.elderlauncher.data.LocalContacts
 import com.example.elderlauncher.data.Prefs
+import com.example.elderlauncher.phone.PhonePermissions
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.switchmaterial.SwitchMaterial
 
 class SettingsActivity : AppCompatActivity() {
+
+    // 来电播报开关打开、或进入设置页发现权限缺失时补一次申请。
+    // 桌面冷启动只申请一次，用户当时若点了拒绝，这里提供重新授权的机会。
+    private val announcePermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        if (result.values.any { !it }) {
+            Toast.makeText(this, R.string.phone_perm_denied, Toast.LENGTH_LONG).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,8 +49,16 @@ class SettingsActivity : AppCompatActivity() {
         val swLow = findViewById<SwitchMaterial>(R.id.swLow)
         swIncoming.isChecked = Prefs.enabled(this, Prefs.ANN_INCOMING)
         swLow.isChecked = Prefs.enabled(this, Prefs.ANN_LOW)
-        swIncoming.setOnCheckedChangeListener { _, v -> Prefs.set(this, Prefs.ANN_INCOMING, v) }
+        swIncoming.setOnCheckedChangeListener { _, v ->
+            Prefs.set(this, Prefs.ANN_INCOMING, v)
+            // 主动打开来电播报时补齐权限（用户可能在冷启动时拒绝过）
+            if (v) requestAnnouncePermissionsIfNeeded()
+        }
         swLow.setOnCheckedChangeListener { _, v -> Prefs.set(this, Prefs.ANN_LOW, v) }
+
+        // 来电播报已开启但权限未授予：进设置页再给一次申请机会，
+        // 避免冷启动那一次被拒绝后功能永久失效、用户又不知道去哪开。
+        if (swIncoming.isChecked) requestAnnouncePermissionsIfNeeded()
 
         // 桌面入口：隐藏/恢复首页右上角设置齿轮。
         // 开启后首页齿轮隐藏，但仍保留“连点时间区域 5 下进入设置”的隐藏入口。
@@ -81,6 +101,14 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.btnTestLow).setOnClickListener {
             testAnnounce(getString(R.string.ann_low_battery))
         }
+    }
+
+    /** 缺权限时才申请；已授予则静默跳过。返回是否实际发起，便于单元测试驱动。 */
+    internal fun requestAnnouncePermissionsIfNeeded(): Boolean {
+        val missing = PhonePermissions.missing(this)
+        if (missing.isEmpty()) return false
+        announcePermissionLauncher.launch(missing)
+        return true
     }
 
     /** 生成诊断日志并唤起系统分享面板，用户可直接发给开发者 */

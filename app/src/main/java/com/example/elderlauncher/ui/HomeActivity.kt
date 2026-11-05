@@ -26,6 +26,7 @@ import com.example.elderlauncher.core.TtsManager
 import com.example.elderlauncher.data.LocalContacts
 import com.example.elderlauncher.data.Prefs
 import com.example.elderlauncher.phone.CallThrottle
+import com.example.elderlauncher.phone.PhonePermissions
 import com.example.elderlauncher.phone.TelecomHelper
 import com.google.android.material.card.MaterialCardView
 import java.text.SimpleDateFormat
@@ -78,6 +79,17 @@ class HomeActivity : AppCompatActivity() {
     private val callPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> onCallPermissionResult(granted) }
+
+    // 来电播报权限：READ_PHONE_STATE + READ_CONTACTS。
+    // 只声明在 Manifest 不够，系统投递 PHONE_STATE 广播时会校验运行时权限。
+    // 拒绝时给一句可操作提示，设置页仍可再次申请。
+    private val announcePermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        if (result.values.any { !it }) {
+            Toast.makeText(this, R.string.phone_perm_denied, Toast.LENGTH_LONG).show()
+        }
+    }
 
     companion object {
         // 用于 onSaveInstanceState 暂存待拨号码的 key
@@ -173,7 +185,26 @@ class HomeActivity : AppCompatActivity() {
             }
         })
 
+        // 来电播报权限只在冷启动申请一次：桌面是常驻 Activity，onCreate 不会因
+        // 从设置页返回而重跑；旋转/重建也不重复弹，避免用户拒绝后反复打扰。
+        // 用户若当时点了拒绝，进入设置页（或重新打开来电播报开关）仍可再次申请。
+        ensureAnnouncePermissions(savedInstanceState == null)
+
         CrashLogger.trace("HomeActivity.onCreate 结束")
+    }
+
+    /**
+     * 确保来电播报所需的运行时权限已授予。
+     *
+     * 桌面只在冷启动（savedInstanceState == null）自动申请一次；从设置页返回、
+     * 旋转屏幕等场景都不重复弹权限框。返回是否实际发起了申请，便于单元测试驱动。
+     */
+    internal fun ensureAnnouncePermissions(coldStart: Boolean): Boolean {
+        if (!coldStart) return false
+        val missing = PhonePermissions.missing(this)
+        if (missing.isEmpty()) return false
+        announcePermissionLauncher.launch(missing)
+        return true
     }
 
     /**

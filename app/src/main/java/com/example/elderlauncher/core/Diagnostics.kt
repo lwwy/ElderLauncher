@@ -70,12 +70,12 @@ object Diagnostics {
         sb.appendLine()
 
         sb.appendLine("---------- 权限状态 ----------")
+        // 只列本应用会实际申请的权限。未声明/未申请的权限项会永远显示「未授权」，
+        // 干扰判断来电播报到底能不能收到广播。
         val perms = listOf(
             "CALL_PHONE" to android.Manifest.permission.CALL_PHONE,
             "READ_CONTACTS" to android.Manifest.permission.READ_CONTACTS,
-            "CAMERA" to android.Manifest.permission.CAMERA,
-            "READ_PHONE_STATE" to android.Manifest.permission.READ_PHONE_STATE,
-            "ANSWER_PHONE_CALLS" to "android.permission.ANSWER_PHONE_CALLS"
+            "READ_PHONE_STATE" to android.Manifest.permission.READ_PHONE_STATE
         )
         for ((label, p) in perms) {
             sb.appendLine("$label: ${permState(ctx, p)}")

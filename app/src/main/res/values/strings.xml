@@ -107,4 +107,5 @@
     <!-- 首页拦截返回键时的提示（不退出桌面，只给一句反馈） -->
     <string name="home_back_blocked">这已经是桌面首页了</string>
     <string name="call_perm_denied">未授予电话权限，无法拨号。请在设置中开启“电话”权限</string>
+    <string name="phone_perm_denied">来电播报需要“电话”和“通讯录”权限，请到 设置 → 应用 → 老人桌面 → 权限 中开启</string>
 </resources>

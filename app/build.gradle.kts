@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -11,18 +13,29 @@ android {
         applicationId = "com.example.elderlauncher"
         minSdk = 24
         targetSdk = 34
-        versionCode = 14
-        versionName = "1.2.0"
+        versionCode = 16
+        versionName = "1.2.2"
     }
 
-    // 固定签名：保证每次构建（换机器/换环境）证书一致，
-    // 否则覆盖安装会被系统判定为"另一个应用"，默认桌面/电话/无障碍设置全部丢失。
+    // 签名密钥与密码放在仓库根目录的 keystore.properties（已被 .gitignore 排除，绝不提交）。
+    // 全新克隆 / CI 没有该文件时，debug 使用系统默认 debug 签名、release 产出未签名包，
+    // 构建不会因缺少密钥而失败；本地配置了密钥则证书保持不变，可继续覆盖安装。
+    val keystoreProps = Properties()
+    val keystorePropsFile = rootProject.file("keystore.properties")
+    if (keystorePropsFile.exists()) {
+        keystorePropsFile.inputStream().use { keystoreProps.load(it) }
+    }
+    val hasReleaseKey = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+        .all { !keystoreProps.getProperty(it).isNullOrBlank() }
+
     signingConfigs {
-        create("elderSign") {
-            storeFile = file("<redacted>")
-            storePassword = "<redacted>"
-            keyAlias = "<redacted>"
-            keyPassword = "<redacted>"
+        if (hasReleaseKey) {
+            create("elderSign") {
+                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
         }
     }
 
@@ -35,11 +48,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("elderSign")
+            signingConfigs.findByName("elderSign")?.let { signingConfig = it }
         }
         debug {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("elderSign")
+            signingConfigs.findByName("elderSign")?.let { signingConfig = it }
         }
     }
 

@@ -13,3 +13,8 @@ local.properties
 build/
 **/build/
 *.apk
+
+# 签名密钥与本地签名配置：绝不提交到版本控制
+*.keystore
+*.jks
+keystore.properties
