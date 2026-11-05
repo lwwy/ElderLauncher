@@ -1,12 +1,14 @@
-package com.example.elderlauncher.receiver
+package com.example.elderlauncher.phone.receiver
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.telephony.TelephonyManager
-import com.example.elderlauncher.ContactsHelper
-import com.example.elderlauncher.Prefs
-import com.example.elderlauncher.TtsManager
+import com.example.elderlauncher.R
+import com.example.elderlauncher.core.TtsManager
+import com.example.elderlauncher.data.Prefs
+import com.example.elderlauncher.phone.ContactsHelper
+import com.example.elderlauncher.phone.ElderInCallService
 
 /**
  * 来电播报：纯本地 TTS 朗读来电人（不出网）。
@@ -25,8 +27,8 @@ class CallStateReceiver : BroadcastReceiver() {
         // 早期实现把「号码为空」也当成不播报，导致非默认拨号器场景下来电完全不响，
         // 这恰恰是老人最需要提示的时候——所以这里只要处于响铃状态就播。
         if (Prefs.enabled(context, Prefs.ANN_INCOMING)) {
-            val who = if (!name.isNullOrEmpty()) name else "未知号码"
-            TtsManager.speakNow(context, "来电，$who")
+            val who = if (!name.isNullOrEmpty()) name else context.getString(R.string.ann_unknown_number)
+            TtsManager.speakNow(context, context.getString(R.string.ann_incoming, who))
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.elderlauncher
+package com.example.elderlauncher.core
 
 import android.app.Application
 import android.content.Context

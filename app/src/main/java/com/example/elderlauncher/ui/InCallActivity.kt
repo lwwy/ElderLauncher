@@ -1,4 +1,4 @@
-package com.example.elderlauncher
+package com.example.elderlauncher.ui
 
 import android.content.Intent
 import android.os.Build
@@ -9,6 +9,9 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.example.elderlauncher.R
+import com.example.elderlauncher.phone.ContactsHelper
+import com.example.elderlauncher.phone.ElderInCallService
 
 /**
  * 全屏来电/通话大卡片：高对比、大字号。

@@ -1,4 +1,4 @@
-package com.example.elderlauncher
+package com.example.elderlauncher.ui
 
 import android.Manifest
 import android.content.Intent
@@ -7,11 +7,12 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.Button
 import android.widget.GridView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.example.elderlauncher.R
+import com.example.elderlauncher.phone.TelecomHelper
 import com.google.android.material.button.MaterialButton
 
 class DialerActivity : AppCompatActivity() {
@@ -33,7 +34,7 @@ class DialerActivity : AppCompatActivity() {
             override fun getView(i: Int, convertView: View?, parent: ViewGroup?): View {
                 // 复用 GridView 回收的按钮，避免每次滑动都新建 View
                 val b = (convertView as? MaterialButton) ?: MaterialButton(this@DialerActivity).apply {
-                    textSize = 32f
+                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.textKeypad))
                 }
                 b.text = keys[i]
                 b.setOnClickListener { append(keys[i]) }
@@ -41,13 +42,13 @@ class DialerActivity : AppCompatActivity() {
             }
         }
 
-        findViewById<Button>(R.id.btnDelete).setOnClickListener {
+        findViewById<MaterialButton>(R.id.btnDelete).setOnClickListener {
             if (number.isNotEmpty()) {
                 number = number.substring(0, number.length - 1)
                 tvNumber.text = number
             }
         }
-        findViewById<Button>(R.id.btnCall).setOnClickListener { call() }
+        findViewById<MaterialButton>(R.id.btnCall).setOnClickListener { call() }
     }
 
     private fun append(s: String) {

@@ -1,13 +1,16 @@
-package com.example.elderlauncher
+package com.example.elderlauncher.phone
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.telecom.PhoneAccountHandle
 import android.telecom.TelecomManager
 import android.util.Log
+import androidx.core.content.ContextCompat
+import com.example.elderlauncher.core.CrashLogger
 
 /**
  * 通话相关工具：发起呼出。
@@ -22,6 +25,13 @@ object TelecomHelper {
      * 排除本应用名下的账号，优先系统给出的 simCallManager。
      */
     fun simAccount(context: Context): PhoneAccountHandle? {
+        // 读通话账号需要 READ_PHONE_STATE；没授权时不勉强，让调用方走 ACTION_CALL 兜底
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            CrashLogger.trace("simAccount 跳过：未授予 READ_PHONE_STATE")
+            return null
+        }
         return try {
             val tm = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
             val accounts = tm.callCapablePhoneAccounts ?: return null
@@ -56,9 +66,7 @@ object TelecomHelper {
         val uri = Uri.fromParts("tel", number, null)
         val extras = Bundle().apply {
             // 官方免提参数，交给系统在通话建立时自动开免提
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                putBoolean(TelecomManager.EXTRA_START_CALL_WITH_SPEAKERPHONE, true)
-            }
+            putBoolean(TelecomManager.EXTRA_START_CALL_WITH_SPEAKERPHONE, true)
             simAccount(context)?.let {
                 putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, it)
             }
@@ -66,7 +74,10 @@ object TelecomHelper {
 
         try {
             val tm = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && isDefaultDialer(context)) {
+            if (isDefaultDialer(context) &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
                 tm.placeCall(uri, extras)
                 CrashLogger.trace("placeCall(SIM) 发起：$number")
                 return

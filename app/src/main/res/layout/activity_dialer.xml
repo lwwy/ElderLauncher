@@ -7,7 +7,7 @@
 
     <TextView
         android:id="@+id/tvNumber"
-        android:textSize="36sp"
+        android:textSize="@dimen/textTitle"
         android:textStyle="bold"
         android:gravity="center"
         android:hint="@string/dialer_title"
@@ -29,7 +29,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDelete"
             style="@style/BigButton"
             android:text="@string/dialer_delete"
@@ -37,7 +37,7 @@
             android:layout_weight="1"
             android:layout_height="wrap_content" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCall"
             style="@style/BigButton"
             android:text="@string/dialer_call"

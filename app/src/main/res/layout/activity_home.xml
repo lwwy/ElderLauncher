@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="?android:colorBackground"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -18,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardBackgroundColor="@color/colorTimeCard"
-            app:cardCornerRadius="0dp"
+            app:cardCornerRadius="@dimen/cornerNone"
             app:cardElevation="0dp"
             app:contentPadding="20dp">
 
@@ -27,6 +26,7 @@
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:paddingStart="0dp"
                 android:paddingEnd="64dp">
 
                 <LinearLayout
@@ -39,8 +39,8 @@
                         android:id="@+id/tvTime"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="--:--"
-                        android:textSize="64sp"
+                        android:text="@string/time_placeholder"
+                        android:textSize="@dimen/textDisplay"
                         android:textStyle="bold"
                         android:textColor="@android:color/white" />
 
@@ -49,7 +49,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text=""
-                        android:textSize="22sp"
+                        android:textSize="@dimen/textSection"
                         android:textColor="@android:color/white"
                         android:layout_marginStart="12dp" />
                 </LinearLayout>
@@ -59,7 +59,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text=""
-                    android:textSize="18sp"
+                    android:textSize="@dimen/textLabel"
                     android:textColor="@android:color/white"
                     android:layout_marginTop="2dp" />
 
@@ -68,25 +68,29 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text=""
-                    android:textSize="16sp"
+                    android:textSize="@dimen/textTiny"
                     android:textColor="@android:color/white" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <!-- 设置入口：右上角（看护人使用）。
-             给按钮 elevation 高于底部卡片，避免被按 Z 轴盖住而看不见。 -->
-        <ImageButton
+             用 M3 的 IconButton 形态（自带状态层与 48dp 触摸区）。
+             仍保留少量 elevation：同级卡片按声明顺序绘制在上层，
+             没有 Z 轴抬升时按钮可能被后绘制的视图压住（历史踩过的坑）。 -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSettings"
+            style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_gravity="top|end"
             android:layout_margin="8dp"
             android:elevation="3dp"
-            android:src="@drawable/ic_settings"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="@android:color/white"
             android:contentDescription="@string/home_settings"
-            android:scaleType="centerInside" />
+            app:icon="@drawable/ic_settings"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="28dp"
+            app:iconTint="@android:color/white" />
     </FrameLayout>
 
     <!-- 2x2：三个联系人卡片 + 一个电量卡片。
@@ -125,6 +129,7 @@
                     <!-- 无头像时的占位人像：居中，尺寸略小于卡片 -->
                     <ImageView
                         android:id="@+id/ivPlaceholder1"
+                        android:importantForAccessibility="no"
                         android:layout_width="88dp"
                         android:layout_height="88dp"
                         android:layout_gravity="center"
@@ -141,7 +146,7 @@
                         android:paddingTop="12dp"
                         android:paddingBottom="12dp"
                         android:text="@string/contact_add"
-                        android:textSize="20sp"
+                        android:textSize="@dimen/textBody"
                         android:textStyle="bold"
                         android:textColor="@android:color/white"
                         android:shadowColor="#99000000"
@@ -172,6 +177,7 @@
                         app:shapeAppearanceOverlay="@style/AvatarRounded" />
                     <ImageView
                         android:id="@+id/ivPlaceholder2"
+                        android:importantForAccessibility="no"
                         android:layout_width="88dp"
                         android:layout_height="88dp"
                         android:layout_gravity="center"
@@ -188,7 +194,7 @@
                         android:paddingTop="12dp"
                         android:paddingBottom="12dp"
                         android:text="@string/contact_add"
-                        android:textSize="20sp"
+                        android:textSize="@dimen/textBody"
                         android:textStyle="bold"
                         android:textColor="@android:color/white"
                         android:shadowColor="#99000000"
@@ -227,6 +233,7 @@
                         app:shapeAppearanceOverlay="@style/AvatarRounded" />
                     <ImageView
                         android:id="@+id/ivPlaceholder3"
+                        android:importantForAccessibility="no"
                         android:layout_width="88dp"
                         android:layout_height="88dp"
                         android:layout_gravity="center"
@@ -243,7 +250,7 @@
                         android:paddingTop="12dp"
                         android:paddingBottom="12dp"
                         android:text="@string/contact_add"
-                        android:textSize="20sp"
+                        android:textSize="@dimen/textBody"
                         android:textStyle="bold"
                         android:textColor="@android:color/white"
                         android:shadowColor="#99000000"
@@ -263,7 +270,7 @@
                 android:layout_weight="1"
                 android:layout_marginStart="6dp"
                 app:cardBackgroundColor="@color/colorBatteryNormalBg"
-                app:cardCornerRadius="0dp"
+                app:cardCornerRadius="@dimen/cornerNone"
                 app:cardElevation="0dp"
                 app:contentPadding="10dp">
 
@@ -278,15 +285,15 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/home_battery"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/textCaption"
                         android:textColor="@color/colorBatteryNormalFg" />
 
                     <TextView
                         android:id="@+id/tvBattery"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="--"
-                        android:textSize="52sp"
+                        android:text="@string/battery_placeholder"
+                        android:textSize="@dimen/textMega"
                         android:textStyle="bold"
                         android:includeFontPadding="false"
                         android:textColor="@color/colorBatteryNormalFg" />

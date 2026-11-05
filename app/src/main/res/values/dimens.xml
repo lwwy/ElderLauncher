@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      适老化字号令牌（M3 type scale 的"放大版"）。
+      本项目刻意不使用 M3 默认字号（14/16/22sp）——对老人偏小；
+      这里把常用字号收敛成 11 档，布局里不再出现魔法数字。
+    -->
+    <dimen name="textDisplay">64sp</dimen>   <!-- 首页时间大字 -->
+    <dimen name="textMega">52sp</dimen>      <!-- 电量数字 -->
+    <dimen name="textHuge">48sp</dimen>      <!-- 来电号码 -->
+    <dimen name="textTitle">36sp</dimen>     <!-- 页面主标题、拨号号码 -->
+    <dimen name="textHeadline">30sp</dimen>  <!-- 二级标题、主按钮 -->
+    <dimen name="textSubtitle">26sp</dimen>  <!-- 来电页说明、大号提示 -->
+    <dimen name="textSection">22sp</dimen>   <!-- 设置页行标题 -->
+    <dimen name="textBody">20sp</dimen>      <!-- 正文、联系人姓名 -->
+    <dimen name="textLabel">18sp</dimen>     <!-- 小按钮、分区标题 -->
+    <dimen name="textTiny">16sp</dimen>      <!-- 农历等辅助信息 -->
+    <dimen name="textCaption">14sp</dimen>   <!-- 说明文字 -->
+    <dimen name="textKeypad">32sp</dimen>    <!-- 拨号数字键 -->
+
+    <!--
+      圆角令牌（对齐 M3 shape scale：none / small / medium / large）。
+      首页卡片刻意用 0dp 直角——与老人的"纸质相框"认知一致，也避免照片
+      在圆角处露出卡片底色。
+    -->
+    <dimen name="cornerNone">0dp</dimen>
+    <dimen name="cornerMedium">12dp</dimen>
+    <dimen name="cornerLarge">16dp</dimen>
+
+    <!-- 无障碍最小触摸目标（M3 规范 48dp） -->
+    <dimen name="touchTarget">48dp</dimen>
+</resources>

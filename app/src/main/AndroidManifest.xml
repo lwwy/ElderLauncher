@@ -9,6 +9,10 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
 
+    <!-- 硬件非必需：本应用可跑在没有电话模块 / 摄像头的设备上（如平板） -->
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
     <!-- 自启动与后台保活 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -26,7 +30,7 @@
     </queries>
 
     <application
-        android:name=".ElderApp"
+        android:name="com.example.elderlauncher.core.ElderApp"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -37,9 +41,10 @@
 
         <!-- 桌面主页：同时作为 LAUNCHER 与 HOME，可被设为默认桌面 -->
         <activity
-            android:name=".HomeActivity"
+            android:name="com.example.elderlauncher.ui.HomeActivity"
             android:exported="true"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.ElderLauncher.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -50,7 +55,7 @@
 
         <!-- 拨号器：导出并声明 DIAL/CALL，使其成为系统可选默认电话应用 -->
         <activity
-            android:name=".DialerActivity"
+            android:name="com.example.elderlauncher.ui.DialerActivity"
             android:exported="true"
             android:launchMode="singleTask">
             <intent-filter>
@@ -66,15 +71,15 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".SettingsActivity" android:exported="false" />
+        <activity android:name="com.example.elderlauncher.ui.SettingsActivity" android:exported="false" />
         <activity
-            android:name=".ContactEditActivity"
+            android:name="com.example.elderlauncher.ui.ContactEditActivity"
             android:exported="false"
             android:label="@string/edit_contact_title" />
 
         <!-- 来电/通话大卡片：锁屏可弹、单实例 -->
         <activity
-            android:name=".InCallActivity"
+            android:name="com.example.elderlauncher.ui.InCallActivity"
             android:exported="false"
             android:launchMode="singleTask"
             android:excludeFromRecents="true"
@@ -83,7 +88,7 @@
 
         <!-- 通话界面服务 -->
         <service
-            android:name=".ElderInCallService"
+            android:name="com.example.elderlauncher.phone.ElderInCallService"
             android:exported="false"
             android:permission="android.permission.BIND_INCALL_SERVICE">
             <intent-filter>
@@ -93,13 +98,13 @@
 
         <!-- 后台保活前台服务（dataSync 类型：通用、无默认拨号器前置条件） -->
         <service
-            android:name=".KeepAliveService"
+            android:name="com.example.elderlauncher.service.KeepAliveService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
         <!-- 系统广播接收器：只接收系统发出的广播，不对外暴露，
              避免第三方应用伪造「电量不足/来电」触发播报 -->
-        <receiver android:name=".receiver.BatteryReceiver" android:exported="false">
+        <receiver android:name="com.example.elderlauncher.phone.receiver.BatteryReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BATTERY_LOW" />
                 <action android:name="android.intent.action.BATTERY_OKAY" />
@@ -117,7 +122,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <receiver android:name=".receiver.CallStateReceiver" android:exported="false">
+        <receiver android:name="com.example.elderlauncher.phone.receiver.CallStateReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>
@@ -125,7 +130,7 @@
 
         <!-- 开机自启：拉起桌面并启动保活服务 -->
         <receiver
-            android:name=".receiver.BootReceiver"
+            android:name="com.example.elderlauncher.phone.receiver.BootReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>

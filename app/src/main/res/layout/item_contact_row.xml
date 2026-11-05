@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  设置页「常用联系人」的一行：头像 + 名称 + 上移/下移 + 编辑。
+  以前这一行是 SettingsActivity 里 80 行代码 new 出来的，
+  现在改为布局声明，样式调整不用再改 Kotlin。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:minHeight="64dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/imgContactAvatar"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginEnd="14dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_person"
+        app:shapeAppearanceOverlay="@style/AvatarThumb" />
+
+    <TextView
+        android:id="@+id/tvContactLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:textSize="@dimen/textBody"
+        android:textColor="?attr/colorOnSurface" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnMoveUp"
+        style="@style/MoveButton"
+        android:contentDescription="@string/move_up"
+        android:text="@string/arrow_up" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnMoveDown"
+        style="@style/MoveButton"
+        android:contentDescription="@string/move_down"
+        android:text="@string/arrow_down" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnEditContact"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:minWidth="0dp"
+        android:minHeight="@dimen/touchTarget"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:text="@string/edit_contact" />
+</LinearLayout>

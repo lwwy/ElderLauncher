@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.elderlauncher"
         minSdk = 24
         targetSdk = 34
-        versionCode = 8
-        versionName = "1.0.7"
+        versionCode = 10
+        versionName = "1.0.9"
     }
 
     // 固定签名：保证每次构建（换机器/换环境）证书一致，
@@ -28,7 +28,9 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8：代码压缩 + 混淆 + 资源压缩（配合 proguard-rules.pro）
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -49,12 +51,23 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    // 让本地单元测试能读到真实资源（strings/layout），配合 Robolectric 做无设备验证
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.activity:activity-ktx:1.8.2")
+    // Android 12+ 启动画面（SplashScreen API）
+    implementation("androidx.core:core-splashscreen:1.0.1")
     // Material Design 3（Material You）
     implementation("com.google.android.material:material:1.12.0")
+
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.11.1")
+    testImplementation("androidx.test:core:1.5.0")
 }

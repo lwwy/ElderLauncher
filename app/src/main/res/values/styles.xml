@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- 全局主题：Material Design 3 深色（蓝色主色） -->
+    <!-- 全局主题：Material Design 3 深色（蓝色主色）
+         说明：本应用刻意固定深色、不启用 Material You 动态取色——
+         老人靠颜色认界面，跟随壁纸变色会增加认知负担。这是有意选择，不是遗漏。 -->
     <style name="Theme.ElderLauncher" parent="Theme.Material3.Dark.NoActionBar">
         <!-- M3 颜色角色 -->
         <item name="colorPrimary">@color/colorPrimary</item>
@@ -38,52 +40,105 @@
         <item name="android:textColor">@color/colorOnSurface</item>
     </style>
 
+    <!-- 启动主题：Android 12+ 由系统 SplashScreen 接管，低版本沿用纯色窗口 -->
+    <style name="Theme.ElderLauncher.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/colorBackground</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenAnimationDuration">300</item>
+        <item name="postSplashScreenTheme">@style/Theme.ElderLauncher</item>
+    </style>
+
+    <!-- ==================== 文字语义令牌 ==================== -->
+
+    <!-- 设置页分区标题 -->
+    <style name="SectionTitle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/textLabel</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:layout_marginTop">20dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+    </style>
+
+    <!-- 设置项下面的说明小字 -->
+    <style name="HintText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/textCaption</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">8dp</item>
+    </style>
+
+    <!-- 设置页卡片：统一的表面色 + 大圆角 + 1dp 描边 -->
+    <style name="SettingsCard" parent="Widget.Material3.CardView.Filled">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="cardBackgroundColor">?attr/colorSurface</item>
+        <item name="cardCornerRadius">@dimen/cornerLarge</item>
+        <item name="strokeColor">?attr/colorOutline</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="contentPadding">16dp</item>
+    </style>
+
+    <!-- ==================== 按钮 ==================== -->
+
     <!-- 大字号主按钮（Material 3 填充按钮） -->
     <style name="BigButton" parent="Widget.Material3.Button">
-        <item name="android:textSize">30sp</item>
+        <item name="android:textSize">@dimen/textHeadline</item>
         <item name="android:textStyle">bold</item>
         <item name="android:padding">20dp</item>
         <item name="android:layout_margin">8dp</item>
         <item name="android:minHeight">64dp</item>
-        <item name="cornerRadius">16dp</item>
+        <item name="cornerRadius">@dimen/cornerLarge</item>
     </style>
 
     <!-- 描边按钮：用于“恢复系统桌面”这类次要/逆向操作，视觉上不与主按钮抢焦点 -->
     <style name="BigButton.Outlined" parent="Widget.Material3.Button.OutlinedButton">
-        <item name="android:textSize">22sp</item>
+        <item name="android:textSize">@dimen/textSection</item>
         <item name="android:padding">16dp</item>
         <item name="android:layout_margin">8dp</item>
         <item name="android:minHeight">56dp</item>
-        <item name="cornerRadius">16dp</item>
+        <item name="cornerRadius">@dimen/cornerLarge</item>
     </style>
+
+    <!-- 设置页联系人行的 ↑ ↓ 排序按钮：48dp 触摸目标（无障碍下限） -->
+    <style name="MoveButton" parent="Widget.Material3.Button.TextButton">
+        <item name="android:layout_width">@dimen/touchTarget</item>
+        <item name="android:layout_height">@dimen/touchTarget</item>
+        <item name="android:minWidth">@dimen/touchTarget</item>
+        <item name="android:minHeight">@dimen/touchTarget</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:layout_marginStart">4dp</item>
+        <item name="android:textSize">@dimen/textLabel</item>
+    </style>
+
+    <!-- ==================== 卡片 / 头像 ==================== -->
 
     <!-- 首页 2x2 收藏联系人卡片（MaterialCardView）
          只保留外观属性；尺寸由布局里的 layout_width/height/weight 决定，
          避免 0dp+weight 写在 style 里、GridView 权重不生效时卡片高度塌成 0。 -->
     <style name="ContactCard" parent="Widget.Material3.CardView.Filled">
         <item name="cardBackgroundColor">?attr/colorSurfaceVariant</item>
-        <item name="cardCornerRadius">0dp</item>
+        <item name="cardCornerRadius">@dimen/cornerNone</item>
         <item name="cardElevation">0dp</item>
         <item name="contentPadding">0dp</item>
         <item name="strokeColor">?attr/colorOutline</item>
         <item name="strokeWidth">1dp</item>
     </style>
 
-    <!-- 圆形头像（用于首页联系人大卡片） -->
-    <style name="AvatarCircle">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">50%</item>
-    </style>
-
     <!-- 直角头像（与首页直角卡片保持一致，避免四角露出卡片底色） -->
     <style name="AvatarRounded">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">0dp</item>
+        <item name="cornerSize">@dimen/cornerNone</item>
     </style>
 
     <!-- 设置页小头像缩略图 -->
     <style name="AvatarThumb">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">12dp</item>
+        <item name="cornerSize">@dimen/cornerMedium</item>
     </style>
 </resources>

@@ -1,4 +1,4 @@
-package com.example.elderlauncher
+package com.example.elderlauncher.core
 
 import android.content.Context
 import android.content.Intent
@@ -55,9 +55,12 @@ object TtsManager {
         val ctx = context.applicationContext
         val listener = TextToSpeech.OnInitListener { status ->
             if (status == TextToSpeech.SUCCESS) {
+                // 顺序很重要：先清零再判语言。applyLanguage() 内部发现缺中文数据时会把
+                // langMissing 置 true，若之后再清零，这个状态位就永远是 false，
+                // 设置页与诊断日志也就永远看不到"缺中文语音数据"。
+                langMissing = false
                 applyLanguage()
                 ready = true
-                langMissing = false
                 CrashLogger.trace("TTS 初始化成功")
                 flushPending()
             } else {

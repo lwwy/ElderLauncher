@@ -1,8 +1,9 @@
-package com.example.elderlauncher
+package com.example.elderlauncher.phone
 
 import android.content.Intent
 import android.telecom.Call
 import android.telecom.InCallService
+import com.example.elderlauncher.ui.InCallActivity
 
 /**
  * 通话界面服务：系统把当前 Call 交给本服务，由它拉起全屏 InCallActivity 呈现接听/挂断界面。

@@ -1,8 +1,9 @@
-package com.example.elderlauncher
+package com.example.elderlauncher.ui
 
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.PorterDuff
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -15,6 +16,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.example.elderlauncher.R
+import com.example.elderlauncher.core.CrashLogger
+import com.example.elderlauncher.core.Diagnostics
+import com.example.elderlauncher.core.TtsManager
+import com.example.elderlauncher.data.LocalContacts
+import com.example.elderlauncher.data.Prefs
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.switchmaterial.SwitchMaterial
@@ -61,10 +68,10 @@ class SettingsActivity : AppCompatActivity() {
 
         // 播报测试：点一下就能听到实际效果，便于确认系统语音引擎是否正常
         findViewById<MaterialButton>(R.id.btnTestIncoming).setOnClickListener {
-            testAnnounce(getString(R.string.test_incoming_text))
+            testAnnounce(getString(R.string.ann_incoming, getString(R.string.test_caller_name)))
         }
         findViewById<MaterialButton>(R.id.btnTestLow).setOnClickListener {
-            testAnnounce(getString(R.string.test_low_text))
+            testAnnounce(getString(R.string.ann_low_battery))
         }
     }
 
@@ -72,7 +79,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun exportDiagnosticLog() {
         Toast.makeText(this, R.string.export_log_doing, Toast.LENGTH_SHORT).show()
         CrashLogger.trace("用户手动导出诊断日志")
-        val file = CrashLogger.exportDiagnostic(this)
+        val file = Diagnostics.exportDiagnostic(this)
         if (file == null) {
             Toast.makeText(this, R.string.export_log_failed, Toast.LENGTH_LONG).show()
             return
@@ -211,101 +218,59 @@ class SettingsActivity : AppCompatActivity() {
         buildContactRows()
     }
 
-    /** 在设置页渲染 3 个常用联系人行（头像 + 姓名 + 编辑） */
+    /** 在设置页渲染 3 个常用联系人行（头像 + 名称 + 排序 + 编辑） */
     private fun buildContactRows() {
         val container = findViewById<LinearLayout>(R.id.favContainer)
         container.removeAllViews()
         for (i in 0 until LocalContacts.COUNT) {
+            val row = layoutInflater.inflate(R.layout.item_contact_row, container, false)
             val contact = LocalContacts.get(this, i)
             val name = contact?.name?.takeIf { it.isNotEmpty() } ?: getString(R.string.fav_not_set)
 
-            val avatar = ShapeableImageView(this).apply {
-                layoutParams = LinearLayout.LayoutParams(56, 56).apply { marginEnd = 14 }
-                shapeAppearanceModel = com.google.android.material.shape.ShapeAppearanceModel.builder()
-                    .setAllCorners(
-                        com.google.android.material.shape.CornerFamily.ROUNDED,
-                        12 * resources.displayMetrics.density
-                    )
-                    .build()
-                scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
-                setImageResource(R.drawable.ic_person)
-                colorFilter = android.graphics.PorterDuffColorFilter(
-                    ContextCompat.getColor(this@SettingsActivity, R.color.colorOnSurfaceVariant),
-                    android.graphics.PorterDuff.Mode.SRC_IN
+            row.findViewById<TextView>(R.id.tvContactLabel).text =
+                getString(R.string.contact_row_label, i + 1, name)
+
+            val avatar = row.findViewById<ShapeableImageView>(R.id.imgContactAvatar)
+            val bmp = LocalContacts.loadAvatar(this, i)
+            if (bmp != null) {
+                avatar.clearColorFilter()
+                avatar.setImageBitmap(bmp)
+            } else {
+                avatar.setImageResource(R.drawable.ic_person)
+                avatar.setColorFilter(
+                    ContextCompat.getColor(this, R.color.colorOnSurfaceVariant),
+                    PorterDuff.Mode.SRC_IN
                 )
-                val bmp = LocalContacts.loadAvatar(this@SettingsActivity, i)
-                if (bmp != null) {
-                    clearColorFilter()
-                    setImageBitmap(bmp)
-                }
             }
 
-            val tv = TextView(this).apply {
-                text = String.format(getString(R.string.fav_slot), i + 1) + "：$name"
-                textSize = 20f
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.colorOnSurface))
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            }
+            bindMoveButton(
+                row.findViewById(R.id.btnMoveUp), R.string.move_up, i > 0
+            ) { moveContact(i, i - 1) }
+            bindMoveButton(
+                row.findViewById(R.id.btnMoveDown), R.string.move_down, i < LocalContacts.COUNT - 1
+            ) { moveContact(i, i + 1) }
 
-            val up = MaterialButton(this).apply {
-                text = "↑"
-                textSize = 18f
-                isEnabled = i > 0
-                minWidth = 0
-                minimumWidth = 0
-                insetTop = 0
-                insetBottom = 0
-                setPadding(0, 0, 0, 0)
-                contentDescription = getString(R.string.move_up)
-                setOnClickListener { moveContact(i, i - 1) }
-                layoutParams = LinearLayout.LayoutParams(dp(44), dp(44)).apply { marginStart = 4 }
+            row.findViewById<MaterialButton>(R.id.btnEditContact).setOnClickListener {
+                startActivity(
+                    Intent(this, ContactEditActivity::class.java)
+                        .putExtra(ContactEditActivity.EXTRA_SLOT, i)
+                )
             }
-            val down = MaterialButton(this).apply {
-                text = "↓"
-                textSize = 18f
-                isEnabled = i < LocalContacts.COUNT - 1
-                minWidth = 0
-                minimumWidth = 0
-                insetTop = 0
-                insetBottom = 0
-                setPadding(0, 0, 0, 0)
-                contentDescription = getString(R.string.move_down)
-                setOnClickListener { moveContact(i, i + 1) }
-                layoutParams = LinearLayout.LayoutParams(dp(44), dp(44)).apply { marginStart = 4 }
-            }
-
-            val edit = MaterialButton(this).apply {
-                text = getString(R.string.edit_contact)
-                setOnClickListener {
-                    startActivity(
-                        Intent(this@SettingsActivity, ContactEditActivity::class.java)
-                            .putExtra(ContactEditActivity.EXTRA_SLOT, i)
-                    )
-                }
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { marginStart = 12 }
-            }
-
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = android.view.Gravity.CENTER_VERTICAL
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { topMargin = 12 }
-            }
-            row.addView(avatar)
-            row.addView(tv)
-            row.addView(up)
-            row.addView(down)
-            row.addView(edit)
             container.addView(row)
         }
     }
 
-    private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
+    /** 排序按钮的三个属性一起设：无障碍描述、可用状态、点击动作 */
+    private fun bindMoveButton(
+        btn: MaterialButton,
+        labelRes: Int,
+        enabled: Boolean,
+        onClick: () -> Unit
+    ) {
+        btn.contentDescription = getString(labelRes)
+        btn.isEnabled = enabled
+        btn.setOnClickListener { onClick() }
+    }
 
     private fun openAutostart() {
         val pm = packageManager

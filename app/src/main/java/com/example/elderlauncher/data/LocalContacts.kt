@@ -1,11 +1,11 @@
-package com.example.elderlauncher
+package com.example.elderlauncher.data
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import org.json.JSONObject
 import java.io.File
+import org.json.JSONObject
 
 /**
  * 桌面常用联系人（本地可编辑）：姓名 + 电话 + 头像。
@@ -39,6 +39,7 @@ object LocalContacts {
     fun delete(ctx: Context, i: Int) {
         removeRecord(ctx, i)
         avatarFile(ctx, i).delete()
+        if (i in 0 until COUNT) avatarCache[i] = null
     }
 
     private fun removeRecord(ctx: Context, i: Int) {
@@ -56,6 +57,8 @@ object LocalContacts {
         swapAvatar(ctx, avatarFile(ctx, a), avatarFile(ctx, b))
         if (cb != null) set(ctx, a, cb) else removeRecord(ctx, a)
         if (ca != null) set(ctx, b, ca) else removeRecord(ctx, b)
+        // 头像文件已互换，缓存的位图对应关系失效
+        invalidateAvatarCache()
     }
 
     private fun swapAvatar(ctx: Context, fa: File, fb: File) {
@@ -79,16 +82,31 @@ object LocalContacts {
         return File(dir, "contact_$i.jpg")
     }
 
-    fun hasAvatar(ctx: Context, i: Int): Boolean = avatarFile(ctx, i).exists()
+    /**
+     * 头像解码结果的内存缓存（按槽位）。
+     * 桌面每次 onResume（从设置页返回、通话结束、亮屏）都要重新贴 3 张头像，
+     * 每次都从磁盘解码 512px JPEG 会在主线程上白等几十毫秒，桌面可能掉一帧。
+     * 这里缓存解码后的位图，只在上传/删除/交换头像时失效。
+     */
+    private val avatarCache = arrayOfNulls<Bitmap>(COUNT)
+
+    /** 清除头像缓存（不回收位图，交给 GC，避免界面上还在显示时被 recycle） */
+    fun invalidateAvatarCache() {
+        avatarCache.fill(null)
+    }
 
     fun loadAvatar(ctx: Context, i: Int): Bitmap? {
+        if (i < 0 || i >= COUNT) return null
+        avatarCache[i]?.let { return it }
         val f = avatarFile(ctx, i)
         if (!f.exists()) return null
-        return try {
+        val bmp = try {
             BitmapFactory.decodeFile(f.absolutePath)
         } catch (_: Exception) {
             null
         }
+        if (bmp != null) avatarCache[i] = bmp
+        return bmp
     }
 
     /** 保存头像位图到该联系人固定路径（JPEG 压缩） */
@@ -96,6 +114,7 @@ object LocalContacts {
         avatarFile(ctx, i).outputStream().use {
             bmp.compress(Bitmap.CompressFormat.JPEG, 88, it)
         }
+        avatarCache[i] = null
     }
 
     /** 从相册/拍照得到的 URI 解码为缩放后的位图，避免大图 OOM */

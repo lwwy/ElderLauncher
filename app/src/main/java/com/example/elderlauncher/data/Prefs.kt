@@ -1,4 +1,4 @@
-package com.example.elderlauncher
+package com.example.elderlauncher.data
 
 import android.content.Context
 import android.content.SharedPreferences

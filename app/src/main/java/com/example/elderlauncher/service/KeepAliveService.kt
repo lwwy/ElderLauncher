@@ -1,4 +1,4 @@
-package com.example.elderlauncher
+package com.example.elderlauncher.service
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -10,6 +10,9 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import com.example.elderlauncher.R
+import com.example.elderlauncher.core.CrashLogger
+import com.example.elderlauncher.ui.HomeActivity
 
 /**
  * 后台保活前台服务：常驻通知 + START_STICKY + 被划掉自启，

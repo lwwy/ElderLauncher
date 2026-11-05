@@ -1,261 +1,224 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  设置页：五个分区（常用联系人 / 来电与通话 / 权限与保活 / 默认应用 / 日志与诊断）。
+  分区标题、说明小字、卡片外观都收敛到 styles.xml 的语义样式，
+  这里只保留结构和内容，改样式不用逐处改布局。
+-->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?android:colorBackground">
+    android:layout_height="match_parent">
 
     <LinearLayout
-        android:orientation="vertical"
-        android:padding="16dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_title"
-            android:textSize="30sp"
-            android:textStyle="bold"
             android:gravity="center"
+            android:padding="8dp"
+            android:text="@string/settings_title"
             android:textColor="?attr/colorOnSurface"
-            android:padding="8dp" />
+            android:textSize="@dimen/textTitle"
+            android:textStyle="bold" />
 
         <!-- 一、常用联系人 -->
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/set_fav_title"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="8dp" />
+            style="@style/SectionTitle"
+            android:text="@string/set_fav_title" />
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="16dp"
-            app:strokeColor="?attr/colorOutline"
-            app:strokeWidth="1dp"
-            app:contentPadding="16dp">
+        <com.google.android.material.card.MaterialCardView style="@style/SettingsCard">
 
             <LinearLayout
-                android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-                <TextView android:text="@string/set_fav_tip" android:textSize="14sp"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/HintText"
+                    android:text="@string/set_fav_tip" />
+
                 <LinearLayout
                     android:id="@+id/favContainer"
-                    android:orientation="vertical"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <!-- 二、来电与通话 -->
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/section_call"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="8dp" />
+            style="@style/SectionTitle"
+            android:text="@string/section_call" />
 
         <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="16dp"
-            app:strokeColor="?attr/colorOutline"
-            app:strokeWidth="1dp"
+            style="@style/SettingsCard"
             app:contentPadding="4dp">
 
             <LinearLayout
-                android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
                 <LinearLayout
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="12dp"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView android:text="@string/set_incoming" android:textSize="22sp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/set_incoming"
                         android:textColor="?attr/colorOnSurface"
-                        android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content" />
+                        android:textSize="@dimen/textSubtitle" />
+
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnTestIncoming"
                         style="@style/Widget.Material3.Button.TextButton"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
                         android:text="@string/btn_test" />
+
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/swIncoming"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
 
                 <LinearLayout
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="12dp"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView android:text="@string/set_lowbattery" android:textSize="22sp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/set_lowbattery"
                         android:textColor="?attr/colorOnSurface"
-                        android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content" />
+                        android:textSize="@dimen/textSubtitle" />
+
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnTestLow"
                         style="@style/Widget.Material3.Button.TextButton"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
                         android:text="@string/btn_test" />
+
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/swLow"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <!-- 三、权限与保活 -->
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/section_permission"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="8dp" />
+            style="@style/SectionTitle"
+            android:text="@string/section_permission" />
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="16dp"
-            app:strokeColor="?attr/colorOutline"
-            app:strokeWidth="1dp"
-            app:contentPadding="16dp">
+        <com.google.android.material.card.MaterialCardView style="@style/SettingsCard">
 
             <LinearLayout
-                android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAutostart"
                     style="@style/BigButton"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:text="@string/btn_autostart" />
-                <TextView android:text="@string/autostart_tip" android:textSize="14sp"
-                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="8dp" />
+                    android:text="@string/btn_autostart" />
+
+                <TextView
+                    style="@style/HintText"
+                    android:text="@string/autostart_tip" />
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnBattery"
                     style="@style/BigButton"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:text="@string/btn_battery"
-                    android:layout_marginTop="4dp" />
-                <TextView android:text="@string/battery_tip" android:textSize="14sp"
-                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="8dp" />
+                    android:layout_marginTop="4dp"
+                    android:text="@string/btn_battery" />
+
+                <TextView
+                    style="@style/HintText"
+                    android:text="@string/battery_tip" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <!-- 四、默认应用 -->
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/section_default"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="8dp" />
+            style="@style/SectionTitle"
+            android:text="@string/section_default" />
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="16dp"
-            app:strokeColor="?attr/colorOutline"
-            app:strokeWidth="1dp"
-            app:contentPadding="16dp">
+        <com.google.android.material.card.MaterialCardView style="@style/SettingsCard">
 
             <LinearLayout
-                android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnDefault"
                     style="@style/BigButton"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:text="@string/set_default_launcher" />
-                <TextView android:text="@string/set_default_tip" android:textSize="14sp"
-                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="8dp" />
+                    android:text="@string/set_default_launcher" />
+
+                <TextView
+                    style="@style/HintText"
+                    android:text="@string/set_default_tip" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnRestoreHome"
                     style="@style/BigButton.Outlined"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/restore_system_home" />
-                <TextView android:text="@string/restore_system_home_tip" android:textSize="14sp"
-                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="8dp" />
+                    android:layout_marginTop="4dp"
+                    android:text="@string/restore_system_home" />
+
+                <TextView
+                    style="@style/HintText"
+                    android:text="@string/restore_system_home_tip" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <!-- 五、日志与诊断 -->
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/section_diagnostic"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="8dp" />
+            style="@style/SectionTitle"
+            android:text="@string/section_diagnostic" />
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="16dp"
-            app:strokeColor="?attr/colorOutline"
-            app:strokeWidth="1dp"
-            app:contentPadding="16dp">
+        <com.google.android.material.card.MaterialCardView style="@style/SettingsCard">
 
             <LinearLayout
-                android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnExportLog"
                     style="@style/BigButton.Outlined"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:text="@string/export_log" />
-                <TextView android:text="@string/export_log_tip" android:textSize="14sp"
-                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="8dp" />
+                    android:text="@string/export_log" />
+
+                <TextView
+                    style="@style/HintText"
+                    android:text="@string/export_log_tip" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

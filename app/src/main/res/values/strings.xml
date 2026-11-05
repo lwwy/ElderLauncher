@@ -43,8 +43,11 @@
     <string name="restore_system_home_ok">已取消老人桌面的默认桌面设置，按 Home 键即可回到系统桌面</string>
     <string name="restore_system_home_failed">未能自动取消，已为你打开系统桌面设置，请手动选择其他桌面</string>
     <string name="btn_test">测试</string>
-    <string name="test_incoming_text">来电，张三</string>
-    <string name="test_low_text">电量不足，请插上充电器</string>
+    <!-- 播报文案：来电/低电量播报与设置页「测试」按钮共用同一份，避免两处各写一遍 -->
+    <string name="ann_incoming">来电，%1$s</string>
+    <string name="ann_unknown_number">未知号码</string>
+    <string name="ann_low_battery">电量不足，请插上充电器</string>
+    <string name="test_caller_name">张三</string>
     <string name="test_playing">正在播放测试语音…</string>
     <string name="tts_unavailable">系统语音引擎不可用，请到系统设置里检查「文字转语音」输出</string>
     <string name="tts_no_engine">这台手机没有安装语音引擎，点击「去设置」安装或开启一个语音引擎（如“系统语音引擎”“Google 文字转语音”）</string>
@@ -56,11 +59,12 @@
     <string name="tts_retrying">正在重新连接语音引擎…</string>
     <string name="move_up">上移</string>
     <string name="move_down">下移</string>
+    <string name="arrow_up" translatable="false">↑</string>
+    <string name="arrow_down" translatable="false">↓</string>
 
     <!-- 常用联系人管理（设置页） -->
     <string name="set_fav_title">常用联系人</string>
     <string name="set_fav_tip">在下方编辑桌面上的联系人（最多 3 个），可设置姓名、电话与头像；用 ↑ ↓ 调整顺序，桌面即时生效</string>
-    <string name="fav_slot">联系人 %1$d</string>
     <string name="fav_not_set">未添加</string>
 
     <!-- 设置分区标题 -->
@@ -78,7 +82,6 @@
     <string name="export_log_failed">导出失败，请稍后重试</string>
 
     <!-- 自启动 / 保活 -->
-    <string name="autostart_title">自启动与后台</string>
     <string name="btn_autostart">自启动权限</string>
     <string name="autostart_tip">开启自启动与后台运行，手机重启后自动进入桌面</string>
     <string name="btn_battery">忽略电池优化</string>
@@ -88,4 +91,12 @@
     <string name="autostart_failed">未能自动打开自启动设置，请到“设置 → 应用 → 老人桌面”中手动开启自启动与后台运行</string>
     <string name="battery_done">已请求忽略电池优化，请在弹窗中点击“允许”</string>
     <string name="home_empty_hint">请在“设置 → 常用联系人”中添加</string>
+    <!-- 首页时间/日期的占位与格式 -->
+    <string name="time_placeholder" translatable="false">--:--</string>
+    <string name="battery_placeholder" translatable="false">--</string>
+    <string name="home_date">%1$d月%2$d日 %3$s</string>
+    <!-- 设置页联系人行：序号 + 姓名 -->
+    <string name="contact_row_label">联系人 %1$d：%2$s</string>
+    <!-- 首页拦截返回键时的提示（不退出桌面，只给一句反馈） -->
+    <string name="home_back_blocked">这已经是桌面首页了</string>
 </resources>

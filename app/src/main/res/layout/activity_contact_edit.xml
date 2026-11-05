@@ -2,8 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?android:colorBackground">
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:orientation="vertical"
@@ -15,7 +14,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/edit_contact_title"
-            android:textSize="30sp"
+            android:textSize="@dimen/textHeadline"
             android:textStyle="bold"
             android:gravity="center"
             android:textColor="?attr/colorOnSurface"
@@ -44,7 +43,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/choose_avatar"
-            android:textSize="15sp"
+            android:textSize="@dimen/textCaption"
             android:gravity="center"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_marginTop="8dp"
@@ -56,7 +55,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/from_album"
-            android:textSize="20sp" />
+            android:textSize="@dimen/textBody" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnTakePhoto"
@@ -64,7 +63,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/take_photo"
-            android:textSize="20sp"
+            android:textSize="@dimen/textBody"
             android:layout_marginTop="8dp" />
 
         <com.google.android.material.textfield.TextInputLayout
@@ -76,7 +75,7 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etName"
                 android:inputType="text"
-                android:textSize="20sp"
+                android:textSize="@dimen/textBody"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -90,7 +89,7 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPhone"
                 android:inputType="phone"
-                android:textSize="20sp"
+                android:textSize="@dimen/textBody"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -109,7 +108,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/delete_contact"
-            android:textSize="20sp"
+            android:textSize="@dimen/textBody"
             android:textColor="?attr/colorError"
             android:layout_marginTop="12dp" />
     </LinearLayout>

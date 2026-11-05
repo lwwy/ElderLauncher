@@ -1,4 +1,4 @@
-package com.example.elderlauncher
+package com.example.elderlauncher.core
 
 import java.util.Calendar
 import java.util.Date

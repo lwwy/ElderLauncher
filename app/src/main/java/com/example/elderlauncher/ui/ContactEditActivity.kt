@@ -1,20 +1,23 @@
-package com.example.elderlauncher
+package com.example.elderlauncher.ui
 
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.example.elderlauncher.R
+import com.example.elderlauncher.data.LocalContacts
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.textfield.TextInputEditText
@@ -25,6 +28,37 @@ class ContactEditActivity : AppCompatActivity() {
     private var slot = 0
     private var hasExisting = false
     private var pendingCameraFile: File? = null
+
+    /** 相册选图：用 ActivityResult API，替代已废弃的 startActivityForResult */
+    private val albumPicker = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode != RESULT_OK) return@registerForActivityResult
+        val uri = result.data?.data ?: return@registerForActivityResult
+        val bmp = LocalContacts.decodeUri(this, uri)
+        if (bmp == null) {
+            Toast.makeText(this, R.string.avatar_failed, Toast.LENGTH_SHORT).show()
+            return@registerForActivityResult
+        }
+        LocalContacts.saveAvatar(this, slot, bmp)
+        loadAvatarPreview()
+    }
+
+    /** 拍照：结果落在 FileProvider 提供的临时文件里 */
+    private val cameraTaker = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode != RESULT_OK) return@registerForActivityResult
+        val f = pendingCameraFile ?: return@registerForActivityResult
+        val bmp = BitmapFactory.decodeFile(f.absolutePath)?.let { scaleDown(it, 512) }
+        if (bmp == null) {
+            Toast.makeText(this, R.string.avatar_failed, Toast.LENGTH_SHORT).show()
+            return@registerForActivityResult
+        }
+        LocalContacts.saveAvatar(this, slot, bmp)
+        f.delete()
+        loadAvatarPreview()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,9 +98,9 @@ class ContactEditActivity : AppCompatActivity() {
     }
 
     private fun pickAlbum() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        intent.type = "image/*"
-        startActivityForResult(intent, REQ_ALBUM)
+        val intent = Intent(Intent.ACTION_PICK)
+            .setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
+        albumPicker.launch(intent)
     }
 
     private fun takePhoto() {
@@ -86,7 +120,7 @@ class ContactEditActivity : AppCompatActivity() {
             putExtra(MediaStore.EXTRA_OUTPUT, uri)
             addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
         }
-        startActivityForResult(intent, REQ_CAMERA)
+        cameraTaker.launch(intent)
     }
 
     override fun onRequestPermissionsResult(
@@ -101,34 +135,6 @@ class ContactEditActivity : AppCompatActivity() {
             launchCamera()
         } else if (requestCode == REQ_CAMERA_PERM) {
             Toast.makeText(this, R.string.camera_denied, Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode != RESULT_OK) return
-        when (requestCode) {
-            REQ_ALBUM -> {
-                val uri = data?.data ?: return
-                val bmp = LocalContacts.decodeUri(this, uri)
-                if (bmp == null) {
-                    Toast.makeText(this, R.string.avatar_failed, Toast.LENGTH_SHORT).show()
-                    return
-                }
-                LocalContacts.saveAvatar(this, slot, bmp)
-                loadAvatarPreview()
-            }
-            REQ_CAMERA -> {
-                val f = pendingCameraFile ?: return
-                val raw = BitmapFactory.decodeFile(f.absolutePath)
-                val bmp = raw?.let { scaleDown(it, 512) } ?: run {
-                    Toast.makeText(this, R.string.avatar_failed, Toast.LENGTH_SHORT).show()
-                    return
-                }
-                LocalContacts.saveAvatar(this, slot, bmp)
-                f.delete()
-                loadAvatarPreview()
-            }
         }
     }
 
@@ -164,8 +170,6 @@ class ContactEditActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_SLOT = "slot"
-        private const val REQ_ALBUM = 11
-        private const val REQ_CAMERA = 12
         private const val REQ_CAMERA_PERM = 100
     }
 }

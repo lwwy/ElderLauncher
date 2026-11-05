@@ -1,4 +1,4 @@
-package com.example.elderlauncher
+package com.example.elderlauncher.ui
 
 import android.Manifest
 import android.content.Intent
@@ -13,9 +13,19 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.example.elderlauncher.R
+import com.example.elderlauncher.core.CrashLogger
+import com.example.elderlauncher.core.ElderApp
+import com.example.elderlauncher.core.LunarUtil
+import com.example.elderlauncher.core.TtsManager
+import com.example.elderlauncher.data.LocalContacts
+import com.example.elderlauncher.phone.TelecomHelper
+import com.example.elderlauncher.service.KeepAliveService
 import com.google.android.material.card.MaterialCardView
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -72,6 +82,8 @@ class HomeActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 必须在 super.onCreate 之前接管启动画面，否则冷启动会先闪一帧空窗口
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         CrashLogger.trace("HomeActivity.onCreate 开始")
         setContentView(R.layout.activity_home)
@@ -130,6 +142,18 @@ class HomeActivity : AppCompatActivity() {
         }
 
         requestNotifPermission()
+
+        // 拦截返回键：本页就是桌面，按返回不应退到别的桌面去。
+        // 老人误触返回的概率很高，退出后看到陌生的系统桌面会找不到回来的路，
+        // 所以这里直接吞掉这个手势，只给一句提示。
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                Toast.makeText(
+                    this@HomeActivity, R.string.home_back_blocked, Toast.LENGTH_SHORT
+                ).show()
+            }
+        })
+
         CrashLogger.trace("HomeActivity.onCreate 结束")
     }
 
@@ -211,7 +235,9 @@ class HomeActivity : AppCompatActivity() {
         tvAmpm.text = SimpleDateFormat("a", Locale.CHINA).format(now)
         val m = cal.get(Calendar.MONTH) + 1
         val d = cal.get(Calendar.DAY_OF_MONTH)
-        tvDate.text = "${m}月${d}日 ${weekdays[cal.get(Calendar.DAY_OF_WEEK) - 1]}"
+        tvDate.text = getString(
+            R.string.home_date, m, d, weekdays[cal.get(Calendar.DAY_OF_WEEK) - 1]
+        )
         tvLunar.text = LunarUtil.getLunar(now)
     }
 
