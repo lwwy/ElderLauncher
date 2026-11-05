@@ -142,10 +142,16 @@ class ContactEditActivity : AppCompatActivity() {
     }
 
     internal fun delete() {
-        val name = LocalContacts.get(this, slot)?.name?.takeIf { it.isNotEmpty() } ?: "该联系人"
+        val name = LocalContacts.get(this, slot)?.name?.takeIf { it.isNotEmpty() }
+        // 无名联系人用专门文案，避免出现“删除联系人 该联系人”这种自我重复的啰嗦表述
+        val msg = if (name != null) {
+            getString(R.string.confirm_delete_msg, name)
+        } else {
+            getString(R.string.confirm_delete_msg_unnamed)
+        }
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.confirm_delete_title)
-            .setMessage(getString(R.string.confirm_delete_msg, name))
+            .setMessage(msg)
             .setNegativeButton(R.string.cancel) { d, _ -> d.dismiss() }
             .setPositiveButton(R.string.delete_contact) { _, _ ->
                 LocalContacts.delete(this, slot)

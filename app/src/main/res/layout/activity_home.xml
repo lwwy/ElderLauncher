@@ -73,10 +73,11 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 设置入口：右上角（看护人使用）。
+        <!-- 设置入口：右上角齿轮图标（看护人使用）。
              用 M3 的 IconButton 形态（自带状态层与 48dp 触摸区）。
-             仍保留少量 elevation：同级卡片按声明顺序绘制在上层，
-             没有 Z 轴抬升时按钮可能被后绘制的视图压住（历史踩过的坑）。 -->
+             显式关掉 elevation 与 stateListAnimator，避免任何阴影，保持与卡片齐平。
+             btnSettings 声明在 cardTime 之后、同处 FrameLayout，绘制层级在上层，
+             且不与下方联系人区重叠，所以去掉抬升也不会被压住。 -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSettings"
             style="@style/Widget.Material3.Button.IconButton"
@@ -84,7 +85,8 @@
             android:layout_height="56dp"
             android:layout_gravity="top|end"
             android:layout_margin="8dp"
-            android:elevation="3dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
             android:contentDescription="@string/home_settings"
             app:icon="@drawable/ic_settings"
             app:iconGravity="textStart"

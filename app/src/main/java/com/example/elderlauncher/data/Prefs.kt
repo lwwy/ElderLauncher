@@ -9,6 +9,7 @@ object Prefs {
 
     const val ANN_INCOMING = "ann_incoming"   // 来电播报
     const val ANN_LOW = "ann_lowbattery"      // 低电量播报
+    const val HIDE_HOME_SETTINGS = "hide_home_settings" // 隐藏首页右上角设置入口（默认 false=显示）
 
     private fun sp(ctx: Context): SharedPreferences =
         ctx.getSharedPreferences(NAME, Context.MODE_PRIVATE)

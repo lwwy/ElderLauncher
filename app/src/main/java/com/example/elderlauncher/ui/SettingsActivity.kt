@@ -40,6 +40,14 @@ class SettingsActivity : AppCompatActivity() {
         swIncoming.setOnCheckedChangeListener { _, v -> Prefs.set(this, Prefs.ANN_INCOMING, v) }
         swLow.setOnCheckedChangeListener { _, v -> Prefs.set(this, Prefs.ANN_LOW, v) }
 
+        // 桌面入口：隐藏/恢复首页右上角设置齿轮。
+        // 开启后首页齿轮隐藏，但仍保留“连点时间区域 5 下进入设置”的隐藏入口。
+        val swHideSettings = findViewById<SwitchMaterial>(R.id.swHideSettings)
+        swHideSettings.isChecked = Prefs.enabled(this, Prefs.HIDE_HOME_SETTINGS, false)
+        swHideSettings.setOnCheckedChangeListener { _, v ->
+            Prefs.set(this, Prefs.HIDE_HOME_SETTINGS, v)
+        }
+
         // 常用联系人（本地可编辑）
         buildContactRows()
 

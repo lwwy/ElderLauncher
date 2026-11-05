@@ -14,6 +14,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -24,6 +25,7 @@ import com.example.elderlauncher.core.ElderApp
 import com.example.elderlauncher.core.LunarUtil
 import com.example.elderlauncher.core.TtsManager
 import com.example.elderlauncher.data.LocalContacts
+import com.example.elderlauncher.data.Prefs
 import com.example.elderlauncher.phone.TelecomHelper
 import com.example.elderlauncher.service.KeepAliveService
 import com.google.android.material.card.MaterialCardView
@@ -69,9 +71,21 @@ class HomeActivity : AppCompatActivity() {
     // 避免“首次点击只弹权限框、必须再点一次才拨”的割裂体验。
     private var pendingCallNumber: String? = null
 
+    // 用 ActivityResult API 替代已废弃的 requestPermissions / onRequestPermissionsResult：
+    // 注册表的回调随 Activity 生命周期存活，天然抗配置变更（如旋转屏幕）导致的字段丢失。
+    private val callPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> onCallPermissionResult(granted) }
+
+    // 通知权限为可选增强（来电/低电量播报依赖系统 TTS，不依赖通知栏），
+    // 授权与否都不影响主流程，因此回调里无需额外处理。
+    private val notifPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* 无需处理 */ }
+
     companion object {
-        private const val REQ_CALL_PHONE = 1
-        private const val REQ_POST_NOTIF = 2
+        // 用于 onSaveInstanceState 暂存待拨号码的 key
+        private const val KEY_PENDING_CALL = "pending_call_number"
     }
 
     private val clockRunnable = object : Runnable {
@@ -98,6 +112,10 @@ class HomeActivity : AppCompatActivity() {
         setContentView(R.layout.activity_home)
         CrashLogger.trace("setContentView 完成")
 
+        // 还原“待拨号码”：若上一次“弹权限框→授权”过程中发生了屏幕旋转（Activity 重建），
+        // 此处必须把暂存号码恢复回来，否则授权回调里拿不到号码、拨号不会自动重放。
+        pendingCallNumber = savedInstanceState?.getString(KEY_PENDING_CALL)
+
         // 预热语音引擎：TTS 初始化要拉起引擎服务，放在首屏渲染之后再做，
         // 避免拖慢冷启动；首次来电播报前也能就绪。
         handler.postDelayed({
@@ -114,9 +132,18 @@ class HomeActivity : AppCompatActivity() {
         cardBattery = findViewById(R.id.cardBattery)
         CrashLogger.trace("findViewById 完成")
 
-        // 设置入口：右上角齿轮（看护人使用）
-        findViewById<android.view.View>(R.id.btnSettings).setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
+        // 设置入口：右上角齿轮（看护人使用）。
+        // 若用户在设置里开启了“隐藏设置入口”，则隐藏该图标；
+        // 隐藏后仍可用“连点时间区域 5 下”进入设置（见下方 timeBlock 监听）。
+        findViewById<android.view.View>(R.id.btnSettings).apply {
+            visibility = if (Prefs.enabled(this@HomeActivity, Prefs.HIDE_HOME_SETTINGS, false)) {
+                View.GONE
+            } else {
+                View.VISIBLE
+            }
+            setOnClickListener {
+                startActivity(Intent(this@HomeActivity, SettingsActivity::class.java))
+            }
         }
 
         // 时间区：连点 5 次进入设置（隐藏入口）
@@ -231,32 +258,25 @@ class HomeActivity : AppCompatActivity() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
             != PackageManager.PERMISSION_GRANTED
         ) {
+            // 权限未授予：记下待拨号码并发起授权；授权结果由 callPermissionLauncher 回调处理
             pendingCallNumber = number
-            ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.CALL_PHONE), REQ_CALL_PHONE
-            )
+            callPermissionLauncher.launch(Manifest.permission.CALL_PHONE)
             return
         }
         TelecomHelper.placeCall(this, number)
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQ_CALL_PHONE) {
-            val number = pendingCallNumber
-            pendingCallNumber = null
-            if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
-                && !number.isNullOrEmpty()
-            ) {
-                // 用户刚授予权限，立即发起拨号，无需再次点击
-                TelecomHelper.placeCall(this, number)
-            } else if (!number.isNullOrEmpty()) {
-                Toast.makeText(this, R.string.call_perm_denied, Toast.LENGTH_SHORT).show()
-            }
+    /**
+     * 拨号权限授权结果的统一处理（由 callPermissionLauncher 回调调用，也可被单元测试直接驱动）。
+     * 授权后自动用暂存的待拨号码真正发起拨号，无需用户再点一次；拒绝则提示且不拨。
+     */
+    internal fun onCallPermissionResult(granted: Boolean) {
+        val number = pendingCallNumber
+        pendingCallNumber = null
+        if (granted && !number.isNullOrEmpty()) {
+            TelecomHelper.placeCall(this, number)
+        } else if (!number.isNullOrEmpty()) {
+            Toast.makeText(this, R.string.call_perm_denied, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -278,10 +298,13 @@ class HomeActivity : AppCompatActivity() {
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQ_POST_NOTIF
-            )
+            notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(KEY_PENDING_CALL, pendingCallNumber)
     }
 
     override fun onResume() {

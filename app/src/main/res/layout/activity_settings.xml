@@ -25,6 +25,45 @@
             android:textSize="@dimen/textTitle"
             android:textStyle="bold" />
 
+        <!-- 零、桌面入口：隐藏/恢复首页右上角齿轮（隐藏后仍可连点时间 5 下进入设置） -->
+        <TextView
+            style="@style/SectionTitle"
+            android:text="@string/set_home_title" />
+
+        <com.google.android.material.card.MaterialCardView style="@style/SettingsCard">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/set_hide_settings"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="@dimen/textSubtitle" />
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/swHideSettings"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/HintText"
+                    android:text="@string/set_hide_settings_tip" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- 一、常用联系人 -->
         <TextView
             style="@style/SectionTitle"
