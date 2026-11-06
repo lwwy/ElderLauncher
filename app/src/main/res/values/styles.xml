@@ -67,6 +67,23 @@
         <item name="android:paddingBottom">8dp</item>
     </style>
 
+    <!-- 二级设置项标签（如「提示音」）：比行标题小一号、颜色降权。
+         用来表达「这块从属于上面那一行」，避免看起来是并列的第三个设置项 -->
+    <style name="SubItemLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/textLabel</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- 二级设置项的状态文字：单行省略，避免长文件名把下面的按钮挤下去 -->
+    <style name="SubItemStatus">
+        <item name="android:textSize">@dimen/textTiny</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
     <!-- 设置页卡片：统一的表面色 + 大圆角 + 1dp 描边 -->
     <style name="SettingsCard" parent="Widget.Material3.CardView.Filled">
         <item name="android:layout_width">match_parent</item>

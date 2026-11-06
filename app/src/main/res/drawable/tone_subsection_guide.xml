@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  设置项「低电量播报」下的二级内容左侧引导竖线。
+  用背景 drawable 画 2dp 细线，避免用 match_parent 高度的 View 在
+  wrap_content 的横向 LinearLayout 里被测量成 0 或撑满屏幕。
+  仅用于表达层级，不参与任何交互。
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 透明底，保证其余区域不绘制 -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+    <item
+        android:width="2dp"
+        android:gravity="left">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/colorOutline" />
+        </shape>
+    </item>
+</layer-list>

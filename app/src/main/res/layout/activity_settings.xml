@@ -160,49 +160,69 @@
                         android:layout_height="wrap_content" />
                 </LinearLayout>
 
-                <!-- 低电量播报提示音：可选本地音频，未选择时仍用系统语音 -->
+                <!-- 「提示音」是「低电量播报」的二级设置，不是并列的第三项。
+                     左侧 2dp 引导竖线 + 整体再缩进 16dp 表达从属关系；
+                     标签降为 18sp 灰色并与当前音源合并成一行，不再占用一个大标题。 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/tone_subsection_guide"
                     android:orientation="vertical"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
-                    android:paddingBottom="12dp">
+                    android:paddingStart="16dp"
+                    android:paddingEnd="0dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="4dp">
 
-                    <TextView
+                    <!-- 标签与当前音源同一行；长文件名单行省略，不挤压下方按钮 -->
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/set_low_tone"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="@dimen/textSubtitle" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/tvLowToneStatus"
-                        style="@style/HintText"
-                        android:text="@string/low_tone_status_system" />
+                        <TextView
+                            style="@style/SubItemLabel"
+                            android:text="@string/set_low_tone" />
+
+                        <TextView
+                            android:id="@+id/tvLowToneStatus"
+                            style="@style/SubItemStatus"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:text="@string/low_tone_status_system" />
+                    </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
                         android:orientation="horizontal">
 
+                        <!-- 主操作：保留描边按钮 -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnPickTone"
                             style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="0dp"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="6dp"
-                            android:layout_weight="1"
+                            android:minHeight="@dimen/touchTarget"
                             android:text="@string/btn_pick_tone" />
 
+                        <!-- 次要操作：无边框文字按钮，视觉上不与主按钮抢焦点；
+                             禁用态（未选择自定义音频）由颜色状态列表自动淡化 -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnResetTone"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="0dp"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:minHeight="@dimen/touchTarget"
+                            android:textColor="@color/tone_secondary_text"
                             android:text="@string/btn_reset_tone" />
                     </LinearLayout>
 
