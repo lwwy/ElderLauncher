@@ -30,6 +30,12 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 
 class SettingsActivity : AppCompatActivity() {
 
+    /** 上一次「设为默认桌面」启动的分支 key；二次点击换一条路，避免在同一条无效路径上反复打转 */
+    private var lastDefaultHomeBranch: String? = null
+
+    /** 进入设置页时的默认桌面状态，用于从系统设置返回后判断是否设置成功 */
+    private var wasDefaultHome = false
+
     // 来电播报开关打开、或进入设置页发现权限缺失时补一次申请。
     // 桌面冷启动只申请一次，用户当时若点了拒绝，这里提供重新授权的机会。
     private val announcePermissionLauncher = registerForActivityResult(
@@ -75,19 +81,10 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.btnAutostart).setOnClickListener { openAutostart() }
         findViewById<MaterialButton>(R.id.btnBattery).setOnClickListener { ignoreBattery() }
 
-        // 设为默认桌面：API 29+ 走官方 RoleManager 角色申请（系统弹确认框，一步到位），
-        // 角色不可用或低版本回退到系统「默认主屏幕」设置让用户手动选
+        // 设为默认桌面：稳定设置页入口 + 全程反馈，杜绝「点了没反应」
+        wasDefaultHome = HomeRole.isDefaultHome(this)
         findViewById<MaterialButton>(R.id.btnDefault).setOnClickListener {
-            val intent = HomeRole.requestDefaultHomeIntent(this)
-                ?: Intent(Settings.ACTION_HOME_SETTINGS)
-            try {
-                startActivity(intent)
-            } catch (_: Exception) {
-                try {
-                    startActivity(Intent(Settings.ACTION_SETTINGS))
-                } catch (_: Exception) {
-                }
-            }
+            requestDefaultHome()
         }
 
         // 恢复系统桌面：取消本应用的默认桌面，回到手机原来的桌面
@@ -115,6 +112,77 @@ class SettingsActivity : AppCompatActivity() {
         if (missing.isEmpty()) return false
         announcePermissionLauncher.launch(missing)
         return true
+    }
+
+    /**
+     * 「设为默认桌面」主流程。
+     *
+     * 历史：v1.0.9 ~ v1.2.2 一直直接跳 ACTION_HOME_SETTINGS，连续 5 个版本工作正常；
+     * v1.2.3 改成优先 RoleManager 角色申请后，在 HyperOS 上因 ROM 静默拦截变成
+     * 「点了没反应」（异常被空 catch 吞掉、兜底又退到系统设置首页）。
+     *
+     * 现在：
+     *  1. 已是默认桌面 → 明确提示，不再发起申请；
+     *  2. 首次点击即打开与老版本相同的系统「默认主屏幕」设置页（点一次就能选）；
+     *  3. 该页不可解析时顺延到「默认应用」设置页、应用详情页，并把实际分支写日志；
+     *  4. 上次打开后返回仍不是默认桌面 → 二次点击跳过上次那条分支，
+     *     优先改走「默认应用」设置页（国产 ROM 通常在这里选桌面）；
+     *  5. 启动成功给可操作引导；所有入口都不可用也明确提示手动路径，绝不静默失败。
+     *
+     * 参数可注入，便于单元测试驱动各分支。返回实际启动的分支 key，未启动返回 null。
+     */
+    internal fun requestDefaultHome(
+        isDefault: Boolean = HomeRole.isDefaultHome(this),
+        options: List<HomeRole.HomeSetupOption> = HomeRole.defaultHomeSetupOptions(this)
+    ): String? {
+        if (isDefault) {
+            Toast.makeText(this, R.string.default_home_already, Toast.LENGTH_SHORT).show()
+            CrashLogger.trace("设为默认桌面：当前已是默认桌面，无需操作")
+            lastDefaultHomeBranch = null
+            return null
+        }
+
+        // 二次点击：上一条路径没让状态生效，换一条；国产 ROM 通常在「默认应用」里选桌面
+        val usable = lastDefaultHomeBranch?.let { last ->
+            val remaining = options.filter { it.key != last }
+            val defaultAppsFirst =
+                remaining.filter { it.key == "default_apps" } +
+                    remaining.filter { it.key != "default_apps" }
+            defaultAppsFirst.ifEmpty { options }
+        } ?: options
+
+        for (opt in usable) {
+            try {
+                startActivity(opt.intent)
+                CrashLogger.trace("设为默认桌面：已启动 ${opt.key} 分支")
+                Toast.makeText(this, R.string.default_home_guide, Toast.LENGTH_LONG).show()
+                lastDefaultHomeBranch = opt.key
+                return opt.key
+            } catch (e: Exception) {
+                CrashLogger.trace(
+                    "设为默认桌面：${opt.key} 启动失败 ${e.javaClass.simpleName}: ${e.message}"
+                )
+            }
+        }
+
+        Toast.makeText(this, R.string.default_home_manual, Toast.LENGTH_LONG).show()
+        CrashLogger.trace("设为默认桌面：所有候选入口均不可用，已提示手动设置路径")
+        return null
+    }
+
+    /**
+     * 从系统设置返回时刷新默认桌面状态：由「非默认」变为「默认」时给出成功反馈。
+     * 显式传参便于单元测试直接驱动，不依赖测试环境的 HOME 解析结果。
+     */
+    internal fun onDefaultHomeStateChanged(nowDefault: Boolean): Boolean {
+        val becameDefault = !wasDefaultHome && nowDefault
+        if (becameDefault) {
+            Toast.makeText(this, R.string.default_home_success, Toast.LENGTH_LONG).show()
+            CrashLogger.trace("设为默认桌面成功：检测到默认桌面角色已生效")
+            lastDefaultHomeBranch = null
+        }
+        wasDefaultHome = nowDefault
+        return becameDefault
     }
 
     /** 生成诊断日志并唤起系统分享面板，用户可直接发给开发者 */
@@ -244,10 +312,11 @@ class SettingsActivity : AppCompatActivity() {
         buildContactRows()
     }
 
-    /** 每次回到设置页都重建联系人列表，确保编辑/保存后实时刷新头像与姓名 */
+    /** 每次回到设置页都重建联系人列表，并检测默认桌面是否设置成功 */
     override fun onResume() {
         super.onResume()
         buildContactRows()
+        onDefaultHomeStateChanged(HomeRole.isDefaultHome(this))
     }
 
     /** 在设置页渲染 3 个常用联系人行（头像 + 名称 + 排序 + 编辑） */
