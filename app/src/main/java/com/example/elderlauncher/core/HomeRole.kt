@@ -17,8 +17,13 @@ import android.provider.Settings
  *    官方明确说明「This function no longer does anything」，应用调了也不会生效；
  *  - 应用**不能自行放弃**已持有的 HOME 角色，只能引导用户到系统设置里改。
  *
- * 判定口径以 HOME intent 的 `resolveActivity` 结果为准 —— 与诊断日志里的
- * 「默认桌面: 是/否」完全一致，也最能反映「按 Home 键会不会回到本应用」。
+ * 判定口径（v1.2.6 起）：[holdsHomeRole]（ROLE_HOME 角色持有）**或** HOME intent 的
+ * `resolveActivity` 解析到自身，任一成立即为默认桌面。此前只看 resolveActivity，
+ * HyperOS 上「角色持有状态」与「解析结果」可能不同步，导致日志头部写「否」但按 Home 键
+ * 其实正常回到本应用（判定假阴性）。改为「或」只会把「否」修成「是」，不会把「是」误判成「否」。
+ *
+ * 例外：`HomeActivity.shouldInterceptBack()` 仍只用 [resolveHomeMatchesSelf] 的解析口径 ——
+ * 返回键拦截是实际功能行为，保持与 v1.2.5 完全一致，不随本次判定口径调整而改变。
  *
  * 重要：RoleManager 的「角色申请」intent **不作为「设为默认桌面」的入口**。
  * 它在部分国产 ROM（HyperOS 等）上会被静默拦截：`resolveActivity` 能通过校验、
@@ -32,22 +37,45 @@ object HomeRole {
     /** 默认桌面设置入口候选项；key 用于日志与单元测试区分实际走了哪条分支 */
     data class HomeSetupOption(val key: String, val intent: Intent)
 
-    /** 本应用当前是否为默认桌面（与诊断日志口径一致） */
+    /** 本应用当前是否为默认桌面：ROLE_HOME 持有 或 HOME 解析到自身，任一成立即可 */
     fun isDefaultHome(ctx: Context): Boolean = try {
-        val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
-        val resolved = ctx.packageManager.resolveActivity(
-            home, PackageManager.MATCH_DEFAULT_ONLY
-        )
-        isDefaultHome(resolved?.activityInfo?.packageName, ctx.packageName)
+        isDefaultHome(holdsHomeRole(ctx), homeResolvePackage(ctx), ctx.packageName)
     } catch (_: Throwable) {
         false
     }
+
+    /**
+     * 纯判定逻辑抽出来，便于单元测试直接驱动「角色持有但解析为其它」这类假阴性场景，
+     * 不依赖真实 RoleManager / PackageManager 阴影。
+     */
+    internal fun isDefaultHome(
+        roleHeld: Boolean,
+        resolvedPackage: String?,
+        selfPackage: String
+    ): Boolean = roleHeld || isDefaultHome(resolvedPackage, selfPackage)
 
     /** 纯判定逻辑抽出来，便于单元测试不依赖 PackageManager 阴影 */
     internal fun isDefaultHome(resolvedPackage: String?, selfPackage: String): Boolean =
         resolvedPackage != null && resolvedPackage == selfPackage
 
-    /** 是否持有 ROLE_HOME（仅 API 29+ 有意义），供诊断使用；低版本返回 false */
+    /** 诊断用：HOME intent 实际解析到的包名；解析不到返回 null */
+    internal fun homeResolvePackage(ctx: Context): String? = try {
+        val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        ctx.packageManager.resolveActivity(home, PackageManager.MATCH_DEFAULT_ONLY)
+            ?.activityInfo?.packageName
+    } catch (_: Throwable) {
+        null
+    }
+
+    /**
+     * 解析口径（不含 RoleManager）：返回键拦截等需保持原有行为的场景专用。
+     * v1.2.6 只把它用于 [com.example.elderlauncher.ui.HomeActivity.shouldInterceptBack]，
+     * 确保本次「判定口径调整」不改变任何已验证正常的功能行为。
+     */
+    internal fun resolveHomeMatchesSelf(ctx: Context): Boolean =
+        isDefaultHome(homeResolvePackage(ctx), ctx.packageName)
+
+    /** 是否持有 ROLE_HOME（仅 API 29+ 有意义），供判定与诊断使用；低版本返回 false */
     @SuppressLint("NewApi")
     fun holdsHomeRole(ctx: Context): Boolean =
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) false

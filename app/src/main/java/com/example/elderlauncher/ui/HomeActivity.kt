@@ -205,8 +205,13 @@ class HomeActivity : AppCompatActivity() {
         CrashLogger.trace("HomeActivity.onCreate 结束")
     }
 
-    /** 是否应拦截返回键：只有本应用当前是默认桌面时才拦截。供单元测试直接驱动。 */
-    internal fun shouldInterceptBack(): Boolean = HomeRole.isDefaultHome(this)
+    /**
+     * 是否应拦截返回键：只有本应用当前是默认桌面时才拦截。供单元测试直接驱动。
+     *
+     * 这里刻意用 HomeRole 的「解析口径」而非合并后的 isDefaultHome() —— 返回键拦截是
+     * 实际功能行为，v1.2.6 修判定假阴性时保持不变，避免影响已验证正常的桌面体验。
+     */
+    internal fun shouldInterceptBack(): Boolean = HomeRole.resolveHomeMatchesSelf(this)
 
     /**
      * 应用返回键拦截策略。默认按当前默认桌面角色判定；显式传参供单元测试驱动

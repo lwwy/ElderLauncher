@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.provider.Settings
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -76,7 +77,7 @@ class SettingsActivity : AppCompatActivity() {
 
         // 自启动权限 / 电池优化
         findViewById<MaterialButton>(R.id.btnAutostart).setOnClickListener { openAutostart() }
-        findViewById<MaterialButton>(R.id.btnBattery).setOnClickListener { ignoreBattery() }
+        findViewById<MaterialButton>(R.id.btnBattery).setOnClickListener { requestIgnoreBattery() }
 
         // 设为默认桌面：稳定设置页入口 + 全程反馈，杜绝「点了没反应」
         wasDefaultHome = HomeRole.isDefaultHome(this)
@@ -389,16 +390,59 @@ class SettingsActivity : AppCompatActivity() {
         Toast.makeText(this, R.string.autostart_failed, Toast.LENGTH_LONG).show()
     }
 
-    private fun ignoreBattery() {
-        try {
-            val intent = Intent(
-                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+    /**
+     * 「忽略电池优化」入口。
+     *
+     * 旧实现用 ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS 直接弹系统确认框，但 Manifest
+     * 未声明 REQUEST_IGNORE_BATTERY_OPTIMIZATIONS 权限 —— 该 action 按官方要求必须持有权限，
+     * 请求会被拒绝/无响应；而代码无论成败都弹「已请求…请点允许」的假成功，异常时还错用
+     * 「自启动设置」文案。补该权限又会违反 Google Play 政策（lint 的 BatteryLife 警告）。
+     *
+     * 现改走 ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS（系统「电池优化」白名单列表页）：
+     * 官方明确「大多数应用都可以调用」，无需任何权限、无政策风险，用户在列表里手动设为
+     * 「不优化」。用 isIgnoringBatteryOptimizations() 判断真实状态，不再无条件假成功。
+     *
+     * 参数可注入，便于单元测试驱动各分支；返回实际启动的 intent action，未启动返回 null。
+     */
+    internal fun requestIgnoreBattery(
+        alreadyIgnoring: Boolean = isIgnoringBatteryOptimizations(),
+        resolvable: (Intent) -> Boolean = { it.resolveActivity(packageManager) != null },
+        launch: (Intent) -> Unit = { startActivity(it) }
+    ): String? {
+        if (alreadyIgnoring) {
+            Toast.makeText(this, R.string.battery_already, Toast.LENGTH_SHORT).show()
+            CrashLogger.trace("忽略电池优化：已在白名单，无需操作")
+            return null
+        }
+
+        val listPage = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+        val target = if (resolvable(listPage)) {
+            listPage
+        } else {
+            Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                 Uri.parse("package:$packageName")
             )
-            startActivity(intent)
-            Toast.makeText(this, R.string.battery_done, Toast.LENGTH_LONG).show()
-        } catch (_: Exception) {
-            Toast.makeText(this, R.string.autostart_failed, Toast.LENGTH_LONG).show()
         }
+
+        return try {
+            launch(target)
+            CrashLogger.trace("忽略电池优化：已打开 ${target.action} 分支")
+            Toast.makeText(this, R.string.battery_done, Toast.LENGTH_LONG).show()
+            target.action
+        } catch (e: Exception) {
+            CrashLogger.trace(
+                "忽略电池优化：启动失败 ${e.javaClass.simpleName}: ${e.message}"
+            )
+            Toast.makeText(this, R.string.battery_failed, Toast.LENGTH_LONG).show()
+            null
+        }
+    }
+
+    private fun isIgnoringBatteryOptimizations(): Boolean = try {
+        val pm = getSystemService(PowerManager::class.java)
+        pm?.isIgnoringBatteryOptimizations(packageName) == true
+    } catch (_: Throwable) {
+        false
     }
 }

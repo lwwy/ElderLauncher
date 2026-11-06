@@ -46,7 +46,7 @@
     <string name="incoming_hangup">挂断</string>
 
     <string name="set_default_launcher">设为默认桌面</string>
-    <string name="set_default_tip">点一下，在系统弹窗中把“老人桌面”设为默认桌面，开机即进入本应用</string>
+    <string name="set_default_tip">点一下，在系统设置里把“老人桌面”勾选为默认主屏幕，开机即进入本应用</string>
     <string name="restore_system_home">恢复系统桌面</string>
     <string name="restore_system_home_tip">打开系统设置，把默认桌面改回手机原来的桌面。系统不允许应用自行取消，需要你手动选择</string>
     <string name="restore_system_home_guide">已打开系统设置，请把默认桌面选择为系统桌面（应用无法自行取消）</string>
@@ -102,7 +102,9 @@
     <string name="battery_tip">允许后台运行，保证开机与来电提醒不被系统拦截</string>
     <string name="autostart_opened">正在打开自启动设置，请允许“老人桌面”自启动与后台运行</string>
     <string name="autostart_failed">未能自动打开自启动设置，请到“设置 → 应用 → 老人桌面”中手动开启自启动与后台运行</string>
-    <string name="battery_done">已请求忽略电池优化，请在弹窗中点击“允许”</string>
+    <string name="battery_done">已打开电池优化设置，请在列表里把“老人桌面”设为「不优化」</string>
+    <string name="battery_already">已允许后台运行，无需再设置</string>
+    <string name="battery_failed">无法打开电池优化设置，请到“设置 → 电池 → 电池优化”中手动把“老人桌面”设为不优化</string>
     <string name="home_empty_hint">请在“设置 → 常用联系人”中添加</string>
     <!-- 首页时间/日期的占位与格式 -->
     <string name="time_placeholder" translatable="false">--:--</string>

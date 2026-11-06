@@ -42,7 +42,7 @@ object Diagnostics {
         }
     }
 
-    private fun buildReport(ctx: Context): String {
+    internal fun buildReport(ctx: Context): String {
         val sb = StringBuilder()
         sb.appendLine("========== 老人桌面 · 诊断日志 ==========")
         sb.appendLine("导出时间: ${CrashLogger.stamp()}")
@@ -56,7 +56,10 @@ object Diagnostics {
         sb.appendLine("---------- 功能开关 ----------")
         sb.appendLine("来电播报: ${onOff(Prefs.enabled(ctx, Prefs.ANN_INCOMING))}")
         sb.appendLine("低电量播报: ${onOff(Prefs.enabled(ctx, Prefs.ANN_LOW))}")
-        sb.appendLine("默认桌面: ${if (isDefaultHome(ctx)) "是" else "否"}")
+        sb.appendLine("默认桌面: ${if (HomeRole.isDefaultHome(ctx)) "是" else "否"}")
+        // 补两条原始口径，便于区分「真没设上」与「某个判定口径失效」（HyperOS 实测会不同步）
+        sb.appendLine("ROLE_HOME 持有: ${if (HomeRole.holdsHomeRole(ctx)) "是" else "否"}")
+        sb.appendLine("HOME 解析结果: ${HomeRole.homeResolvePackage(ctx) ?: "无"}")
         // 显式传默认 false：该项默认应为“关闭”（显示齿轮），与 enabled() 的默认 true 相反
         sb.appendLine("隐藏设置入口: ${onOff(Prefs.enabled(ctx, Prefs.HIDE_HOME_SETTINGS, false))}")
         sb.appendLine("常用联系人: ${contactSummary(ctx)}")
@@ -95,17 +98,7 @@ object Diagnostics {
 
     private fun onOff(v: Boolean) = if (v) "开启" else "关闭"
 
-    private fun isDefaultHome(ctx: Context): Boolean = try {
-        val intent = android.content.Intent(android.content.Intent.ACTION_MAIN)
-            .addCategory(android.content.Intent.CATEGORY_HOME)
-        val resolved = ctx.packageManager.resolveActivity(
-            intent,
-            android.content.pm.PackageManager.MATCH_DEFAULT_ONLY
-        )
-        resolved?.activityInfo?.packageName == ctx.packageName
-    } catch (_: Throwable) {
-        false
-    }
+    /** 「默认桌面」判定统一由 [HomeRole.isDefaultHome] 提供，此处不再重复实现 */
 
     /** 只统计已填几个联系人，不写入姓名/号码，避免隐私外泄 */
     private fun contactSummary(ctx: Context): String {
