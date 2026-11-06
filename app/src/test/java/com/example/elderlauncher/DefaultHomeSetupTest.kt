@@ -22,17 +22,17 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
 
 /**
- * 「设为默认桌面」点击无反应修复的回归测试。
+ * 「设为默认桌面」入口的回归测试。
  *
- * 根因：v1.2.3 把原本一直正常的 ACTION_HOME_SETTINGS 换成优先 RoleManager 角色申请，
- * 而该 intent 在 HyperOS 上「能启动却不弹框」，且能骗过 resolveActivity 校验，
- * 导致「取首个可启动入口」永远停在它上面。守护的不变量：
- *  1. 候选链以 home_settings 打头、顺序固定，且**绝不含 role**；
- *  2. 首次点击就走 home_settings（与 v1.0.9 ~ v1.2.2 行为一致），并有可操作引导；
+ * 守护的不变量：
+ *  1. 候选链以 home_settings 打头，且**绝不含 role / default_apps** —— 前者会被
+ *     HyperOS 静默拦截，后者打开的「默认应用」页实测只有电话/短信/浏览器等条目、
+ *     完全没有桌面选项，作为兜底会把用户带进死路；
+ *  2. 每次点击（首次、二次、三次）都打开同一个「默认主屏幕」设置页，不再换路；
  *  3. 已是默认桌面时不启动任何入口，但给出明确提示；
- *  4. 首个入口不可用时顺延；所有入口不可用也绝不静默失败；
- *  5. 上次入口没生效时，二次点击换一条分支（优先 default_apps），不重复同一条；
- *  6. 从系统设置返回检测到角色变为默认，成功反馈只提示一次并重置分支状态。
+ *  4. 首选不可解析时顺延；所有入口不可用也绝不静默失败；
+ *  5. 引导/手动文案指向真正能勾选桌面的页面，不再叫用户「换一个设置页」；
+ *  6. 从系统设置返回检测到角色变为默认，成功反馈只提示一次。
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
@@ -68,12 +68,12 @@ class DefaultHomeSetupTest {
         HomeRole.HomeSetupOption("app_details", Intent("test.action.APP_DETAILS"))
 
     @Test
-    fun setupOptionsStartWithHomeSettingsAndNeverIncludeRole() {
-        // 全部候选都可解析时，顺序必须固定为老版本的稳定路径，且不能混入 RoleManager
+    fun setupOptionsStartWithHomeSettingsAndExcludeDeadEnds() {
+        // 全部候选都可解析时，顺序固定，且不能混入 RoleManager 或无效的「默认应用」页
         val options = HomeRole.defaultHomeSetupOptions(app) { true }
 
         assertEquals(
-            listOf("home_settings", "default_apps", "app_details"),
+            listOf("home_settings", "app_details"),
             options.map { it.key }
         )
         assertEquals(
@@ -84,6 +84,10 @@ class DefaultHomeSetupTest {
         assertFalse(
             "候选链不得包含会被 ROM 静默拦截的 RoleManager 入口",
             options.any { it.key == "role" }
+        )
+        assertFalse(
+            "候选链不得包含没有桌面选项的 default_apps 入口",
+            options.any { it.key == "default_apps" }
         )
     }
 
@@ -123,50 +127,46 @@ class DefaultHomeSetupTest {
     }
 
     @Test
-    fun secondClickSwitchesAwayFromFirstEntryAndPrefersDefaultApps() {
+    fun repeatedClicksAlwaysRetryHomeSettingsAndNeverSwitchPage() {
         val a = activity()
         drainIntents(a)
-        val full = listOf(homeSettings, defaultApps, appDetails)
+        // 即使调用方仍传入含 default_apps 的候选链，也永远只走首选那一个设置页
+        val options = listOf(homeSettings, defaultApps, appDetails)
 
-        // 第一次：打开 HOME_SETTINGS（模拟该页没有桌面选项，用户返回后仍未成为默认）
-        a.requestDefaultHome(false, full)
-        drainIntents(a)
-        a.onDefaultHomeStateChanged(false)
-        ShadowToast.reset()
-
-        // 第二次：必须换一条路，优先国产 ROM 里真正能选桌面的「默认应用」设置
-        val used = a.requestDefaultHome(false, full)
-
-        assertEquals("default_apps", used)
-        val started = drainIntents(a)
-        assertTrue(
-            "二次点击应打开系统「默认应用」设置",
-            started.any { it.action == "test.action.DEFAULT_APPS" }
-        )
-        assertFalse(
-            "二次点击不得重复上次那条没生效的 HOME_SETTINGS",
-            started.any { it.action == "test.action.HOME_SETTINGS" }
-        )
+        repeat(3) { round ->
+            val used = a.requestDefaultHome(false, options)
+            assertEquals("第 ${round + 1} 次点击仍应打开「默认主屏幕」设置页", "home_settings", used)
+            val started = drainIntents(a)
+            assertTrue(
+                "第 ${round + 1} 次点击必须启动 home_settings",
+                started.any { it.action == "test.action.HOME_SETTINGS" }
+            )
+            assertFalse(
+                "任何一次点击都不得把用户带到没有桌面选项的「默认应用」页",
+                started.any { it.action == "test.action.DEFAULT_APPS" }
+            )
+        }
     }
 
     @Test
-    fun secondClickNeverRepeatsTheSameBranch() {
+    fun secondClickDoesNotOpenAnotherSettingsPage() {
         val a = activity()
         drainIntents(a)
 
-        // 首次只给出 default_apps（模拟 HOME_SETTINGS 在这台 ROM 上不可解析）
-        a.requestDefaultHome(false, listOf(defaultApps, appDetails))
-        drainIntents(a)
-        a.onDefaultHomeStateChanged(false)
-
-        // 二次点击即使拿回完整候选链，也不能再走上次那条
-        val used = a.requestDefaultHome(false, listOf(homeSettings, defaultApps, appDetails))
-
-        assertEquals("home_settings", used)
-        assertFalse(
-            "二次点击不得重复上次的 default_apps",
-            drainIntents(a).any { it.action == "test.action.DEFAULT_APPS" }
+        a.requestDefaultHome(false, listOf(homeSettings, appDetails))
+        assertEquals(
+            "首次点击只应启动 1 个 Activity",
+            1,
+            drainIntents(a).size
         )
+        a.onDefaultHomeStateChanged(false) // 从设置页返回，仍未成为默认
+        ShadowToast.reset()
+
+        val used = a.requestDefaultHome(false, listOf(homeSettings, appDetails))
+        assertEquals("二次点击仍是同一条路径", "home_settings", used)
+        val started = drainIntents(a)
+        assertEquals("二次点击也只启动 1 个页面", 1, started.size)
+        assertEquals("test.action.HOME_SETTINGS", started.first().action)
     }
 
     @Test
@@ -174,11 +174,11 @@ class DefaultHomeSetupTest {
         val a = activity()
         drainIntents(a)
 
-        // 只给后两级候选，验证仍会启动其中的第一项（不会因缺首选而静默）
-        val used = a.requestDefaultHome(false, listOf(defaultApps, appDetails))
+        // 只给最后兜底，验证仍会启动（不会因缺首选而静默）
+        val used = a.requestDefaultHome(false, listOf(appDetails))
 
-        assertEquals("default_apps", used)
-        assertTrue(drainIntents(a).any { it.action == "test.action.DEFAULT_APPS" })
+        assertEquals("app_details", used)
+        assertTrue(drainIntents(a).any { it.action == "test.action.APP_DETAILS" })
     }
 
     @Test
@@ -215,30 +215,28 @@ class DefaultHomeSetupTest {
     }
 
     @Test
-    fun successFeedbackResetsBranchForFreshStart() {
-        val a = activity()
-        drainIntents(a)
-        val full = listOf(homeSettings, defaultApps, appDetails)
+    fun guideTextPointsToTheRealSettingPageAndNoLongerSuggestsSwitching() {
+        val guide = app.getString(R.string.default_home_guide)
+        val manual = app.getString(R.string.default_home_manual)
 
-        a.onDefaultHomeStateChanged(false)
-        a.requestDefaultHome(false, full)
-        drainIntents(a)
-        a.onDefaultHomeStateChanged(true) // 从系统设置返回，设置成功 → 重置分支
-        a.onDefaultHomeStateChanged(false) // 之后又被改回非默认
-        ShadowToast.reset()
-        drainIntents(a)
+        assertTrue("引导文案应提示在列表中勾选", guide.contains("勾选"))
+        assertTrue("引导文案应提示重试而非换页", guide.contains("重试"))
+        assertFalse("引导文案不得再叫用户换一个设置页", guide.contains("换一个设置页"))
 
-        // 新一轮点击应从首选重新开始，而不是停留在上次的 secondary 分支
-        assertEquals("home_settings", a.requestDefaultHome(false, full))
+        assertTrue("手动文案应指向真正能设桌面的页面", manual.contains("默认主屏幕"))
+        assertFalse(
+            "手动文案不得再指向没有桌面选项的「默认应用 → 桌面」",
+            manual.contains("默认应用 → 桌面")
+        )
     }
 
     @Test
     fun setupOptionsFilterKeepsOnlyResolvableEntries() {
         // 注入 resolvable，验证候选链会剔除系统打不开的入口
         val options = HomeRole.defaultHomeSetupOptions(app) { intent ->
-            intent.action == Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS
+            intent.action == Settings.ACTION_APPLICATION_DETAILS_SETTINGS
         }
         assertEquals(1, options.size)
-        assertEquals("default_apps", options.first().key)
+        assertEquals("app_details", options.first().key)
     }
 }

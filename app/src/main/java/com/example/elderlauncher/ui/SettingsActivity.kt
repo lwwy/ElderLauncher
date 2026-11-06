@@ -30,9 +30,6 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 
 class SettingsActivity : AppCompatActivity() {
 
-    /** 上一次「设为默认桌面」启动的分支 key；二次点击换一条路，避免在同一条无效路径上反复打转 */
-    private var lastDefaultHomeBranch: String? = null
-
     /** 进入设置页时的默认桌面状态，用于从系统设置返回后判断是否设置成功 */
     private var wasDefaultHome = false
 
@@ -123,10 +120,10 @@ class SettingsActivity : AppCompatActivity() {
      *
      * 现在：
      *  1. 已是默认桌面 → 明确提示，不再发起申请；
-     *  2. 首次点击即打开与老版本相同的系统「默认主屏幕」设置页（点一次就能选）；
-     *  3. 该页不可解析时顺延到「默认应用」设置页、应用详情页，并把实际分支写日志；
-     *  4. 上次打开后返回仍不是默认桌面 → 二次点击跳过上次那条分支，
-     *     优先改走「默认应用」设置页（国产 ROM 通常在这里选桌面）；
+     *  2. 每次点击都打开与老版本相同的系统「默认主屏幕」设置页（点一次就能选）；
+     *  3. 该页不可解析时才顺延到应用详情页，并把实际分支写日志；
+     *  4. 不再「二次点击换路」—— HyperOS 的「默认应用」页里没有桌面选项，
+     *     换过去只会让用户更找不到；重复点击本按钮就是重新打开同一页重试；
      *  5. 启动成功给可操作引导；所有入口都不可用也明确提示手动路径，绝不静默失败。
      *
      * 参数可注入，便于单元测试驱动各分支。返回实际启动的分支 key，未启动返回 null。
@@ -138,25 +135,15 @@ class SettingsActivity : AppCompatActivity() {
         if (isDefault) {
             Toast.makeText(this, R.string.default_home_already, Toast.LENGTH_SHORT).show()
             CrashLogger.trace("设为默认桌面：当前已是默认桌面，无需操作")
-            lastDefaultHomeBranch = null
             return null
         }
 
-        // 二次点击：上一条路径没让状态生效，换一条；国产 ROM 通常在「默认应用」里选桌面
-        val usable = lastDefaultHomeBranch?.let { last ->
-            val remaining = options.filter { it.key != last }
-            val defaultAppsFirst =
-                remaining.filter { it.key == "default_apps" } +
-                    remaining.filter { it.key != "default_apps" }
-            defaultAppsFirst.ifEmpty { options }
-        } ?: options
-
-        for (opt in usable) {
+        // 每次都从首选开始：能勾选桌面的只有「默认主屏幕应用」页，重复点击即重试该页
+        for (opt in options) {
             try {
                 startActivity(opt.intent)
                 CrashLogger.trace("设为默认桌面：已启动 ${opt.key} 分支")
                 Toast.makeText(this, R.string.default_home_guide, Toast.LENGTH_LONG).show()
-                lastDefaultHomeBranch = opt.key
                 return opt.key
             } catch (e: Exception) {
                 CrashLogger.trace(
@@ -179,7 +166,6 @@ class SettingsActivity : AppCompatActivity() {
         if (becameDefault) {
             Toast.makeText(this, R.string.default_home_success, Toast.LENGTH_LONG).show()
             CrashLogger.trace("设为默认桌面成功：检测到默认桌面角色已生效")
-            lastDefaultHomeBranch = null
         }
         wasDefaultHome = nowDefault
         return becameDefault

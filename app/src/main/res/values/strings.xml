@@ -53,8 +53,8 @@
     <string name="restore_system_home_already">当前已不是默认桌面，无需操作</string>
     <!-- 设为默认桌面：多路径引导与结果反馈（修复「点了没反应」） -->
     <string name="default_home_already">老人桌面已经是默认桌面了</string>
-    <string name="default_home_guide">已打开系统设置，请在页面里把「老人桌面」设为默认桌面；若这一页找不到桌面选项，请再点一次本按钮换一个设置页</string>
-    <string name="default_home_manual">无法自动打开设置，请到 系统设置 → 默认应用 → 桌面 中手动选择「老人桌面」</string>
+    <string name="default_home_guide">已打开「默认主屏幕应用」设置，请在列表中勾选「老人桌面」；若页面没出现，请再点一次本按钮重试</string>
+    <string name="default_home_manual">无法自动打开设置，请在系统设置里搜索「默认主屏幕」，手动把「老人桌面」设为默认桌面</string>
     <string name="default_home_success">已设为默认桌面</string>
     <string name="btn_test">▶ 测试</string>
     <!-- 播报文案：来电/低电量播报与设置页「测试」按钮共用同一份，避免两处各写一遍 -->

@@ -85,12 +85,13 @@ object HomeRole {
      * 「设为默认桌面」的候选入口，按优先级排列，只保留当前系统真正能解析的。
      *
      * 顺序刻意与 v1.0.9 ~ v1.2.2（连续 5 个版本实测正常）保持一致：
-     *  - home_settings：系统「默认主屏幕」设置 —— 首选，用户点一次就能进到选择页；
-     *  - default_apps：系统「默认应用」设置 —— 国产 ROM 通常在这里选桌面，二次点击优先；
-     *  - app_details：本应用详情页 —— 最后兜底，至少让用户看到界面。
+     *  - home_settings：系统「默认主屏幕」设置 —— 唯一能真正勾选桌面的页面，始终首选；
+     *  - app_details：本应用详情页 —— 仅当上面打不开时的最后兜底，至少让用户看到界面。
      *
      * 不含 RoleManager 的 role 入口：它能通过 resolveActivity 校验却不生效，
      * 会让「取首个可启动入口」的策略永远停在它上面（详见类注释）。
+     * 不含 default_apps（ACTION_MANAGE_DEFAULT_APPS_SETTINGS）：HyperOS 实测该页只有
+     * 电话 / 短信 / 浏览器 / 钱包等条目，完全没有桌面选项，作为兜底会把用户带进死路。
      * resolvable 抽成可注入参数，便于单元测试不依赖真实 PackageManager 驱动分支。
      */
     fun defaultHomeSetupOptions(
@@ -99,7 +100,6 @@ object HomeRole {
     ): List<HomeSetupOption> {
         val all = listOf(
             HomeSetupOption("home_settings", homeSettingsIntent()),
-            HomeSetupOption("default_apps", Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)),
             HomeSetupOption(
                 "app_details",
                 Intent(
