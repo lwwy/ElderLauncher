@@ -40,13 +40,9 @@
         <item name="android:textColor">@color/colorOnSurface</item>
     </style>
 
-    <!-- 启动主题：Android 12+ 由系统 SplashScreen 接管，低版本沿用纯色窗口 -->
-    <style name="Theme.ElderLauncher.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/colorBackground</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
-        <item name="windowSplashScreenAnimationDuration">300</item>
-        <item name="postSplashScreenTheme">@style/Theme.ElderLauncher</item>
-    </style>
+    <!-- 桌面 Activity 刻意不再使用 SplashScreen 主题：桌面是常驻界面，
+         被系统重建时会反复重播启动画面，表现为「闪一下图标再出界面」。
+         直接用纯色窗口背景（与桌面内容同色），重建也只是一帧纯色，无可感闪烁。 -->
 
     <!-- ==================== 文字语义令牌 ==================== -->
 

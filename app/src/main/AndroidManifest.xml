@@ -35,15 +35,30 @@
         android:theme="@style/Theme.ElderLauncher"
         tools:targetApi="34">
 
-        <!-- 桌面主页：同时作为 LAUNCHER 与 HOME，可被设为默认桌面 -->
+        <!-- 桌面主页：HOME 与 LAUNCHER 拆成两个独立 intent-filter。
+             合在一个 filter 里时，同一个 Activity 既是「按 Home 键的终点」又是
+             「从桌面点图标打开的普通 App」，系统会在两种 task 语义间反复清栈/重建，
+             切回系统桌面后表现为动画闪烁、界面闪现（诊断日志实测 20 分钟内 onCreate 4 次）。
+             excludeFromRecents：桌面 task 不进最近任务，避免系统额外带前/压后。
+             主题用纯色窗口（与桌面背景同色），不再用 Splash 主题，
+             这样即使被系统重建也不会重播启动画面。 -->
         <activity
             android:name="com.example.elderlauncher.ui.HomeActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:theme="@style/Theme.ElderLauncher.Splash">
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.ElderLauncher">
+            <!-- 普通 App 入口：从系统桌面点图标进入。
+                 保留 DEFAULT：部分 ROM 启动 LAUNCHER 时 intent 会带该 category，
+                 少声明会导致隐式解析失败、点图标打不开（拆分前原 filter 是有的）。 -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- HOME 角色：设为默认桌面后由系统按 Home 键拉起 -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>

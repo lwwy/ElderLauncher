@@ -7,5 +7,5 @@
 # 这里只对入口类做兜底，避免将来改 manifest 写法时被裁掉。
 -keep class com.example.elderlauncher.core.ElderApp { *; }
 
-# 第三方库（Material / AppCompat / SplashScreen）都自带 consumer rules，无需重复声明。
+# 第三方库（Material / AppCompat）都自带 consumer rules，无需重复声明。
 -dontwarn org.jetbrains.annotations.**

@@ -2,7 +2,6 @@ package com.example.elderlauncher.ui
 
 import android.content.ComponentName
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.PorterDuff
 import android.net.Uri
 import android.os.Bundle
@@ -20,6 +19,7 @@ import androidx.core.content.FileProvider
 import com.example.elderlauncher.R
 import com.example.elderlauncher.core.CrashLogger
 import com.example.elderlauncher.core.Diagnostics
+import com.example.elderlauncher.core.HomeRole
 import com.example.elderlauncher.core.TtsManager
 import com.example.elderlauncher.data.LocalContacts
 import com.example.elderlauncher.data.Prefs
@@ -75,12 +75,18 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.btnAutostart).setOnClickListener { openAutostart() }
         findViewById<MaterialButton>(R.id.btnBattery).setOnClickListener { ignoreBattery() }
 
-        // 设为默认桌面
+        // 设为默认桌面：API 29+ 走官方 RoleManager 角色申请（系统弹确认框，一步到位），
+        // 角色不可用或低版本回退到系统「默认主屏幕」设置让用户手动选
         findViewById<MaterialButton>(R.id.btnDefault).setOnClickListener {
+            val intent = HomeRole.requestDefaultHomeIntent(this)
+                ?: Intent(Settings.ACTION_HOME_SETTINGS)
             try {
-                startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
-            } catch (e: Exception) {
-                startActivity(Intent(Settings.ACTION_SETTINGS))
+                startActivity(intent)
+            } catch (_: Exception) {
+                try {
+                    startActivity(Intent(Settings.ACTION_SETTINGS))
+                } catch (_: Exception) {
+                }
             }
         }
 
@@ -140,47 +146,37 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    /** 取消老人桌面的默认桌面设置，回到系统桌面 */
-    private fun restoreSystemHome() {
-        try {
-            // 清除本应用作为 HOME 的首选记录（对绝大多数 ROM 生效）
-            packageManager.clearPackagePreferredActivities(packageName)
-            CrashLogger.trace("已清除本应用的默认桌面首选记录")
-        } catch (e: Exception) {
-            CrashLogger.trace("清除默认桌面首选失败：${e.message}")
-        }
-
-        val stillDefault = try {
-            val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
-            val resolved = packageManager.resolveActivity(home, PackageManager.MATCH_DEFAULT_ONLY)
-            resolved?.activityInfo?.packageName == packageName
-        } catch (e: Exception) {
-            false
-        }
-
-        if (stillDefault) {
-            // 部分 ROM（含 HyperOS）用角色管理默认桌面，App 无法自行放弃角色，只能引导用户改
-            Toast.makeText(this, R.string.restore_system_home_failed, Toast.LENGTH_LONG).show()
+    /**
+     * 恢复系统桌面（改为引导式，不再尝试自动取消）。
+     *
+     * Android 10 (API 29) 起默认桌面由 RoleManager.ROLE_HOME 独占管理：
+     *  - `clearPackagePreferredActivities()` 已弃用，官方明确「不再做任何事」，
+     *    之前那行调用实际上从未生效，真正让状态改变的是用户去系统设置手动改；
+     *  - 应用**无法自行放弃**已持有的 HOME 角色，只能由用户在系统设置里切换。
+     *
+     * 同时**不再主动发 ACTION_MAIN + CATEGORY_HOME intent**：本应用仍声明 HOME，
+     * 该 intent 可能被解析回自己，导致切回系统桌面时界面闪回、Activity 反复重建
+     * （诊断日志里两次「清除首选记录」之后都紧跟着额外的 onCreate）。
+     *
+     * 声明为 internal 便于单元测试直接驱动验证「不再发 HOME intent」。
+     */
+    internal fun restoreSystemHome(isDefaultHome: Boolean = HomeRole.isDefaultHome(this)) {
+        if (isDefaultHome) {
+            Toast.makeText(this, R.string.restore_system_home_guide, Toast.LENGTH_LONG).show()
             try {
-                startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
-            } catch (e: Exception) {
+                startActivity(HomeRole.homeSettingsIntent())
+            } catch (_: Exception) {
                 try {
                     startActivity(Intent(Settings.ACTION_SETTINGS))
                 } catch (_: Exception) {
                 }
             }
+            CrashLogger.trace("恢复系统桌面：当前仍是默认，已引导至系统设置手动切换")
         } else {
-            Toast.makeText(this, R.string.restore_system_home_ok, Toast.LENGTH_LONG).show()
-            // 直接打开系统桌面，让用户立刻看到效果
-            try {
-                startActivity(
-                    Intent(Intent.ACTION_MAIN)
-                        .addCategory(Intent.CATEGORY_HOME)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
-            } catch (e: Exception) {
-                CrashLogger.trace("打开系统桌面失败：${e.message}")
-            }
+            Toast.makeText(
+                this, R.string.restore_system_home_already, Toast.LENGTH_SHORT
+            ).show()
+            CrashLogger.trace("恢复系统桌面：当前已不是默认，无需操作（未发 HOME intent）")
         }
     }
 

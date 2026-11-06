@@ -17,9 +17,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.elderlauncher.R
 import com.example.elderlauncher.core.CrashLogger
+import com.example.elderlauncher.core.HomeRole
 import com.example.elderlauncher.core.LowBatteryAnnouncer
 import com.example.elderlauncher.core.LunarUtil
 import com.example.elderlauncher.core.TtsManager
@@ -103,6 +103,30 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
+    // TTS 延迟预热抽成具名 Runnable：Activity 销毁时可从 Handler 里取消，
+    // 避免实例被系统反复重建时残留的旧任务重复初始化语音引擎
+    // （诊断日志曾出现 4 次 onCreate 对应 4 次 TTS 预热）。
+    private val ttsWarmupRunnable = Runnable {
+        TtsManager.init(applicationContext)
+        CrashLogger.trace("TtsManager.init 完成（延迟预热）")
+    }
+
+    /**
+     * 返回键拦截只在「本应用是默认桌面」时启用：那时退出会看到陌生的系统桌面，
+     * 老人容易迷路，所以吞掉返回键只给一句提示。
+     *
+     * 非默认桌面时交还系统默认行为（Android 12+ 把 task 移后台），否则用户想退出
+     * 只能按 Home 键，反而触发 HOME/LAUNCHER 两套 task 切换动画，观感断续。
+     * 每次 onResume 按当前角色重新判定，切换默认桌面后即时生效。
+     */
+    private val backCallback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            Toast.makeText(
+                this@HomeActivity, R.string.home_back_blocked, Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     private val batteryReceiver = object : android.content.BroadcastReceiver() {
         override fun onReceive(c: android.content.Context?, i: android.content.Intent?) {
             val level = i?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
@@ -118,8 +142,6 @@ class HomeActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 必须在 super.onCreate 之前接管启动画面，否则冷启动会先闪一帧空窗口
-        installSplashScreen()
         super.onCreate(savedInstanceState)
         CrashLogger.trace("HomeActivity.onCreate 开始")
         setContentView(R.layout.activity_home)
@@ -130,11 +152,8 @@ class HomeActivity : AppCompatActivity() {
         pendingCallNumber = savedInstanceState?.getString(KEY_PENDING_CALL)
 
         // 预热语音引擎：TTS 初始化要拉起引擎服务，放在首屏渲染之后再做，
-        // 避免拖慢冷启动；首次来电播报前也能就绪。
-        handler.postDelayed({
-            TtsManager.init(applicationContext)
-            CrashLogger.trace("TtsManager.init 完成（延迟预热）")
-        }, 3000)
+        // 避免拖慢冷启动。只在 onCreate 排一次，onNewIntent 复用实例时不会重复排。
+        handler.postDelayed(ttsWarmupRunnable, 3000)
 
         tvTime = findViewById(R.id.tvTime)
         tvDate = findViewById(R.id.tvDate)
@@ -174,16 +193,9 @@ class HomeActivity : AppCompatActivity() {
         updateClock()
         CrashLogger.trace("updateClock 完成")
 
-        // 拦截返回键：本页就是桌面，按返回不应退到别的桌面去。
-        // 老人误触返回的概率很高，退出后看到陌生的系统桌面会找不到回来的路，
-        // 所以这里直接吞掉这个手势，只给一句提示。
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                Toast.makeText(
-                    this@HomeActivity, R.string.home_back_blocked, Toast.LENGTH_SHORT
-                ).show()
-            }
-        })
+        // 返回键：只在「是默认桌面」时拦截，非默认桌面交还系统默认行为。
+        onBackPressedDispatcher.addCallback(this, backCallback)
+        applyBackIntercept()
 
         // 来电播报权限只在冷启动申请一次：桌面是常驻 Activity，onCreate 不会因
         // 从设置页返回而重跑；旋转/重建也不重复弹，避免用户拒绝后反复打扰。
@@ -191,6 +203,33 @@ class HomeActivity : AppCompatActivity() {
         ensureAnnouncePermissions(savedInstanceState == null)
 
         CrashLogger.trace("HomeActivity.onCreate 结束")
+    }
+
+    /** 是否应拦截返回键：只有本应用当前是默认桌面时才拦截。供单元测试直接驱动。 */
+    internal fun shouldInterceptBack(): Boolean = HomeRole.isDefaultHome(this)
+
+    /**
+     * 应用返回键拦截策略。默认按当前默认桌面角色判定；显式传参供单元测试驱动
+     * 「非默认桌面必须关闭拦截」这条路径，不依赖测试环境的 HOME 解析结果。
+     */
+    internal fun applyBackIntercept(shouldIntercept: Boolean = shouldInterceptBack()) {
+        backCallback.isEnabled = shouldIntercept
+    }
+
+    /** 当前返回键拦截是否启用（供单元测试验证 onCreate/onResume 真的应用了角色判定） */
+    internal fun isBackInterceptEnabled(): Boolean = backCallback.isEnabled
+
+    /**
+     * singleTask 复用入口：从系统桌面点图标、或系统再次投递 HOME intent 时走这里，
+     * 而不是重新 onCreate。这里绝不做 setContentView / 启动画面 / 权限申请 / TTS 预热，
+     * 否则每复用一次就闪一次。只刷新随状态变化的内容。
+     */
+    public override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        CrashLogger.trace("HomeActivity.onNewIntent 复用实例，action=${intent.action}")
+        applySettingsVisibility()
+        applyBackIntercept()
     }
 
     /**
@@ -334,6 +373,8 @@ class HomeActivity : AppCompatActivity() {
         CrashLogger.trace("HomeActivity.onResume 开始")
         // 从设置页返回桌面只走 onResume，这里必须重新应用开关，隐藏/恢复才能即时生效
         applySettingsVisibility()
+        // 默认桌面角色可能在系统设置里被改过，返回键拦截策略要跟着即时刷新
+        applyBackIntercept()
         updateClock()
         refreshContacts()
         handler.post(clockRunnable)
@@ -347,10 +388,24 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        CrashLogger.trace("HomeActivity.onPause")
         handler.removeCallbacks(clockRunnable)
         try {
             unregisterReceiver(batteryReceiver)
         } catch (_: Exception) {
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        CrashLogger.trace("HomeActivity.onStop")
+    }
+
+    override fun onDestroy() {
+        CrashLogger.trace("HomeActivity.onDestroy")
+        // 实例销毁后不再执行残留的延迟任务，避免重复初始化、以及持有已销毁实例引用
+        handler.removeCallbacks(ttsWarmupRunnable)
+        handler.removeCallbacks(clockRunnable)
+        super.onDestroy()
     }
 }
