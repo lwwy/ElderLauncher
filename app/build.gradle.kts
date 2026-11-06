@@ -13,8 +13,8 @@ android {
         applicationId = "com.example.elderlauncher"
         minSdk = 24
         targetSdk = 34
-        versionCode = 20
-        versionName = "1.2.6"
+        versionCode = 21
+        versionName = "1.2.7"
     }
 
     // 签名密钥与密码放在仓库根目录的 keystore.properties（已被 .gitignore 排除，绝不提交）。

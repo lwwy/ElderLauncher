@@ -66,6 +66,7 @@ object Diagnostics {
         sb.appendLine()
 
         sb.appendLine("---------- 语音播报 ----------")
+        sb.appendLine("低电量提示音: ${LowBatterySound.statusLabel(ctx)}")
         sb.appendLine("系统语音引擎: ${if (TtsManager.hasEngine(ctx)) "已安装" else "未检测到"}")
         sb.appendLine("初始化状态: ${if (TtsManager.isReady()) "就绪" else "未就绪"}")
         sb.appendLine("中文语音数据: ${if (TtsManager.langMissing) "缺失" else "正常/未知"}")

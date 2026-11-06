@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.provider.OpenableColumns
 import android.provider.Settings
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -21,6 +22,7 @@ import com.example.elderlauncher.R
 import com.example.elderlauncher.core.CrashLogger
 import com.example.elderlauncher.core.Diagnostics
 import com.example.elderlauncher.core.HomeRole
+import com.example.elderlauncher.core.LowBatterySound
 import com.example.elderlauncher.core.TtsManager
 import com.example.elderlauncher.data.LocalContacts
 import com.example.elderlauncher.data.Prefs
@@ -43,6 +45,14 @@ class SettingsActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.phone_perm_denied, Toast.LENGTH_LONG).show()
         }
     }
+
+    /**
+     * 选择低电量自定义提示音。SAF 的 OpenDocument 免存储权限；
+     * 拿到 URI 后立刻复制到应用私有目录（见 [LowBatterySound]），不依赖持久授权。
+     */
+    private val tonePicker = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri -> onTonePicked(uri) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,8 +110,23 @@ class SettingsActivity : AppCompatActivity() {
             testAnnounce(getString(R.string.ann_incoming, getString(R.string.test_caller_name)))
         }
         findViewById<MaterialButton>(R.id.btnTestLow).setOnClickListener {
-            testAnnounce(getString(R.string.ann_low_battery))
+            playLowBatteryPreview()
         }
+
+        // 低电量自定义提示音：可选，未选择时仍是系统语音（行为与老版本一致）
+        findViewById<MaterialButton>(R.id.btnPickTone).setOnClickListener {
+            try {
+                tonePicker.launch(arrayOf("audio/*"))
+            } catch (_: Exception) {
+                Toast.makeText(this, R.string.low_tone_failed, Toast.LENGTH_LONG).show()
+            }
+        }
+        findViewById<MaterialButton>(R.id.btnResetTone).setOnClickListener {
+            LowBatterySound.clear(this)
+            refreshLowToneUi()
+            Toast.makeText(this, R.string.low_tone_reset, Toast.LENGTH_SHORT).show()
+        }
+        refreshLowToneUi()
     }
 
     /** 缺权限时才申请；已授予则静默跳过。返回是否实际发起，便于单元测试驱动。 */
@@ -233,6 +258,74 @@ class SettingsActivity : AppCompatActivity() {
             ).show()
             CrashLogger.trace("恢复系统桌面：当前已不是默认，无需操作（未发 HOME intent）")
         }
+    }
+
+    /**
+     * 低电量播报试听：选了自定义提示音就播文件，否则走原来的 TTS 试听。
+     * 原来的 [testAnnounce]（含 TTS 引擎检测 / 去设置 / 重试对话框）一行不改，
+     * 这里只是加一个前置分支 —— 未选择文件时行为与之前完全一致。
+     * 自定义音频播放失败时给明确提示并临时回退 TTS，不静默失败。
+     */
+    private fun playLowBatteryPreview() {
+        if (!LowBatterySound.hasCustom(this)) {
+            testAnnounce(getString(R.string.ann_low_battery))
+            return
+        }
+        if (LowBatterySound.play(this)) {
+            Toast.makeText(this, R.string.test_playing, Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, R.string.low_tone_failed, Toast.LENGTH_LONG).show()
+            TtsManager.speakNow(this, getString(R.string.ann_low_battery))
+        }
+    }
+
+    /** 文件选择回调：复制落盘 + 按结果提示 + 刷新界面 */
+    internal fun onTonePicked(uri: Uri?) {
+        if (uri == null) return
+        val name = queryDisplayName(uri)
+        when (LowBatterySound.save(this, uri, name)) {
+            LowBatterySound.SaveResult.OK -> Toast.makeText(
+                this,
+                getString(
+                    R.string.low_tone_picked,
+                    name ?: getString(R.string.low_tone_fallback_name)
+                ),
+                Toast.LENGTH_LONG
+            ).show()
+            LowBatterySound.SaveResult.TOO_LARGE -> Toast.makeText(
+                this, R.string.low_tone_too_large, Toast.LENGTH_LONG
+            ).show()
+            LowBatterySound.SaveResult.FAILED -> Toast.makeText(
+                this, R.string.low_tone_failed, Toast.LENGTH_LONG
+            ).show()
+        }
+        refreshLowToneUi()
+    }
+
+    /** 从 SAF URI 取原始文件名，仅用于展示；取不到不影响播放 */
+    private fun queryDisplayName(uri: Uri): String? = try {
+        contentResolver.query(uri, null, null, null, null)?.use { c ->
+            val idx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (idx >= 0 && c.moveToFirst()) c.getString(idx) else null
+        }
+    } catch (_: Exception) {
+        null
+    }
+
+    /** 刷新提示音状态文字与「恢复系统语音」按钮的可用状态 */
+    private fun refreshLowToneUi() {
+        val hasCustom = LowBatterySound.hasCustom(this)
+        val label = if (hasCustom) {
+            getString(
+                R.string.low_tone_status_custom,
+                LowBatterySound.displayName(this)
+                    ?: getString(R.string.low_tone_fallback_name)
+            )
+        } else {
+            getString(R.string.low_tone_status_system)
+        }
+        findViewById<TextView>(R.id.tvLowToneStatus).text = label
+        findViewById<MaterialButton>(R.id.btnResetTone).isEnabled = hasCustom
     }
 
     /**

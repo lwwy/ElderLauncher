@@ -71,6 +71,19 @@
     <string name="tts_cancel">知道了</string>
     <string name="tts_retry">重试</string>
     <string name="tts_retrying">正在重新连接语音引擎…</string>
+
+    <!-- 低电量播报：可选的本地提示音（未选择时仍用系统 TTS，行为与老版本一致） -->
+    <string name="set_low_tone">提示音</string>
+    <string name="low_tone_status_system">当前：系统语音</string>
+    <string name="low_tone_status_custom">当前：%1$s</string>
+    <string name="low_tone_fallback_name">本地音频</string>
+    <string name="btn_pick_tone">选择提示音</string>
+    <string name="btn_reset_tone">恢复系统语音</string>
+    <string name="low_tone_tip">可选一段自己喜欢的音频替代系统语音。建议 10 秒以内的短提示音，超过 10MB 的文件无法使用</string>
+    <string name="low_tone_picked">已设置提示音：%1$s</string>
+    <string name="low_tone_too_large">音频文件超过 10MB，请选择更短的提示音</string>
+    <string name="low_tone_failed">无法读取该音频文件，请换一个试试</string>
+    <string name="low_tone_reset">已恢复系统语音</string>
     <string name="move_up">上移</string>
     <string name="move_down">下移</string>
     <string name="arrow_up" translatable="false">↑</string>

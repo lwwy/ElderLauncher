@@ -10,6 +10,7 @@ object Prefs {
     const val ANN_INCOMING = "ann_incoming"   // 来电播报
     const val ANN_LOW = "ann_lowbattery"      // 低电量播报
     const val HIDE_HOME_SETTINGS = "hide_home_settings" // 隐藏首页右上角设置入口（默认 false=显示）
+    const val LOW_TONE_NAME = "low_tone_name" // 低电量自定义提示音的原始文件名（null=用系统语音）
 
     private fun sp(ctx: Context): SharedPreferences =
         ctx.getSharedPreferences(NAME, Context.MODE_PRIVATE)
@@ -19,4 +20,9 @@ object Prefs {
 
     fun set(ctx: Context, key: String, value: Boolean) =
         sp(ctx).edit().putBoolean(key, value).apply()
+
+    fun getString(ctx: Context, key: String): String? = sp(ctx).getString(key, null)
+
+    fun setString(ctx: Context, key: String, value: String?) =
+        sp(ctx).edit().putString(key, value).apply()
 }

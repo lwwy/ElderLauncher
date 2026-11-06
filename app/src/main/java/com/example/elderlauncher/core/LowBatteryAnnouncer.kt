@@ -33,6 +33,10 @@ object LowBatteryAnnouncer {
     internal var announceCount = 0
         private set
 
+    /** 仅供单元测试观测本次播报实际走的音源分支（生产逻辑不依赖它） */
+    internal var lastRoute: LowBatterySound.Route = LowBatterySound.Route.TTS
+        private set
+
     /**
      * 由 ACTION_BATTERY_CHANGED 驱动。
      * @param pct 当前电量百分比，无法取得时为负
@@ -63,10 +67,24 @@ object LowBatteryAnnouncer {
         announced = false
     }
 
-    /** @return 是否真的播报了（开关关闭时不播，也不占用本轮标记） */
+    /**
+     * @return 是否真的播报了（开关关闭时不播，也不占用本轮标记）
+     *
+     * 音源：默认仍是系统 TTS 念固定文案；用户在设置页选了本地音频后改播该文件，
+     * 播放失败 / 文件失效自动回退 TTS。阈值、迟滞、去重状态一律不受影响 ——
+     * 只要「播出了声音」（无论哪种音源），就照常占用本轮标记。
+     */
     private fun speak(ctx: Context): Boolean {
         if (!Prefs.enabled(ctx, Prefs.ANN_LOW)) return false
-        TtsManager.speakNow(ctx, ctx.getString(R.string.ann_low_battery))
+        val hasCustom = LowBatterySound.hasCustom(ctx)
+        val playOk = if (hasCustom) LowBatterySound.play(ctx) else false
+        val route = LowBatterySound.resolveRoute(hasCustom, playOk)
+        lastRoute = route
+        if (route != LowBatterySound.Route.CUSTOM) {
+            // 未选择自定义音频，或自定义播放失败 → 回退系统语音，绝不静默失败
+            TtsManager.speakNow(ctx, ctx.getString(R.string.ann_low_battery))
+        }
+        CrashLogger.trace("低电量播报：音源=${route.name}")
         announceCount++
         return true
     }
@@ -75,5 +93,6 @@ object LowBatteryAnnouncer {
     internal fun resetForTest() {
         announced = false
         announceCount = 0
+        lastRoute = LowBatterySound.Route.TTS
     }
 }
