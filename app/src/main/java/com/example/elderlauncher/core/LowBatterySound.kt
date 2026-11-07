@@ -29,6 +29,13 @@ object LowBatterySound {
     private const val DIR_NAME = "low_battery"
     private const val FILE_NAME = "tone"
 
+    /**
+     * 诊断日志 / 运行轨迹里显示的固定占位名。
+     * 用户所选音频的原始文件名可能含姓名等个人信息，可导出的日志一律不写真实名；
+     * 设置页 UI 仍通过 [displayName] 在本机显示真实文件名，不受影响。
+     */
+    private const val LOG_TONE_LABEL = "自定义音频.mp3"
+
     /** 保存结果，供设置页给出对应提示 */
     enum class SaveResult { OK, TOO_LARGE, FAILED }
 
@@ -40,6 +47,9 @@ object LowBatterySound {
     /** 正在播放的实例；重复点击试听时先释放旧的，避免多个音频叠加 */
     @Volatile
     private var current: MediaPlayer? = null
+
+    /** 仅供单元测试观测本次播放实际应用的音频通道（生产逻辑不依赖它） */
+    internal var lastAppliedAudioAttributes: AudioAttributes? = null
 
     fun toneFile(ctx: Context): File =
         File(File(ctx.filesDir, DIR_NAME).apply { if (!exists()) mkdirs() }, FILE_NAME)
@@ -55,9 +65,9 @@ object LowBatterySound {
     /** 用户选择时记下的文件名，仅用于设置页与诊断日志展示；取不到时返回 null */
     fun displayName(ctx: Context): String? = Prefs.getString(ctx, Prefs.LOW_TONE_NAME)
 
-    /** 诊断日志用的一行状态描述 */
+    /** 诊断日志用的一行状态描述；只区分系统语音 / 自定义，不写真实文件名 */
     fun statusLabel(ctx: Context): String =
-        if (hasCustom(ctx)) "自定义（${displayName(ctx) ?: "本地音频"}）" else "系统语音"
+        if (hasCustom(ctx)) LOG_TONE_LABEL else "系统语音"
 
     /**
      * 把 SAF 选中的音频复制到私有目录。
@@ -107,8 +117,9 @@ object LowBatterySound {
             tmp.delete()
             return SaveResult.FAILED
         }
+        // 真实文件名只存进 Prefs 供设置页本机展示；运行轨迹里只写固定占位名
         Prefs.setString(ctx, Prefs.LOW_TONE_NAME, displayName?.takeIf { it.isNotBlank() })
-        CrashLogger.trace("低电量提示音：已保存 ${displayName ?: "本地音频"}")
+        CrashLogger.trace("低电量提示音：已保存 $LOG_TONE_LABEL")
         return SaveResult.OK
     }
 
@@ -159,14 +170,11 @@ object LowBatterySound {
         if (!f.isFile || f.length() == 0L) return false
         releaseCurrent()
         return try {
+            val attrs = AnnounceAudio.alarm()
+            lastAppliedAudioAttributes = attrs
             val mp = MediaPlayer().apply {
-                // 用系统提示音通道，避免受「媒体音量」静音影响
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build()
-                )
+                // 统一走闹钟通道：跟随系统「闹钟音量」流，静音 / 媒体音量为 0 时仍能听到
+                setAudioAttributes(attrs)
                 setDataSource(f.absolutePath)
                 setOnCompletionListener { player ->
                     if (current === player) current = null

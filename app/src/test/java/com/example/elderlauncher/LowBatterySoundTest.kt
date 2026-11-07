@@ -166,10 +166,17 @@ class LowBatterySoundTest {
     }
 
     @Test
-    fun statusLabel_defaultAndCustom() {
+    fun statusLabel_defaultAndCustom_neverLeaksOriginalFileName() {
         assertEquals("系统语音", LowBatterySound.statusLabel(app))
         saveBytes(ByteArray(64), "我的提示音.wav")
-        assertTrue(LowBatterySound.statusLabel(app).contains("我的提示音.wav"))
+        val label = LowBatterySound.statusLabel(app)
+        assertFalse(
+            "诊断日志用的状态描述不得写入用户所选音频的原始文件名",
+            label.contains("我的提示音.wav")
+        )
+        assertEquals("自定义音频.mp3", label)
+        // 设置页 UI 仍应能拿到真实文件名（本机可见，不导出）
+        assertEquals("我的提示音.wav", LowBatterySound.displayName(app))
     }
 
     @Test
@@ -210,13 +217,18 @@ class LowBatterySoundTest {
     // ---------------------------------------------------------- 诊断日志 / 权限 / UI
 
     @Test
-    fun diagnostics_includesToneStatus() {
+    fun diagnostics_includesToneStatus_butNotOriginalFileName() {
         assertTrue(
             "诊断日志必须能看到当前音源",
             Diagnostics.buildReport(app).contains("低电量提示音: 系统语音")
         )
         saveBytes(ByteArray(64), "自定义音.mp3")
-        assertTrue(Diagnostics.buildReport(app).contains("自定义音.mp3"))
+        val report = Diagnostics.buildReport(app)
+        assertTrue("诊断日志仍须标明当前是自定义音源", report.contains("自定义音频.mp3"))
+        assertFalse(
+            "诊断日志不得写入用户所选音频的原始文件名（可能含个人信息）",
+            report.contains("自定义音.mp3")
+        )
     }
 
     @Test

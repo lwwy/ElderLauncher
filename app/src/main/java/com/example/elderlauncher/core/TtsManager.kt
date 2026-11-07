@@ -2,6 +2,9 @@ package com.example.elderlauncher.core
 
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.AudioManager
+import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import java.util.Locale
 
@@ -15,6 +18,8 @@ import java.util.Locale
  * 2. `setLanguage` 可能返回 LANG_MISSING_DATA / LANG_NOT_SUPPORTED（没装中文数据包），
  *    此时 status 是 SUCCESS 但播报无声，所以要检查返回值并回退语言。
  * 3. 引擎初始化是异步的，首次在低端机上可能超过 2 秒，调用方不要过早判死。
+ * 4. 播报统一走闹钟通道（[AnnounceAudio]）：setAudioAttributes 为主，
+ *    同时用传统 streamType 参数兜底，兼容只认老参数的国产 TTS 引擎。
  */
 object TtsManager {
     private var tts: TextToSpeech? = null
@@ -30,6 +35,9 @@ object TtsManager {
     /** 中文语音数据是否缺失（缺数据时会播报无声） */
     var langMissing = false
         private set
+
+    /** 仅供单元测试观测实际应用的音频通道（生产逻辑不依赖它） */
+    internal var appliedAudioAttributes: AudioAttributes? = null
 
     /**
      * 系统里是否有可用的 TTS 引擎。
@@ -60,6 +68,7 @@ object TtsManager {
                 // 设置页与诊断日志也就永远看不到"缺中文语音数据"。
                 langMissing = false
                 applyLanguage()
+                applyAudioAttributes()
                 ready = true
                 CrashLogger.trace("TTS 初始化成功")
                 flushPending()
@@ -67,6 +76,7 @@ object TtsManager {
                 // 关键：失败要把实例置空，否则下次调用会因为 tts != null 而永不重试
                 lastError = "引擎初始化失败 status=$status"
                 ready = false
+                appliedAudioAttributes = null
                 CrashLogger.trace("TTS 初始化失败，status=$status，已释放以便重试")
                 try {
                     tts?.shutdown()
@@ -104,6 +114,7 @@ object TtsManager {
             CrashLogger.trace("TTS 创建异常：${e.message}")
             tts = null
             ready = false
+            appliedAudioAttributes = null
         }
     }
 
@@ -126,11 +137,36 @@ object TtsManager {
         }
     }
 
+    /**
+     * 把播报通道设为闹钟流：跟随系统独立的「闹钟音量」，
+     * 手机静音 / 媒体音量为 0 / 系统勿扰默认放行闹钟时仍能听到提醒。
+     */
+    private fun applyAudioAttributes() {
+        val engine = tts ?: return
+        val attrs = AnnounceAudio.alarm()
+        // 先记录本次采用的通道：部分 ROM 的引擎不接受 setAudioAttributes，
+        // 此时仍有 alarmParams() 的 streamType 兜底，通道意图不变。
+        appliedAudioAttributes = attrs
+        try {
+            engine.setAudioAttributes(attrs)
+        } catch (e: Exception) {
+            CrashLogger.trace("TTS 设置闹钟通道异常（streamType 兜底）：${e.message}")
+        }
+    }
+
+    /**
+     * 部分 ROM 的 TTS 引擎只认传统的 streamType 参数，这里与 setAudioAttributes
+     * 双保险，保证播报真的落在闹钟流。用字面量 key 避免引用已废弃的常量。
+     */
+    private fun alarmParams(): Bundle = Bundle().apply {
+        putInt("streamType", AudioManager.STREAM_ALARM)
+    }
+
     private fun flushPending() {
         val text = pending ?: return
         pending = null
         try {
-            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "elder_${System.currentTimeMillis()}")
+            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, alarmParams(), "elder_${System.currentTimeMillis()}")
         } catch (e: Exception) {
             CrashLogger.trace("TTS 播报异常：${e.message}")
         }
@@ -144,7 +180,7 @@ object TtsManager {
             return
         }
         try {
-            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "elder_${System.currentTimeMillis()}")
+            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, alarmParams(), "elder_${System.currentTimeMillis()}")
         } catch (e: Exception) {
             CrashLogger.trace("TTS 播报异常：${e.message}")
         }
@@ -173,5 +209,6 @@ object TtsManager {
         tts = null
         ready = false
         pending = null
+        appliedAudioAttributes = null
     }
 }

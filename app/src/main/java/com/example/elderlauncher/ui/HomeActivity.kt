@@ -95,11 +95,20 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
+    /** 最近一次收到的电量与充电状态；供整分 tick 复用，避免另起定时器 */
+    private var lastBatteryPct = -1
+    private var lastBatteryPlugged = false
+
     // 时钟刷新对齐到「每分钟的第 0 秒」：12:01:00 一到就显示 12:01，
     // 而不是沿用固定 30 秒轮询（那样最坏要等近 30 秒才跳分钟）。
     private val clockRunnable = object : Runnable {
         override fun run() {
             updateClock()
+            // 每整分用缓存电量再检查一次：让「每 30 分钟」与免打扰边界
+            // 22:00 / 07:00 都能准点触发，不依赖系统恰好在那一刻投递电量广播。
+            LowBatteryAnnouncer.onBatteryChanged(
+                this@HomeActivity, lastBatteryPct, lastBatteryPlugged
+            )
             handler.postDelayed(this, delayToNextMinute(System.currentTimeMillis()))
         }
     }
@@ -135,9 +144,12 @@ class HomeActivity : AppCompatActivity() {
             val pct = if (level >= 0 && scale > 0) level * 100 / scale else -1
             updateBattery(pct)
             // ACTION_BATTERY_CHANGED 是粘性广播，动态注册时会立即回调一次，
-            // 之后电量每变化也会回调。交给统一状态机做「跨阈值只播一次」判定，
+            // 之后电量每变化也会回调。交给统一状态机做「30 分钟节奏 + 免打扰」判定，
             // 替代在 Android 8+ 基本收不到的静态 ACTION_BATTERY_LOW。
+            // 同时缓存最新状态给整分 tick 复用（pct=-1 表示尚未取到有效电量，状态机会安全跳过）。
             val plugged = (i?.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) ?: 0) != 0
+            lastBatteryPct = pct
+            lastBatteryPlugged = plugged
             LowBatteryAnnouncer.onBatteryChanged(this@HomeActivity, pct, plugged)
         }
     }

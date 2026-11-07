@@ -18,6 +18,10 @@ import java.util.Locale
  *
  * 诊断报告在 [Diagnostics] 里生成，写「下载」目录在 [FileExporter] 里做，
  * 这里不再混着三件事。
+ *
+ * 隐私：所有会离开应用私有目录的文本（诊断报告、崩溃报告、运行轨迹，
+ * 以及导出到公共「下载」目录的副本）都在写入 / 读出 / 导出边界经过
+ * [redactPhoneNumbers] 脱敏，绝不携带完整电话号码。
  */
 object CrashLogger {
 
@@ -32,12 +36,60 @@ object CrashLogger {
     private const val PREFS = "elder_crash_debug"
     private const val KEY_SESSION_PENDING = "session_pending"
 
+    /**
+     * 日期 / 时间戳片段，避免把导出时间、崩溃报告时间与日志文件名误判成号码：
+     * `2026-11-07`（fullFmt）与 `20261107-144201`（fileFmt）两种形态都要放过。
+     */
+    private val DATE_LIKE = Regex("^\\d{4}-\\d{2}-\\d{2}|^\\d{8}-\\d{6}")
+
+    /**
+     * 疑似号码片段：以数字或 + 开头、由数字 / + / - / 空格组成、长度 >= 7。
+     * 允许 +、-、空格，是为了兜住旧版写入的带分隔符号码（如 138-0013-8000）。
+     * 前后排除字母数字与已脱敏的 * 号，避免误伤机型型号（22081212C）、
+     * 版本号、API level，也不会二次改动已有的 ****8000 结果。
+     */
+    private val NUMBER_RUN =
+        Regex("(?<![A-Za-z0-9*])[+\\d][\\d\\-+ ]{5,}\\d(?![A-Za-z0-9])")
+
+    /** 系统异常信息里可能出现的 tel: URI，号码中可带 +、-、空格 */
+    private val TEL_URI = Regex("tel:[+\\d][\\d\\-+ ]{4,}\\d")
+
     @Volatile
     private var appContext: Context? = null
 
     private val timeFmt = SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.US)
     private val fullFmt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
     private val fileFmt = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US)
+
+    /**
+     * 日志脱敏：把疑似完整号码替换成 **** + 末 4 位。
+     *
+     * 为什么在“日志边界”再兜一层，而不只在 [com.example.elderlauncher.phone.TelecomHelper]
+     * 写入时处理：
+     *  - 覆盖安装后，旧版本已经写进 trace.log / 崩溃文件的完整号码仍会被导出；
+     *  - 系统抛出的异常 message 可能自带 `dat=tel:13800138000` 这类完整 URI。
+     * 只改写入端拦不住这两条路径。
+     *
+     * 纯字符串变换，不改动任何业务数据；对已脱敏的 ****8000 天然幂等
+     * （4 位数字不满足 7 位阈值，且 * 号被排除在匹配之外）。
+     */
+    internal fun redactPhoneNumbers(text: String): String {
+        // 先处理 tel: URI，保留 tel: 前缀，只把号码换成 ****末 4 位
+        val withTel = TEL_URI.replace(text) { m ->
+            val digits = m.value.substringAfter("tel:").filter { it.isDigit() }
+            if (digits.length >= 4) "tel:****" + digits.takeLast(4) else m.value
+        }
+        return NUMBER_RUN.replace(withTel) { m ->
+            val raw = m.value
+            val digits = raw.filter { it.isDigit() }
+            when {
+                // 短数字段（时间戳 14:42:01、API 34、版本号 1.2.10 等）保持原样
+                digits.length < 7 -> raw
+                DATE_LIKE.containsMatchIn(raw) -> raw
+                else -> "****" + digits.takeLast(4)
+            }
+        }
+    }
 
     // ---------------------------------------------------------------- 初始化
 
@@ -77,15 +129,16 @@ object CrashLogger {
     fun trace(msg: String) {
         if (!ENABLED) return
         val ctx = appContext ?: return
-        Log.i(TAG, msg)
+        val safe = redactPhoneNumbers(msg)
+        Log.i(TAG, safe)
         try {
             val f = File(dirFor(ctx), TRACE_FILE)
             if (f.exists() && f.length() > MAX_TRACE_BYTES) {
                 // 超上限时只保留后半段，避免无限增长
                 val tail = f.readText().takeLast(MAX_TRACE_BYTES / 2)
-                f.writeText(tail)
+                f.writeText(redactPhoneNumbers(tail))
             }
-            f.appendText("[${timeFmt.format(Date())}] $msg\n")
+            f.appendText("[${timeFmt.format(Date())}] $safe\n")
         } catch (_: Throwable) {
             // 打点失败不影响主流程
         }
@@ -156,7 +209,7 @@ object CrashLogger {
             val src = File(dirFor(context), TRACE_FILE)
             if (!src.exists()) return null
             val name = "trace-${fileFmt.format(Date())}.txt"
-            val text = src.readText().takeLast(64 * 1024)
+            val text = redactPhoneNumbers(src.readText().takeLast(64 * 1024))
             if (FileExporter.writeToDownloads(context, name, text)) name else null
         } catch (_: Throwable) {
             null
@@ -180,7 +233,8 @@ object CrashLogger {
     /** 轨迹文件里的最后 [lines] 行，供诊断报告拼装 */
     internal fun traceTail(ctx: Context, lines: Int): String = try {
         val f = File(dirFor(ctx), TRACE_FILE)
-        if (f.exists()) f.readLines().takeLast(lines).joinToString("\n") else "(无轨迹记录)"
+        if (f.exists()) redactPhoneNumbers(f.readLines().takeLast(lines).joinToString("\n"))
+        else "(无轨迹记录)"
     } catch (_: Throwable) {
         "(读取轨迹失败)"
     }
@@ -230,7 +284,7 @@ object CrashLogger {
         sb.appendLine("系统: Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
         sb.appendLine("版本: ${appVersion(ctx)}")
         sb.appendLine("--------------- 异常堆栈 ---------------")
-        sb.appendLine(Log.getStackTraceString(error))
+        sb.appendLine(redactPhoneNumbers(Log.getStackTraceString(error)))
         sb.appendLine("--------------- 运行轨迹 ---------------")
         sb.appendLine(readTrace(ctx))
         sb.appendLine("========================================")
@@ -239,7 +293,7 @@ object CrashLogger {
 
     private fun readTrace(ctx: Context): String = try {
         val f = File(dirFor(ctx), TRACE_FILE)
-        if (f.exists()) f.readText().takeLast(8000) else "(无轨迹记录)"
+        if (f.exists()) redactPhoneNumbers(f.readText().takeLast(8000)) else "(无轨迹记录)"
     } catch (_: Throwable) {
         "(读取轨迹失败)"
     }
@@ -256,7 +310,7 @@ object CrashLogger {
 
     /** 把崩溃文件复制到公共「下载」目录（Android 10+ 走 MediaStore，无需存储权限） */
     private fun exportToDownloads(ctx: Context, file: File): Boolean = try {
-        FileExporter.writeToDownloads(ctx, file.name, file.readText())
+        FileExporter.writeToDownloads(ctx, file.name, redactPhoneNumbers(file.readText()))
     } catch (_: Throwable) {
         false
     }

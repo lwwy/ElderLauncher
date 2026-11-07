@@ -21,6 +21,19 @@ import com.example.elderlauncher.core.CrashLogger
 object TelecomHelper {
 
     /**
+     * 日志脱敏：只保留号码末 4 位（例如 13800138000 → ****8000）。
+     *
+     * 诊断日志 / 运行轨迹会被导出到公共「下载」目录并可能发给开发者，
+     * 因此任何写日志的地方都不得出现完整电话号码。先滤掉 +、-、空格等分隔符
+     * 再取末 4 位，保证带格式存储的号码也不会被完整带出。
+     */
+    internal fun maskNumber(number: String): String {
+        val digits = number.filter { it.isDigit() }
+        // 不足 4 位（如 110 / 120 短号）无法"只留后 4 位"，全部打码，绝不回显完整号码
+        return if (digits.length >= 4) "****" + digits.takeLast(4) else "****"
+    }
+
+    /**
      * 取一个"真正能打电话"的账号（运营商 SIM）。
      * 排除本应用名下的账号，优先系统给出的 simCallManager。
      */
@@ -63,6 +76,7 @@ object TelecomHelper {
      */
     fun placeCall(context: Context, number: String) {
         if (number.isBlank()) return
+        // 只用于发起呼叫；写日志一律用 [maskNumber]，绝不落完整号码
         val uri = Uri.fromParts("tel", number, null)
         val extras = Bundle().apply {
             // 官方免提参数，交给系统在通话建立时自动开免提
@@ -79,12 +93,16 @@ object TelecomHelper {
                 PackageManager.PERMISSION_GRANTED
             ) {
                 tm.placeCall(uri, extras)
-                CrashLogger.trace("placeCall(SIM) 发起：$number")
+                CrashLogger.trace("placeCall(SIM) 发起，拨打号码：${maskNumber(number)}")
                 return
             }
         } catch (e: Exception) {
-            CrashLogger.trace("placeCall 失败: ${e.javaClass.name}: ${e.message}")
-            Log.e("TelecomHelper", "placeCall failed", e)
+            // 异常信息里可能带 dat=tel:138... ，trace 与 logcat 都只写脱敏后的文本
+            val failure = CrashLogger.redactPhoneNumbers(
+                "placeCall failed: ${e.javaClass.name}: ${e.message}"
+            )
+            CrashLogger.trace(failure)
+            Log.e("TelecomHelper", failure)
         }
 
         // 兜底：非默认电话应用 / placeCall 异常 → 走系统拨号
@@ -95,7 +113,7 @@ object TelecomHelper {
                     putExtras(extras)
                 }
             )
-            CrashLogger.trace("ACTION_CALL 兜底发起：$number")
+            CrashLogger.trace("ACTION_CALL 兜底发起，拨打号码：${maskNumber(number)}")
         } catch (e: Exception) {
             CrashLogger.trace("ACTION_CALL 也失败: ${e.javaClass.name}: ${e.message}")
         }
