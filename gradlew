@@ -47,14 +47,15 @@
 #       problems, so this is (mostly) avoided, by progressively accumulating
 #       options in "$@", and eventually passing that to Java.
 #
-#       Where the inevitable space-separated string CANNOT be avoided, quoted
-#       variables are used (and thus exposed to whitespace attack vectors).
+#       Where the inherited environment variables (DEFAULT_JVM_OPTS, JAVA_OPTS,
+#       and GRADLE_OPTS) rely on word-splitting, this is performed explicitly;
+#       see the in-line comments for details.
 #
 #       There are tweaks for specific operating systems such as AIX, CygWin,
 #       Darwin, MinGW, and NonStop.
 #
 #   (3) This script is generated from the Groovy template
-#       https://github.com/gradle/gradle/blob/master/subprojects/plugins/src/main/resources/org/gradle/api/internal/plugins/unixStartScript.txt
+#       https://github.com/gradle/gradle/blob/HEAD/subprojects/plugins/src/main/resources/org/gradle/api/internal/plugins/unixStartScript.txt
 #       within the Gradle project.
 #
 #       You can find Gradle at https://github.com/gradle/gradle/.
@@ -129,10 +130,13 @@ location of your Java installation."
     fi
 else
     JAVACMD=java
-    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+    if ! command -v java >/dev/null 2>&1
+    then
+        die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
 
 Please set the JAVA_HOME variable in your environment to match the
 location of your Java installation."
+    fi
 fi
 
 # Increase the maximum file descriptors if we can.
@@ -143,7 +147,7 @@ if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
         # shellcheck disable=SC3045
         MAX_FD=$( ulimit -H -n ) ||
             warn "Could not query maximum file descriptor limit"
-        esac
+    esac
     case $MAX_FD in  #(
       '' | soft) :;; #(
       *)
@@ -154,31 +158,44 @@ if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
     esac
 fi
 
-# Collect all arguments for the java command, stacking in dribs and drabs.
-# This avoids the use of the "space as a separator" convention.
-while "$@" != "" ; do
-    case "$1" in
-      # Recognize "--daemon" and "--no-daemon" options and pass them through.
-      --daemon | --no-daemon ) args="$args \"$1\"" ;;        # Quote for protecting spaces.
-      # Recognize "-D" and "--define" options and pass them through.
-      -D* | --define ) args="$args \"$1\"" ;;                 # Quote for protecting spaces.
-      # Recognize "-D" and "--define" options and pass them through in their long form.
-      -D*=* ) args="$args \"$1\"" ;;                          # Quote for protecting spaces.
-      # Recognize "-D" and "--define" options and pass them through in their long form.
-      --define=* ) args="$args \"$1\"" ;;                     # Quote for protecting spaces.
-      # Recognize "-D" and "--define" options and pass them through in their long form.
-      -D ) args="$args \"$1\"" ;;                             # Quote for protecting spaces.
-      # Recognize "-D" and "--define" options and pass them through in their long form.
-      --define ) args="$args \"$1\"" ;;                       # Quote for protecting spaces.
-      # Recognize "-XX" options and pass them through.
-      -XX* ) args="$args \"$1\"" ;;                           # Quote for protecting spaces.
-      # Recognize any other option that begins with a dash and pass it through.
-      -* ) args="$args \"$1\"" ;;                             # Quote for protecting spaces.
-      # Anything else is an argument to be passed to the application.
-      * ) args="$args \"$1\"" ;;                              # Quote for protecting spaces.
-    esac
-    shift
-done
+# Collect all arguments for the java command, stacking in reverse order:
+#   * args from the command line
+#   * the main class name
+#   * -classpath
+#   * -D...appname settings
+#   * --module-path (only if needed)
+#   * DEFAULT_JVM_OPTS, JAVA_OPTS, and GRADLE_OPTS environment variables.
+
+# For Cygwin or MSYS, switch paths to Windows format before running java
+if "$cygwin" || "$msys" ; then
+    APP_HOME=$( cygpath --path --mixed "$APP_HOME" )
+    CLASSPATH=$( cygpath --path --mixed "$CLASSPATH" )
+
+    JAVACMD=$( cygpath --unix "$JAVACMD" )
+
+    # Now convert the arguments - kludge to limit ourselves to /bin/sh
+    for arg do
+        if
+            case $arg in                                #(
+              -*)   false ;;                            # don't mess with options #(
+              /?*)  t=${arg#/} t=/${t%%/*}              # looks like a POSIX filepath
+                    [ -e "$t" ] ;;                      #(
+              *)    false ;;
+            esac
+        then
+            arg=$( cygpath --path --ignore --mixed "$arg" )
+        fi
+        # Roll the args list around exactly as many times as the number of
+        # args, so each arg winds up back in the position where it started, but
+        # possibly modified.
+        #
+        # NB: a `for` loop captures its iteration list before it begins, so
+        # changing the positional parameters here affects neither the number of
+        # iterations, nor the values presented in `arg`.
+        shift                   # remove old arg
+        set -- "$@" "$arg"      # push replacement arg
+    done
+fi
 
 
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
@@ -194,7 +211,7 @@ set -- \
         "-Dorg.gradle.appname=$APP_BASE_NAME" \
         -classpath "$CLASSPATH" \
         org.gradle.wrapper.GradleWrapperMain \
-        "$args"
+        "$@"
 
 # Stop when "xargs" is not available.
 if ! command -v xargs >/dev/null 2>&1
@@ -208,7 +225,7 @@ fi
 #
 # In Bash we could simply go:
 #
-#   readarray ARGS < <( xargs -n1 <<<"$args" ) &&
+#   readarray ARGS < <( xargs -n1 <<<"$var" ) &&
 #   set -- "${ARGS[@]}" "$@"
 #
 # but POSIX shell has neither arrays nor command substitution, so instead we
@@ -222,9 +239,10 @@ fi
 #
 
 eval "set -- $(
-        printf '%s\n' "$args" \
-        | xargs -n1 \
-        | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/'/"
+        printf '%s\n' "$DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS" |
+        xargs -n1 |
+        sed ' s~[^-[:alnum:]+,./:=@_]~\\&~g; ' |
+        tr '\n' ' '
     )" '"$@"'
 
 exec "$JAVACMD" "$@"
