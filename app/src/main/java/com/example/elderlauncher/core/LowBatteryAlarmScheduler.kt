@@ -4,11 +4,9 @@ import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.Uri
 import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
-import android.provider.Settings
 import com.example.elderlauncher.core.CrashLogger
 import com.example.elderlauncher.data.Prefs
 import com.example.elderlauncher.phone.receiver.LowBatteryAlarmReceiver
@@ -78,24 +76,6 @@ internal object LowBatteryAlarmScheduler {
     internal fun canScheduleExact(ctx: Context): Boolean {
         val am = ctx.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return false
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms()
-    }
-
-    /**
-     * 引导用户到系统设置开启「精确闹钟」权限（Android 12+）。
-     * 仅当 [canScheduleExact] 为 false 时调用；调用方须为前台 Activity 上下文，
-     * 内部已加 NEW_TASK 并做 resolveActivity 守卫，无法打开时静默失败不闪退。
-     */
-    internal fun openExactAlarmSettings(ctx: Context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
-        try {
-            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-                .setData(Uri.parse("package:${ctx.packageName}"))
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            if (intent.resolveActivity(ctx.packageManager) != null) {
-                ctx.startActivity(intent)
-            }
-        } catch (_: Exception) {
-        }
     }
 
     /** 安排下一次触发：功能关闭时直接取消；否则排到 [nextAlarmAt] 那一刻 */

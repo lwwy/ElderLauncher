@@ -25,7 +25,6 @@
     <string name="avatar_failed">图片读取失败，请重试</string>
     <string name="camera_unavailable">这台设备没有可用的相机，请从相册选择图片</string>
     <string name="album_unavailable">未找到可选取图片的应用，请改用拍照</string>
-    <string name="exact_alarm_hint">低电量提醒需要「精确闹钟」权限，请在设置中开启，否则提醒可能延迟</string>
     <string name="contact_saved">已保存</string>
     <string name="contact_deleted">已删除</string>
     <string name="edit_contact">编辑</string>
