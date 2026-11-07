@@ -26,10 +26,12 @@ import org.robolectric.shadows.ShadowToast
 import java.io.File
 
 /**
- * 编辑联系人头像「拍照」三处修复的回归测试：
+ * 编辑联系人头像「拍照 / 选相册」的回归测试：
  *  1. 无相机设备 / 无拍照应用时，不启动相机、给提示、绝不闪退；
  *  2. 拍照原图解码走采样，decodeFile 对损坏/超大输入安全返回，不 OOM；
- *  3. 拍照期间 Activity 被回收重建，待取回路径能从实例状态恢复，照片不丢。
+ *  3. 拍照期间 Activity 被回收重建，待取回路径能从实例状态恢复，照片不丢；
+ *  4. 无相册 App 时点击「从相册选择」走守卫分支，给提示、绝不抛
+ *     ActivityNotFoundException 闪退（与拍照同风格防护）。
  *
  * 说明：Robolectric 不能真的拉起系统相机、也不真正解码高像素 JPEG 到内存，
  * 因此「OOM」用纯逻辑 [LocalContacts.decodeFile] 的采样/异常兜底覆盖，
@@ -123,6 +125,41 @@ class ContactEditCameraTest {
         // Robolectric 默认不声明相机 feature / 无 ACTION_IMAGE_CAPTURE 应用
         val btn = a.findViewById<View>(R.id.btnTakePhoto)
         assertEquals("无相机设备应隐藏拍照按钮", View.GONE, btn.visibility)
+        a.finish()
+    }
+
+    // ---------------------------------------------------------- 4. 无相册 App 不闪退
+
+    @Test
+    fun canPickAlbum_returnsFalseWhenNoResolverTrueWhenResolver() {
+        val a = edit(0)
+        assertFalse(
+            "系统里没有能处理 ACTION_PICK 图片的应用时不可用",
+            a.canPickAlbum(resolvable = { false })
+        )
+        assertTrue(
+            "存在可处理应用时可用",
+            a.canPickAlbum(resolvable = { true })
+        )
+        a.finish()
+    }
+
+    @Test
+    fun pickAlbum_whenNoAlbumApp_showsHintAndDoesNotCrash() {
+        val a = edit(0)
+        ShadowToast.reset()
+        // 真实点击路径：Robolectric 默认无任何应用能处理 ACTION_PICK 图片，
+        // 应走守卫分支，给提示、绝不抛 ActivityNotFoundException 闪退。
+        a.findViewById<View>(R.id.btnFromAlbum).performClick()
+        assertNull(
+            "无相册应用时不得尝试启动任何 Activity",
+            shadowOf(a).nextStartedActivity
+        )
+        assertEquals(
+            "应提示用户改用拍照",
+            app.getString(R.string.album_unavailable),
+            ShadowToast.getTextOfLatestToast()
+        )
         a.finish()
     }
 

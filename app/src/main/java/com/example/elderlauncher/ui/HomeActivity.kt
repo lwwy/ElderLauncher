@@ -20,6 +20,7 @@ import androidx.core.content.ContextCompat
 import com.example.elderlauncher.R
 import com.example.elderlauncher.core.CrashLogger
 import com.example.elderlauncher.core.HomeRole
+import com.example.elderlauncher.core.LowBatteryAlarmScheduler
 import com.example.elderlauncher.core.LowBatteryAnnouncer
 import com.example.elderlauncher.core.LunarUtil
 import com.example.elderlauncher.core.TtsManager
@@ -151,6 +152,9 @@ class HomeActivity : AppCompatActivity() {
             lastBatteryPct = pct
             lastBatteryPlugged = plugged
             LowBatteryAnnouncer.onBatteryChanged(this@HomeActivity, pct, plugged)
+            // 亮屏期间一旦检测到低电量，立即武装系统级定时哨兵，
+            // 这样息屏 / 切到别的 App 后仍能按时提醒（不再依赖桌面 Activity 存活）
+            LowBatteryAlarmScheduler.ensureScheduled(this@HomeActivity)
         }
     }
 
@@ -383,6 +387,8 @@ class HomeActivity : AppCompatActivity() {
         )
         // 走到这里说明桌面已完整显示，标记本次启动成功
         CrashLogger.markSessionReady()
+        // 亮屏即武装系统级定时哨兵：息屏 / 切到别的 App 后低电量播报仍按时触发
+        LowBatteryAlarmScheduler.ensureScheduled(this)
     }
 
     override fun onPause() {

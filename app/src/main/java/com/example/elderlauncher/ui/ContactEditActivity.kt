@@ -1,6 +1,7 @@
 package com.example.elderlauncher.ui
 
 import android.content.Intent
+import android.content.ActivityNotFoundException
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.net.Uri
@@ -130,10 +131,35 @@ class ContactEditActivity : AppCompatActivity() {
     }
 
     private fun pickAlbum() {
+        if (!canPickAlbum()) {
+            Toast.makeText(this, R.string.album_unavailable, Toast.LENGTH_SHORT).show()
+            return
+        }
         val intent = Intent(Intent.ACTION_PICK)
             .setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
-        albumPicker.launch(intent)
+        try {
+            albumPicker.launch(intent)
+        } catch (_: ActivityNotFoundException) {
+            // 极端情形：守卫通过，但 launch 瞬间又被系统判定无可处理的应用，
+            // 仍以提示兜底，避免抛异常闪退。
+            Toast.makeText(this, R.string.album_unavailable, Toast.LENGTH_SHORT).show()
+        }
     }
+
+    /**
+     * 是否具备从相册选图的条件：系统里存在能处理 ACTION_PICK 图片的应用。
+     * 与 [canTakePhoto] 同风格，参数可注入，便于单测驱动「无相册 / 有相册」分支。
+     * 运行时守卫而非隐藏按钮：相册可用性会变（用户装/卸相册 App），且头像图本身也
+     * 触发本入口，运行时判定更稳妥。
+     */
+    internal fun canPickAlbum(
+        resolvable: (Intent) -> Boolean = {
+            it.resolveActivity(packageManager) != null
+        }
+    ): Boolean = resolvable(
+        Intent(Intent.ACTION_PICK)
+            .setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
+    )
 
     /**
      * 是否具备拍照条件：设备有相机硬件，且存在能处理 ACTION_IMAGE_CAPTURE 的应用。
