@@ -92,6 +92,51 @@ class LowBatteryAlarmSchedulerTest {
         assertEquals(1, scheduledAlarms().size)
     }
 
+    // ---------------------------------------------------------------- 关闭 -> 重新打开 恢复排程（C2）
+
+    @Test
+    fun cancel_thenReschedule_recoversAlarm() {
+        // 打开：排一个闹钟
+        LowBatteryAlarmScheduler.ensureScheduled(app)
+        assertEquals(1, scheduledAlarms().size)
+
+        // 关闭（功能关掉）：cancel 必须连 PendingIntent 一起撤销，不留残留
+        Prefs.set(app, Prefs.ANN_LOW, false)
+        LowBatteryAlarmScheduler.cancel(app)
+        assertEquals("关闭后不应残留任何闹钟", 0, scheduledAlarms().size)
+
+        // 重新打开：应能重新创建并排程新的 PendingIntent（无死锁、无残留导致永不触发）
+        Prefs.set(app, Prefs.ANN_LOW, true)
+        LowBatteryAlarmScheduler.ensureScheduled(app)
+        assertEquals("关闭后重新打开应能恢复排程", 1, scheduledAlarms().size)
+        assertTrue(
+            "重新排程的应为 RTC_WAKEUP 精确闹钟",
+            scheduledAlarms().first().getType() == AlarmManager.RTC_WAKEUP
+        )
+    }
+
+    @Test
+    fun canScheduleExact_followsSystemPermission() {
+        // 系统授予精确闹钟权限：应允许（真实设备首次安装默认即此状态）
+        ShadowAlarmManager.setCanScheduleExactAlarms(true)
+        assertTrue("系统授予精确闹钟权限时应允许", LowBatteryAlarmScheduler.canScheduleExact(app))
+        // 用户撤销后：canScheduleExact 应返回 false
+        ShadowAlarmManager.setCanScheduleExactAlarms(false)
+        assertFalse("系统撤销精确闹钟权限时应不允许", LowBatteryAlarmScheduler.canScheduleExact(app))
+    }
+
+    @Test
+    fun scheduleNext_withoutExactPermission_degradesButStillSchedules() {
+        // R1：精确闹钟权限被撤销时，scheduleNext 降级为 inexact，但仍在排程（不漏提醒）
+        ShadowAlarmManager.setCanScheduleExactAlarms(false)
+        LowBatteryAlarmScheduler.scheduleNext(app)
+        assertTrue(
+            "无精确闹钟权限时仍应排程（降级 inexact，仍可 Doze 唤醒）",
+            scheduledAlarms().isNotEmpty()
+        )
+        ShadowAlarmManager.setCanScheduleExactAlarms(true)
+    }
+
     // ---------------------------------------------------------------- tick 驱动状态机
 
     @Test

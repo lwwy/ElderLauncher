@@ -2,7 +2,6 @@ package com.example.elderlauncher.ui
 
 import android.content.Intent
 import android.content.ActivityNotFoundException
-import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
@@ -21,7 +20,7 @@ import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.textfield.TextInputEditText
 import java.io.File
 
-class ContactEditActivity : AppCompatActivity() {
+open class ContactEditActivity : AppCompatActivity() {
 
     private var slot = 0
     private var hasExisting = false
@@ -94,14 +93,11 @@ class ContactEditActivity : AppCompatActivity() {
 
         findViewById<ShapeableImageView>(R.id.imgAvatar).setOnClickListener { pickAlbum() }
         findViewById<MaterialButton>(R.id.btnFromAlbum).setOnClickListener { pickAlbum() }
-        findViewById<MaterialButton>(R.id.btnTakePhoto).apply {
-            if (canTakePhoto()) {
-                setOnClickListener { takePhoto() }
-            } else {
-                // 没有相机硬件 / 没有能拍照的应用：直接隐藏入口，避免点了闪退或没反应
-                visibility = View.GONE
-            }
-        }
+        // 不再基于 resolveActivity 预检隐藏按钮：Android 11+ 包可见性会使预检误判为
+        // 「无应用」而错误隐藏入口（<queries> 未声明相机/相册 intent 时尤其明显）。
+        // 改为始终显示，由 takePhoto 内部 try-catch 兜底，真正无相机时启动抛异常再提示，
+        // 绝不闪退（官方推荐做法，无需为相机/相册声明 <queries>）。
+        findViewById<MaterialButton>(R.id.btnTakePhoto).setOnClickListener { takePhoto() }
         findViewById<MaterialButton>(R.id.btnSave).setOnClickListener { save() }
         findViewById<MaterialButton>(R.id.btnDelete).apply {
             visibility = if (hasExisting) View.VISIBLE else View.GONE
@@ -130,77 +126,47 @@ class ContactEditActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 从相册选图。不再做 resolveActivity 预检（Android 11+ 包可见性会让预检误判，
+     * 反而把可用入口错误关掉）；直接 launch，由 try-catch 兜底：极少数情况下系统
+     * 判定无可处理的应用而抛 [ActivityNotFoundException] 时，给提示而非闪退。
+     */
     private fun pickAlbum() {
-        if (!canPickAlbum()) {
-            Toast.makeText(this, R.string.album_unavailable, Toast.LENGTH_SHORT).show()
-            return
-        }
         val intent = Intent(Intent.ACTION_PICK)
             .setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
         try {
-            albumPicker.launch(intent)
+            launchAlbumPicker(intent)
         } catch (_: ActivityNotFoundException) {
-            // 极端情形：守卫通过，但 launch 瞬间又被系统判定无可处理的应用，
-            // 仍以提示兜底，避免抛异常闪退。
             Toast.makeText(this, R.string.album_unavailable, Toast.LENGTH_SHORT).show()
         }
     }
 
-    /**
-     * 是否具备从相册选图的条件：系统里存在能处理 ACTION_PICK 图片的应用。
-     * 与 [canTakePhoto] 同风格，参数可注入，便于单测驱动「无相册 / 有相册」分支。
-     * 运行时守卫而非隐藏按钮：相册可用性会变（用户装/卸相册 App），且头像图本身也
-     * 触发本入口，运行时判定更稳妥。
-     */
-    internal fun canPickAlbum(
-        resolvable: (Intent) -> Boolean = {
-            it.resolveActivity(packageManager) != null
-        }
-    ): Boolean = resolvable(
-        Intent(Intent.ACTION_PICK)
-            .setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
-    )
+    /** 实际发起相册选择；抽成 internal open 便于单测注入「无应用 → 抛异常」路径 */
+    internal open fun launchAlbumPicker(intent: Intent) {
+        albumPicker.launch(intent)
+    }
 
     /**
-     * 是否具备拍照条件：设备有相机硬件，且存在能处理 ACTION_IMAGE_CAPTURE 的应用。
-     * 参数可注入，便于单元测试驱动「无相机 / 有相机」两种分支。
-     */
-    internal fun canTakePhoto(
-        hasCameraFeature: Boolean =
-            packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY),
-        resolvable: (Intent) -> Boolean = {
-            it.resolveActivity(packageManager) != null
-        }
-    ): Boolean = hasCameraFeature && resolvable(Intent(MediaStore.ACTION_IMAGE_CAPTURE))
-
-    /**
-     * 点击「拍照」。无相机时给一句提示并返回，绝不 launch（避免 ActivityNotFoundException
-     * 闪退）；有相机时构造 FileProvider URI 启动系统相机，任何异常都降级为提示而非崩溃。
-     * 调用系统相机不需要本应用声明/申请 CAMERA 权限，由系统相机自己处理授权。
+     * 点击「拍照」。不再基于 resolveActivity 预检（同相册，包可见性会误判），
+     * 直接发起；无相机硬件 / 无拍照应用时系统抛出 [ActivityNotFoundException]，
+     * 由 try-catch 捕获并提示，绝不闪退。调用系统相机不需要本应用 CAMERA 权限。
      */
     internal fun takePhoto(
-        available: Boolean = canTakePhoto(),
         // 抽出 URI 构造便于测试注入：Robolectric 每个用例换一个 cacheDir，
-        // 而 FileProvider 会静态缓存首次解析出的根目录，跨用例会误判为「未配置的 root」。
-        // 默认值与线上完全一致，真实调用（onCreate 里的点击）不带此参数。
+        // 而 FileProvider 会静态缓存首次解析出的根目录，跨用例会误判为「未配置的 root」；
+        // 默认与线上完全一致，真实点击不带此参数。
         uriFor: (File) -> Uri = {
             FileProvider.getUriForFile(this, "$packageName.fileprovider", it)
         }
-    ): Boolean {
-        if (!available) {
-            Toast.makeText(this, R.string.camera_unavailable, Toast.LENGTH_SHORT).show()
-            return false
-        }
-        return try {
-            launchCamera(uriFor)
-            true
-        } catch (_: Exception) {
-            Toast.makeText(this, R.string.camera_unavailable, Toast.LENGTH_SHORT).show()
-            false
-        }
+    ): Boolean = try {
+        launchCamera(uriFor)
+        true
+    } catch (_: Exception) {
+        Toast.makeText(this, R.string.camera_unavailable, Toast.LENGTH_SHORT).show()
+        false
     }
 
-    private fun launchCamera(uriFor: (File) -> Uri) {
+    internal open fun launchCamera(uriFor: (File) -> Uri) {
         val f = cameraFile()
         // 清掉上次可能残留的临时文件，避免把旧照片当成这次结果
         if (f.exists()) f.delete()

@@ -1,6 +1,7 @@
 package com.example.elderlauncher
 
 import android.app.Application
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
@@ -27,20 +28,20 @@ import java.io.File
 
 /**
  * 编辑联系人头像「拍照 / 选相册」的回归测试：
- *  1. 无相机设备 / 无拍照应用时，不启动相机、给提示、绝不闪退；
+ *  1. 无相机设备 / 无拍照应用时，点击不闪退、给提示（try-catch 兜底，不再依赖 resolveActivity 预检）；
  *  2. 拍照原图解码走采样，decodeFile 对损坏/超大输入安全返回，不 OOM；
  *  3. 拍照期间 Activity 被回收重建，待取回路径能从实例状态恢复，照片不丢；
- *  4. 无相册 App 时点击「从相册选择」走守卫分支，给提示、绝不抛
+ *  4. 无相册 App 时点击「从相册选择」走 try-catch 兜底，给提示、绝不抛
  *     ActivityNotFoundException 闪退（与拍照同风格防护）。
  *
- * 说明：Robolectric 不能真的拉起系统相机、也不真正解码高像素 JPEG 到内存，
+ * 说明：C1 修复后，相机/相册不再基于 resolveActivity 预检隐藏按钮，而是直接 launch、
+ * 由 try-catch 捕获「无应用可处理」时抛出的 ActivityNotFoundException。测试用
+ * [ThrowingContactEditActivity] 覆写 launch 入口，真实模拟「系统判定无应用」这一抛异常路径，
+ * 从而验证兜底逻辑（而非依赖已被删除的预检函数）。
+ *
+ * 另注：Robolectric 不能真的拉起系统相机、也不真正解码高像素 JPEG 到内存，
  * 因此「OOM」用纯逻辑 [LocalContacts.decodeFile] 的采样/异常兜底覆盖，
  * 「重建」用 ActivityController 的 saveInstanceState + 重新 create 覆盖。
- *
- * 另注：Robolectric 每个测试方法会换一个临时 cacheDir，而 androidx 的
- * FileProvider 按 authority 静态缓存了首次解析出的根目录，跨方法再用就会抛
- * 「Failed to find configured root」。这是测试沙箱差异（真机 cacheDir 固定），
- * 故发起拍照的用例注入 uriFor 绕开它；线上调用不带该参数，仍走真实 FileProvider。
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
@@ -71,21 +72,26 @@ class ContactEditCameraTest {
             .create().visible().get()
     }
 
-    // ---------------------------------------------------------- 1. 无相机不闪退
-
-    @Test
-    fun canTakePhoto_requiresBothCameraFeatureAndResolvableApp() {
-        val a = edit(0)
-        assertFalse("无相机硬件时不可用", a.canTakePhoto(hasCameraFeature = false, resolvable = { true }))
-        assertFalse("有硬件但没有拍照应用时不可用", a.canTakePhoto(hasCameraFeature = true, resolvable = { false }))
-        assertTrue("硬件与拍照应用齐备时才可用", a.canTakePhoto(hasCameraFeature = true, resolvable = { true }))
-        a.finish()
+    /** 可注入「无应用 → 抛异常」的子类，用于真实验证 try-catch 兜底 */
+    private fun editThrowing(
+        slot: Int,
+        configure: ThrowingContactEditActivity.() -> Unit = {}
+    ): ThrowingContactEditActivity {
+        val intent = Intent(app, ThrowingContactEditActivity::class.java)
+            .putExtra(ContactEditActivity.EXTRA_SLOT, slot)
+        return Robolectric.buildActivity(ThrowingContactEditActivity::class.java, intent)
+            .create().visible().get().apply(configure)
     }
 
+    // ---------------------------------------------------------- 1. 无相机不闪退（try-catch 兜底）
+
     @Test
-    fun takePhoto_whenUnavailable_showsHintAndStartsNothing() {
-        val a = edit(0)
-        assertFalse("无相机时 takePhoto 应返回 false", a.takePhoto(available = false))
+    fun takePhoto_whenNoCameraApp_showsHintAndDoesNotCrash() {
+        // 真实路径：launch 抛 ActivityNotFoundException（模拟系统里没有任何拍照应用）
+        val a = editThrowing(0) { throwOnCamera = true }
+        ShadowToast.reset()
+        val result = a.takePhoto()
+        assertFalse("无相机时应返回 false", result)
         assertEquals(
             "应给出可操作的提示",
             app.getString(R.string.camera_unavailable),
@@ -100,7 +106,7 @@ class ContactEditCameraTest {
         val a = edit(0)
         assertTrue(
             "有相机时应发起成功",
-            a.takePhoto(available = true, uriFor = { fakeCameraUri })
+            a.takePhoto(uriFor = { fakeCameraUri })
         )
         val started = shadowOf(a).nextStartedActivity
         assertNotNull("应启动拍照 Intent", started)
@@ -119,37 +125,13 @@ class ContactEditCameraTest {
         a.finish()
     }
 
-    @Test
-    fun noCameraFeature_hidesTakePhotoButton() {
-        val a = edit(0)
-        // Robolectric 默认不声明相机 feature / 无 ACTION_IMAGE_CAPTURE 应用
-        val btn = a.findViewById<View>(R.id.btnTakePhoto)
-        assertEquals("无相机设备应隐藏拍照按钮", View.GONE, btn.visibility)
-        a.finish()
-    }
-
-    // ---------------------------------------------------------- 4. 无相册 App 不闪退
-
-    @Test
-    fun canPickAlbum_returnsFalseWhenNoResolverTrueWhenResolver() {
-        val a = edit(0)
-        assertFalse(
-            "系统里没有能处理 ACTION_PICK 图片的应用时不可用",
-            a.canPickAlbum(resolvable = { false })
-        )
-        assertTrue(
-            "存在可处理应用时可用",
-            a.canPickAlbum(resolvable = { true })
-        )
-        a.finish()
-    }
+    // ---------------------------------------------------------- 4. 无相册 App 不闪退（try-catch 兜底）
 
     @Test
     fun pickAlbum_whenNoAlbumApp_showsHintAndDoesNotCrash() {
-        val a = edit(0)
+        // 真实路径：launch 抛 ActivityNotFoundException（模拟系统里没有任何相册应用）
+        val a = editThrowing(0) { throwOnAlbum = true }
         ShadowToast.reset()
-        // 真实点击路径：Robolectric 默认无任何应用能处理 ACTION_PICK 图片，
-        // 应走守卫分支，给提示、绝不抛 ActivityNotFoundException 闪退。
         a.findViewById<View>(R.id.btnFromAlbum).performClick()
         assertNull(
             "无相册应用时不得尝试启动任何 Activity",
@@ -226,7 +208,7 @@ class ContactEditCameraTest {
         val a = controller.get()
 
         // 模拟「点拍照」：launchCamera 会把待取回路径写入实例状态
-        assertTrue(a.takePhoto(available = true, uriFor = { fakeCameraUri }))
+        assertTrue(a.takePhoto(uriFor = { fakeCameraUri }))
         assertTrue(
             "发起拍照后应有待取回路径",
             readField<String?>(a, "pendingCameraPath") != null
@@ -270,5 +252,21 @@ class ContactEditCameraTest {
     private fun <T> readField(target: Any, name: String): T {
         val f = ContactEditActivity::class.java.getDeclaredField(name).apply { isAccessible = true }
         return f.get(target) as T
+    }
+
+    /** 覆写 launch 入口，可模拟「系统判定无应用 → 抛 ActivityNotFoundException」 */
+    class ThrowingContactEditActivity : ContactEditActivity() {
+        var throwOnAlbum: Boolean = false
+        var throwOnCamera: Boolean = false
+
+        override fun launchAlbumPicker(intent: Intent) {
+            if (throwOnAlbum) throw ActivityNotFoundException("no album app")
+            super.launchAlbumPicker(intent)
+        }
+
+        override fun launchCamera(uriFor: (File) -> Uri) {
+            if (throwOnCamera) throw ActivityNotFoundException("no camera app")
+            super.launchCamera(uriFor)
+        }
     }
 }

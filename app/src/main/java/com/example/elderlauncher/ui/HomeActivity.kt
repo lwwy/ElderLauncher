@@ -84,6 +84,9 @@ class HomeActivity : AppCompatActivity() {
         // 用于 onSaveInstanceState 暂存待拨号码的 key
         private const val KEY_PENDING_CALL = "pending_call_number"
 
+        /** 精确闹钟权限引导每进程只弹一次，避免每次回到桌面都跳设置页 */
+        private var exactAlarmGuided = false
+
         /**
          * 计算「从 now 到下一个整分钟边界」的毫秒数。
          * 抽成纯函数便于单元测试，不依赖 Android 时钟。
@@ -389,6 +392,8 @@ class HomeActivity : AppCompatActivity() {
         CrashLogger.markSessionReady()
         // 亮屏即武装系统级定时哨兵：息屏 / 切到别的 App 后低电量播报仍按时触发
         LowBatteryAlarmScheduler.ensureScheduled(this)
+        // R1：精确闹钟权限被用户撤销时，提示并引导去系统设置开启（每进程仅引导一次）
+        guideExactAlarmPermission()
     }
 
     override fun onPause() {
@@ -399,6 +404,19 @@ class HomeActivity : AppCompatActivity() {
             unregisterReceiver(batteryReceiver)
         } catch (_: Exception) {
         }
+    }
+
+    /**
+     * R1：精确闹钟权限被用户撤销时，提示并引导去系统设置开启。
+     * 仅在权限确实缺失、且本进程尚未引导过时才弹一次，避免每次回到桌面都跳设置页；
+     * 若用户不开启，[LowBatteryAlarmScheduler.scheduleNext] 已降级为 inexact，仍能 Doze 唤醒。
+     */
+    private fun guideExactAlarmPermission() {
+        if (LowBatteryAlarmScheduler.canScheduleExact(this)) return
+        if (exactAlarmGuided) return
+        exactAlarmGuided = true
+        Toast.makeText(this, R.string.exact_alarm_hint, Toast.LENGTH_LONG).show()
+        LowBatteryAlarmScheduler.openExactAlarmSettings(this)
     }
 
     override fun onStop() {

@@ -4,8 +4,12 @@ import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.Uri
 import android.os.BatteryManager
+import android.os.Build
 import android.os.PowerManager
+import android.provider.Settings
+import com.example.elderlauncher.core.CrashLogger
 import com.example.elderlauncher.data.Prefs
 import com.example.elderlauncher.phone.receiver.LowBatteryAlarmReceiver
 import java.util.Calendar
@@ -67,6 +71,33 @@ internal object LowBatteryAlarmScheduler {
         false
     }
 
+    /**
+     * Android 12+(API31) 起精确闹钟需用户授予 SCHEDULE_EXACT_ALARM；
+     * 未授予时只能降级为 inexact（仍可 Doze 唤醒）。低版本恒为 true。
+     */
+    internal fun canScheduleExact(ctx: Context): Boolean {
+        val am = ctx.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return false
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms()
+    }
+
+    /**
+     * 引导用户到系统设置开启「精确闹钟」权限（Android 12+）。
+     * 仅当 [canScheduleExact] 为 false 时调用；调用方须为前台 Activity 上下文，
+     * 内部已加 NEW_TASK 并做 resolveActivity 守卫，无法打开时静默失败不闪退。
+     */
+    internal fun openExactAlarmSettings(ctx: Context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        try {
+            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                .setData(Uri.parse("package:${ctx.packageName}"))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (intent.resolveActivity(ctx.packageManager) != null) {
+                ctx.startActivity(intent)
+            }
+        } catch (_: Exception) {
+        }
+    }
+
     /** 安排下一次触发：功能关闭时直接取消；否则排到 [nextAlarmAt] 那一刻 */
     fun scheduleNext(ctx: Context) {
         if (!Prefs.enabled(ctx, Prefs.ANN_LOW)) {
@@ -75,10 +106,23 @@ internal object LowBatteryAlarmScheduler {
         }
         val am = ctx.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
         val trigger = nextAlarmAt(System.currentTimeMillis())
+        // R1：精确闹钟权限被用户撤销（Android 12+）时，先记录降级原因，
+        // 直接降级为仍可 Doze 唤醒的 inexact 方案，避免 SecurityException 与「完全不提醒」。
+        if (!canScheduleExact(ctx)) {
+            CrashLogger.trace(
+                "精确闹钟权限(SCHEDULE_EXACT_ALARM)未授予，降级为 setAndAllowWhileIdle（用户未开启精确闹钟）"
+            )
+            try {
+                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pendingIntent(ctx))
+            } catch (_: Exception) {
+            }
+            return
+        }
         try {
             am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pendingIntent(ctx))
         } catch (_: SecurityException) {
-            // API31+ 若用户撤销了 SCHEDULE_EXACT_ALARM，降级为 inexact（仍能 Doze 唤醒）
+            // 兜底：极端时序下权限在检查后被撤销，再降级一次
+            CrashLogger.trace("setExactAndAllowWhileIdle 抛 SecurityException，降级为 setAndAllowWhileIdle")
             try {
                 am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pendingIntent(ctx))
             } catch (_: Exception) {
@@ -99,7 +143,12 @@ internal object LowBatteryAlarmScheduler {
     fun cancel(ctx: Context) {
         val am = ctx.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
         try {
-            am.cancel(pendingIntent(ctx))
+            val pi = pendingIntent(ctx)
+            // 同时撤销 AlarmManager 里的闹钟与 PendingIntent 本身：
+            // 仅 cancel 闹钟而不撤销 PendingIntent，会让旧 PendingIntent 残留，
+            // 重新打开开关重新排程时可能复用到一个已失效的对象，造成「排了却永不触发」的死锁。
+            am.cancel(pi)
+            pi.cancel()
         } catch (_: Exception) {
         }
     }
