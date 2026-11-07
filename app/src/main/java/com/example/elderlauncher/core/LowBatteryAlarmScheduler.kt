@@ -47,6 +47,9 @@ internal object LowBatteryAlarmScheduler {
 
     private var wakeLock: PowerManager.WakeLock? = null
 
+    /** 精确闹钟降级日志每进程只记一次，避免每 30 分钟 tick 反复刷爆 128KB 轨迹缓冲 */
+    private var exactDowngradeLogged = false
+
     private fun pendingIntent(ctx: Context): android.app.PendingIntent {
         val intent = Intent(ctx, LowBatteryAlarmReceiver::class.java).setAction(ACTION)
         return android.app.PendingIntent.getBroadcast(
@@ -89,12 +92,16 @@ internal object LowBatteryAlarmScheduler {
         // R1：精确闹钟权限被用户撤销（Android 12+）时，先记录降级原因，
         // 直接降级为仍可 Doze 唤醒的 inexact 方案，避免 SecurityException 与「完全不提醒」。
         if (!canScheduleExact(ctx)) {
-            CrashLogger.trace(
-                "精确闹钟权限(SCHEDULE_EXACT_ALARM)未授予，降级为 setAndAllowWhileIdle（用户未开启精确闹钟）"
-            )
+            if (!exactDowngradeLogged) {
+                exactDowngradeLogged = true
+                CrashLogger.trace(
+                    "精确闹钟权限(SCHEDULE_EXACT_ALARM)未授予，降级为 setAndAllowWhileIdle（用户未开启精确闹钟）"
+                )
+            }
             try {
                 am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pendingIntent(ctx))
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                CrashLogger.trace("scheduleNext 降级 inexact(setAndAllowWhileIdle)失败: ${e.message}")
             }
             return
         }
@@ -105,9 +112,11 @@ internal object LowBatteryAlarmScheduler {
             CrashLogger.trace("setExactAndAllowWhileIdle 抛 SecurityException，降级为 setAndAllowWhileIdle")
             try {
                 am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pendingIntent(ctx))
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                CrashLogger.trace("scheduleNext 兜底降级 inexact(setAndAllowWhileIdle)失败: ${e.message}")
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            CrashLogger.trace("scheduleNext 排程异常: ${e.message}")
         }
     }
 
@@ -129,7 +138,8 @@ internal object LowBatteryAlarmScheduler {
             // 重新打开开关重新排程时可能复用到一个已失效的对象，造成「排了却永不触发」的死锁。
             am.cancel(pi)
             pi.cancel()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            CrashLogger.trace("cancel 闹钟异常: ${e.message}")
         }
     }
 
@@ -208,7 +218,8 @@ internal object LowBatteryAlarmScheduler {
             }
             val ms = if (spoke) WAKE_SPOKE_MS else WAKE_QUICK_MS
             if (!lock.isHeld) lock.acquire(ms)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            CrashLogger.trace("holdWakeLock 获取失败: ${e.message}")
         }
     }
 }

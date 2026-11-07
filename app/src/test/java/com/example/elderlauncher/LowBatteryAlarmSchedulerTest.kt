@@ -45,6 +45,9 @@ class LowBatteryAlarmSchedulerTest {
     fun tearDown() {
         LowBatteryAlarmScheduler.cancel(app)
         LowBatteryAnnouncer.resetForTest()
+        // 复位 Robolectric 静态闹钟状态（setCanScheduleExactAlarms 是全局静态），
+        // 避免用例间因执行顺序导致 canScheduleExact 取值串味。
+        ShadowAlarmManager.setCanScheduleExactAlarms(false)
     }
 
     private fun at(dayOffset: Int, hour: Int, minute: Int): Long =
