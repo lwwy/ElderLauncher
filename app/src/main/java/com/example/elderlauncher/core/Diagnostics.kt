@@ -54,7 +54,6 @@ object Diagnostics {
         sb.appendLine()
 
         sb.appendLine("---------- 功能开关 ----------")
-        sb.appendLine("来电播报: ${onOff(Prefs.enabled(ctx, Prefs.ANN_INCOMING))}")
         sb.appendLine("低电量播报: ${onOff(Prefs.enabled(ctx, Prefs.ANN_LOW))}")
         sb.appendLine("默认桌面: ${if (HomeRole.isDefaultHome(ctx)) "是" else "否"}")
         // 补两条原始口径，便于区分「真没设上」与「某个判定口径失效」（HyperOS 实测会不同步）
@@ -74,12 +73,11 @@ object Diagnostics {
         sb.appendLine()
 
         sb.appendLine("---------- 权限状态 ----------")
-        // 只列本应用会实际申请的权限。未声明/未申请的权限项会永远显示「未授权」，
-        // 干扰判断来电播报到底能不能收到广播。
+        // 只列本应用会实际申请的权限（拨号用的 CALL_PHONE）。
+        // 来电播报下架后不再申请通讯录/电话状态权限，列出来只会永远显示「未授权」，
+        // 反而误导排查；这里保持与实际申请行为一致。
         val perms = listOf(
-            "CALL_PHONE" to android.Manifest.permission.CALL_PHONE,
-            "READ_CONTACTS" to android.Manifest.permission.READ_CONTACTS,
-            "READ_PHONE_STATE" to android.Manifest.permission.READ_PHONE_STATE
+            "CALL_PHONE" to android.Manifest.permission.CALL_PHONE
         )
         for ((label, p) in perms) {
             sb.appendLine("$label: ${permState(ctx, p)}")

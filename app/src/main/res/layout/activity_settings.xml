@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  设置页：五个分区（常用联系人 / 来电与通话 / 权限与保活 / 默认应用 / 日志与诊断）。
+  设置页：五个分区（桌面入口 / 常用联系人 / 语音播报 / 权限与保活 / 默认应用 / 日志与诊断）。
   分区标题、说明小字、卡片外观都收敛到 styles.xml 的语义样式，
   这里只保留结构和内容，改样式不用逐处改布局。
 -->
@@ -88,10 +88,10 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 二、来电与通话 -->
+        <!-- 二、语音播报（来电播报功能已按隐私要求整体下架，本区仅保留低电量播报） -->
         <TextView
             style="@style/SectionTitle"
-            android:text="@string/section_call" />
+            android:text="@string/section_announce" />
 
         <com.google.android.material.card.MaterialCardView
             style="@style/SettingsCard"
@@ -101,35 +101,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="12dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/set_incoming"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="@dimen/textSubtitle" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnTestIncoming"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:text="@string/btn_test" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/swIncoming"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"

@@ -23,12 +23,12 @@
     <string name="contact_empty_name">请填写姓名</string>
     <string name="contact_empty_phone">请填写电话号码</string>
     <string name="avatar_failed">图片读取失败，请重试</string>
+    <string name="camera_unavailable">这台设备没有可用的相机，请从相册选择图片</string>
     <string name="contact_saved">已保存</string>
     <string name="contact_deleted">已删除</string>
     <string name="edit_contact">编辑</string>
 
     <string name="settings_title">设置</string>
-    <string name="set_incoming">来电播报</string>
     <string name="set_lowbattery">低电量播报</string>
 
     <!-- 桌面入口设置：隐藏/恢复首页右上角齿轮 -->
@@ -48,11 +48,8 @@
     <string name="default_home_manual">无法自动打开设置，请在系统设置里搜索「默认主屏幕」，手动把「老人桌面」设为默认桌面</string>
     <string name="default_home_success">已设为默认桌面</string>
     <string name="btn_test">▶ 测试</string>
-    <!-- 播报文案：来电/低电量播报与设置页「测试」按钮共用同一份，避免两处各写一遍 -->
-    <string name="ann_incoming">来电，%1$s</string>
-    <string name="ann_unknown_number">未知号码</string>
+    <!-- 播报文案：低电量播报与设置页「测试」按钮共用同一份，避免两处各写一遍 -->
     <string name="ann_low_battery">电量不足，请插上充电器</string>
-    <string name="test_caller_name">张三</string>
     <string name="test_playing">正在播放测试语音…</string>
     <string name="tts_unavailable">系统语音引擎不可用，请到系统设置里检查「文字转语音」输出</string>
     <string name="tts_no_engine">这台手机没有安装语音引擎，点击「去设置」安装或开启一个语音引擎（如“系统语音引擎”“Google 文字转语音”）</string>
@@ -86,7 +83,7 @@
     <string name="fav_not_set">未添加</string>
 
     <!-- 设置分区标题 -->
-    <string name="section_call">来电与通话</string>
+    <string name="section_announce">语音播报</string>
     <string name="section_permission">权限与保活</string>
     <string name="section_default">默认应用</string>
     <string name="section_diagnostic">日志与诊断</string>
@@ -99,11 +96,11 @@
     <string name="export_log_saved">日志已生成：%1$s\n同时已保存到「下载」目录</string>
     <string name="export_log_failed">导出失败，请稍后重试</string>
 
-    <!-- 自启动 / 后台运行：国产 ROM 需放行，开机广播与来电广播才能可靠送达 -->
+    <!-- 自启动 / 后台运行：国产 ROM 需放行，开机广播与低电量广播才能可靠送达 -->
     <string name="btn_autostart">自启动权限</string>
     <string name="autostart_tip">开启自启动与后台运行，手机重启后自动进入桌面</string>
     <string name="btn_battery">忽略电池优化</string>
-    <string name="battery_tip">允许后台运行，保证开机与来电提醒不被系统拦截</string>
+    <string name="battery_tip">允许后台运行，保证开机与低电量播报不被系统拦截</string>
     <string name="autostart_opened">正在打开自启动设置，请允许“老人桌面”自启动与后台运行</string>
     <string name="autostart_failed">未能自动打开自启动设置，请到“设置 → 应用 → 老人桌面”中手动开启自启动与后台运行</string>
     <string name="battery_done">已打开省电策略，请把“老人桌面”设为「无限制」</string>
@@ -118,5 +115,4 @@
     <!-- 首页拦截返回键时的提示（不退出桌面，只给一句反馈） -->
     <string name="home_back_blocked">这已经是桌面首页了</string>
     <string name="call_perm_denied">未授予电话权限，无法拨号。请在设置中开启“电话”权限</string>
-    <string name="phone_perm_denied">来电播报需要“电话”和“通讯录”权限，请到 设置 → 应用 → 老人桌面 → 权限 中开启</string>
 </resources>

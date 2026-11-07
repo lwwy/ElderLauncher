@@ -47,14 +47,8 @@ class CallPermissionReplayTest {
     }
 
     private fun launch(): HomeActivity {
-        // 先授予来电播报所需权限：桌面冷启动会申请 READ_PHONE_STATE / READ_CONTACTS，
-        // 那次 announcePermissionLauncher.launch 会占用 ActivityResultRegistry，
-        // 导致后续 callPermissionLauncher.launch 在 Robolectric 下不再产生 Intent。
-        // 授予后冷启动不再发起申请，测试只观察拨号权限这一条链路。
-        shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(
-            Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.READ_CONTACTS
-        )
+        // 来电播报功能下架后，桌面冷启动不再申请任何权限，
+        // 测试可专注观察拨号权限 CALL_PHONE 这一条链路。
         // 沿用原 DialerActivity 回归测试的构建方式：只 create + visible，
         // 不走完整 setup 生命周期（onResume 会注册电池广播、刷新联系人）。
         val a = Robolectric.buildActivity(HomeActivity::class.java)

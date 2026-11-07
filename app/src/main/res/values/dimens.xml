@@ -9,7 +9,7 @@
     <dimen name="textMega">52sp</dimen>      <!-- 电量数字 -->
     <dimen name="textTitle">36sp</dimen>     <!-- 页面主标题 -->
     <dimen name="textHeadline">30sp</dimen>  <!-- 二级标题、主按钮 -->
-    <dimen name="textSubtitle">26sp</dimen>  <!-- 来电页说明、大号提示 -->
+    <dimen name="textSubtitle">26sp</dimen>  <!-- 大号提示、卡片说明 -->
     <dimen name="textSection">22sp</dimen>   <!-- 设置页行标题 -->
     <dimen name="textBody">20sp</dimen>      <!-- 正文、联系人姓名 -->
     <dimen name="textLabel">18sp</dimen>     <!-- 小按钮、分区标题 -->

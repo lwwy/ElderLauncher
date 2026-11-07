@@ -7,7 +7,6 @@ import android.content.SharedPreferences
 object Prefs {
     private const val NAME = "elder_prefs"
 
-    const val ANN_INCOMING = "ann_incoming"   // 来电播报
     const val ANN_LOW = "ann_lowbattery"      // 低电量播报
     const val HIDE_HOME_SETTINGS = "hide_home_settings" // 隐藏首页右上角设置入口（默认 false=显示）
     const val LOW_TONE_NAME = "low_tone_name" // 低电量自定义提示音的原始文件名（null=用系统语音）

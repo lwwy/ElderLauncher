@@ -2,9 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- 电话 / 联系人：本地功能所需（不使用短信，故不申请 SMS 权限） -->
+    <!-- 拨号：本地功能所需（不使用短信，故不申请 SMS 权限）。
+         来电播报功能已按隐私要求下架，因此不再声明/申请 READ_CONTACTS（通讯录），
+         也不再在运行时申请任何「电话状态 + 通讯录」权限组合；
+         READ_PHONE_STATE 仅保留声明供 TelecomHelper 做保护性检查（未授权时安全降级），
+         CALL_PHONE 仍由点拨号时按需申请。 -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <!-- 硬件非必需：本应用可跑在没有电话模块 / 摄像头的设备上（如平板） -->
@@ -74,7 +77,7 @@
             android:label="@string/edit_contact_title" />
 
         <!-- 系统广播接收器：只接收系统发出的广播，不对外暴露，
-             避免第三方应用伪造「电量不足/来电」触发播报 -->
+             避免第三方应用伪造「电量不足」触发低电量播报 -->
         <receiver android:name="com.example.elderlauncher.phone.receiver.BatteryReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BATTERY_LOW" />
@@ -82,7 +85,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- 文件提供器：用于拍照时临时保存图片 -->
+        <!-- 文件提供器：用于拍照时临时保存图片、以及导出诊断日志 -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -93,13 +96,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <receiver android:name="com.example.elderlauncher.phone.receiver.CallStateReceiver" android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.PHONE_STATE" />
-            </intent-filter>
-        </receiver>
-
-        <!-- 开机自启：拉起桌面（无常驻服务，播报由静态广播接收器按需触发） -->
+        <!-- 开机自启：拉起桌面（无常驻服务，低电量播报由静态广播接收器按需触发） -->
         <receiver
             android:name="com.example.elderlauncher.phone.receiver.BootReceiver"
             android:enabled="true"

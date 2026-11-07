@@ -12,7 +12,7 @@ import java.io.InputStream
  * 低电量播报的「自定义提示音」：让用户选一段本地音频，替代系统 TTS 念固定文案。
  *
  * 设计要点（与「设为默认桌面」一样，坚持「默认行为不变、失败必回退」）：
- * 1. 只作用于低电量播报；来电播报仍走 [TtsManager]，完全不受影响。
+ * 1. 只作用于低电量播报；未选择提示音时仍走 [TtsManager]，完全不受影响。
  * 2. SAF 选到的 content:// URI 只在 Activity 存活期间有效，因此拿到后**立刻复制**到
  *    应用私有目录 filesDir/low_battery/tone。之后播放只读私有文件：不依赖原 URI 的
  *    持久授权、不怕原文件被删/移动/重启、后台兼容路径（BatteryReceiver）也能播。

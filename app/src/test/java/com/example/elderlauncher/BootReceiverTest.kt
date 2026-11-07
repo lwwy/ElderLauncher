@@ -20,7 +20,7 @@ import org.robolectric.annotation.Config
  *
  * 守护的不变量：手机重启 / 应用更新后，仍会拉起桌面 HomeActivity；
  * 且不再启动任何前台服务（KeepAliveService 已删除）。
- * 来电播报与通话界面分别由静态广播（豁免清单）与系统绑定服务保证，不依赖常驻进程。
+ * 低电量播报由静态广播接收器（豁免清单）按需触发，不依赖常驻进程。
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)

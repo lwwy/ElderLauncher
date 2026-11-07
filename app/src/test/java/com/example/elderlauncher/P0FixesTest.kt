@@ -6,14 +6,12 @@ import android.graphics.Bitmap
 import android.os.Looper
 import android.provider.Settings
 import android.speech.tts.TextToSpeech
-import android.telephony.TelephonyManager
 import androidx.test.core.app.ApplicationProvider
 import com.example.elderlauncher.core.LowBatteryAnnouncer
 import com.example.elderlauncher.core.TtsManager
 import com.example.elderlauncher.data.LocalContacts
 import com.example.elderlauncher.data.Prefs
 import com.example.elderlauncher.phone.receiver.BatteryReceiver
-import com.example.elderlauncher.phone.receiver.CallStateReceiver
 import com.example.elderlauncher.ui.HomeActivity
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -40,7 +38,7 @@ import java.util.Locale
  * 覆盖：
  * 1. 首页返回键被拦截，不会退出桌面（P0-1）
  * 2. TTS「中文数据缺失」能被真实检测到，不再被重置（P0-2）
- * 3. 播报文案统一来自 strings.xml，来电/低电量两条通路共用（P0-3）
+ * 3. 低电量播报文案来自 strings.xml（P0-3；来电播报文案随功能下架已移除）
  * 4. 头像内存缓存命中与失效（P0-4）
  */
 @RunWith(RobolectricTestRunner::class)
@@ -153,40 +151,7 @@ class P0FixesTest {
 
     @Test
     fun announceStrings_areFormattedFromOneSource() {
-        assertEquals("来电，张三", app.getString(R.string.ann_incoming, "张三"))
-        assertEquals("未知号码", app.getString(R.string.ann_unknown_number))
         assertEquals("电量不足，请插上充电器", app.getString(R.string.ann_low_battery))
-    }
-
-    @Test
-    fun incomingCall_announcesResourceText() {
-        Prefs.set(app, Prefs.ANN_INCOMING, true)
-        val intent = Intent(TelephonyManager.ACTION_PHONE_STATE_CHANGED).apply {
-            putExtra(TelephonyManager.EXTRA_STATE, TelephonyManager.EXTRA_STATE_RINGING)
-        }
-
-        CallStateReceiver().onReceive(app, intent)
-        driveTtsInit()
-
-        val spoken = lastSpoken()
-        assertNotNull("响铃时应触发播报", spoken)
-        assertTrue(
-            "应播报统一文案「来电，…」，实际：$spoken",
-            spoken!!.startsWith("来电，")
-        )
-    }
-
-    @Test
-    fun incomingCall_whenDisabled_doesNotSpeak() {
-        Prefs.set(app, Prefs.ANN_INCOMING, false)
-        val intent = Intent(TelephonyManager.ACTION_PHONE_STATE_CHANGED).apply {
-            putExtra(TelephonyManager.EXTRA_STATE, TelephonyManager.EXTRA_STATE_RINGING)
-        }
-
-        CallStateReceiver().onReceive(app, intent)
-        idleMain()
-
-        assertNull("关闭开关后不应播报", lastSpoken())
     }
 
     @Test

@@ -117,18 +117,52 @@ object LocalContacts {
         avatarCache[i] = null
     }
 
-    /** 从相册/拍照得到的 URI 解码为缩放后的位图，避免大图 OOM */
+    /**
+     * 从相册 URI 解码为缩放后的位图：先只读尺寸，再按 inSampleSize 采样解码，
+     * 避免把 4000×3000 之类的大图一次性读进内存导致 OOM。
+     * 相机拍照路径请改用 [decodeFile]，两者采样口径一致。
+     */
     fun decodeUri(ctx: Context, uri: Uri, maxPx: Int = 512): Bitmap? {
         return try {
             val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             ctx.contentResolver.openInputStream(uri)?.use {
                 BitmapFactory.decodeStream(it, null, opts)
             }
+            if (opts.outWidth <= 0 || opts.outHeight <= 0) return null
             opts.inSampleSize = computeSample(opts.outWidth, opts.outHeight, maxPx)
             opts.inJustDecodeBounds = false
             ctx.contentResolver.openInputStream(uri)?.use {
                 BitmapFactory.decodeStream(it, null, opts)
             }
+        } catch (_: OutOfMemoryError) {
+            // 采样后仍极端超限时兜底返回 null，交给调用方提示「图片读取失败」，而不是崩溃
+            null
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /**
+     * 从拍照得到的文件路径解码位图，同样用「先读尺寸、再采样」两阶段解码。
+     * 修复老实现直接 decodeFile 全尺寸大图（拍照原图常达数千万像素）撑爆内存闪退的问题。
+     * 返回的最大边不会超过 maxPx 量级，可直接用于头像。
+     */
+    fun decodeFile(path: String, maxPx: Int = 512): Bitmap? {
+        // 先做文件级兜底：不存在 / 空文件直接返回 null。
+        // 与 cameraTaker 回调里的 f.exists() && f.length() > 0 保持同一口径，
+        // 也避免某些平台对缺失路径仍返回一个占位 Bitmap 而被误当成有效头像。
+        val file = File(path)
+        if (!file.isFile || file.length() <= 0L) return null
+        return try {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(path, bounds)
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+            val opts = BitmapFactory.Options().apply {
+                inSampleSize = computeSample(bounds.outWidth, bounds.outHeight, maxPx)
+            }
+            BitmapFactory.decodeFile(path, opts)
+        } catch (_: OutOfMemoryError) {
+            null
         } catch (_: Exception) {
             null
         }
