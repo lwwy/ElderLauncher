@@ -1,11 +1,12 @@
 package com.example.elderlauncher
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import com.example.elderlauncher.phone.CallThrottle
-import com.example.elderlauncher.ui.DialerActivity
+import com.example.elderlauncher.ui.HomeActivity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -20,17 +21,19 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /**
- * 拨号权限“二次确认/重放”回归测试。
+ * 拨号权限「二次确认 / 重放」回归测试。
  *
- * 守护的不变量（即本次修复的割裂体验）：
+ * 守护的不变量（历史修复过的割裂体验）：
  * 首次点击拨号时若 CALL_PHONE 未授予，只会拉起系统权限框（REQUEST_PERMISSIONS），不会真正拨号；
- * 当用户在权限弹窗点“允许”后，授权结果回调必须**自动**发起拨号（ACTION_CALL），
+ * 当用户在权限弹窗点「允许」后，授权结果回调必须**自动**发起拨号（ACTION_CALL），
  * 不应要求用户再点一次。拒绝授权则任何情况下都不拨号。
  *
+ * 死代码清理后：无入口的 DialerActivity 整套删除，本测试改为驱动 HomeActivity 的
+ * 等价逻辑（call(number) / onCallPermissionResult）——两处实现完全相同，守护的不变量不变。
+ *
  * 说明：ActivityResult 框架在 Robolectric 下无法通过 receiveResult 可靠地触发回调，
- * 因此这里直接驱动回调方法 [DialerActivity.onCallPermissionResult]，等价验证“授权后自动重拨”的逻辑；
+ * 因此这里直接驱动回调方法 [HomeActivity.onCallPermissionResult]，等价验证「授权后自动重拨」；
  * launcher → 该方法的接线是标准 AndroidX 写法、由平台保证。
- * 注：HomeActivity 的来电联系人头像拨号使用与此完全相同的修复逻辑，二者仅调用入口不同。
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = android.app.Application::class)
@@ -43,14 +46,26 @@ class CallPermissionReplayTest {
         CallThrottle.resetForTest()
     }
 
-    private fun launch(): DialerActivity {
-        return Robolectric.buildActivity(DialerActivity::class.java)
+    private fun launch(): HomeActivity {
+        // 先授予来电播报所需权限：桌面冷启动会申请 READ_PHONE_STATE / READ_CONTACTS，
+        // 那次 announcePermissionLauncher.launch 会占用 ActivityResultRegistry，
+        // 导致后续 callPermissionLauncher.launch 在 Robolectric 下不再产生 Intent。
+        // 授予后冷启动不再发起申请，测试只观察拨号权限这一条链路。
+        shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_CONTACTS
+        )
+        // 沿用原 DialerActivity 回归测试的构建方式：只 create + visible，
+        // 不走完整 setup 生命周期（onResume 会注册电池广播、刷新联系人）。
+        val a = Robolectric.buildActivity(HomeActivity::class.java)
             .create().visible().get()
+        drainIntents(a)
+        return a
     }
 
-    // 显式把 CALL_PHONE 设为“已拒绝”，模拟“尚未授权”的初始状态。
+    // 显式把 CALL_PHONE 设为「已拒绝」，模拟「尚未授权」的初始状态。
     // 权限状态挂在共享的 Application 阴影上、跨用例会残留，故每个用例都显式设一遍，避免互相污染。
-    private fun denyCall(a: DialerActivity) {
+    private fun denyCall(a: Activity) {
         shadowOf(RuntimeEnvironment.getApplication())
             .denyPermissions(Manifest.permission.CALL_PHONE)
         assertEquals(
@@ -60,8 +75,8 @@ class CallPermissionReplayTest {
         )
     }
 
-    // 显式把 CALL_PHONE 设为“已授予”，模拟“已经授权”的初始状态。
-    private fun grantCall(a: DialerActivity) {
+    // 显式把 CALL_PHONE 设为「已授予」，模拟「已经授权」的初始状态。
+    private fun grantCall(a: Activity) {
         shadowOf(RuntimeEnvironment.getApplication())
             .grantPermissions(Manifest.permission.CALL_PHONE)
         assertEquals(
@@ -71,22 +86,15 @@ class CallPermissionReplayTest {
         )
     }
 
-    private fun setNumber(a: DialerActivity, n: String) {
-        DialerActivity::class.java.getDeclaredField("number").apply {
+    private fun invokeCall(a: HomeActivity, number: String) {
+        HomeActivity::class.java.getDeclaredMethod("call", String::class.java).apply {
             isAccessible = true
-            set(a, n)
-        }
-    }
-
-    private fun invokeCall(a: DialerActivity) {
-        DialerActivity::class.java.getDeclaredMethod("call").apply {
-            isAccessible = true
-            invoke(a)
+            invoke(a, number)
         }
     }
 
     /** 依次弹出（消费）所有已启动的 Activity Intent，返回它们的 action 列表 */
-    private fun drainActions(a: DialerActivity): List<String?> {
+    private fun drainActions(a: Activity): List<String?> {
         val actions = mutableListOf<String?>()
         var intent = shadowOf(a).nextStartedActivity
         while (intent != null) {
@@ -97,7 +105,7 @@ class CallPermissionReplayTest {
     }
 
     /** 弹出所有已启动的 Intent，返回列表（便于检查某个具体 Intent 的 data） */
-    private fun drainIntents(a: DialerActivity): List<Intent> {
+    private fun drainIntents(a: Activity): List<Intent> {
         val list = mutableListOf<Intent>()
         var intent = shadowOf(a).nextStartedActivity
         while (intent != null) {
@@ -111,10 +119,9 @@ class CallPermissionReplayTest {
     fun firstTapRequestsPermissionThenGrantAutoPlacesCall() {
         val a = launch()
         denyCall(a)
-        setNumber(a, "10086")
 
         // 首次点击：权限未授予 → 仅拉起系统权限框，不应真正拨号
-        invokeCall(a)
+        invokeCall(a, "10086")
         val afterTap = drainActions(a)
         assertTrue(
             "首次点击应拉起权限请求框",
@@ -122,7 +129,7 @@ class CallPermissionReplayTest {
         )
         assertFalse("首次点击不应直接拨号", afterTap.contains(Intent.ACTION_CALL))
 
-        // 用户在权限弹窗点“允许” → 授权回调必须自动拨号，无需再次点击
+        // 用户在权限弹窗点「允许」 → 授权回调必须自动拨号，无需再次点击
         a.onCallPermissionResult(true)
         val call = drainIntents(a).firstOrNull { it.action == Intent.ACTION_CALL }
         assertNotNull("授权后必须自动拨号（无需二次点击）", call)
@@ -134,10 +141,9 @@ class CallPermissionReplayTest {
     fun deniedPermissionNeverPlacesCall() {
         val a = launch()
         denyCall(a)
-        setNumber(a, "10086")
 
         // 首次点击：仅拉起权限框
-        invokeCall(a)
+        invokeCall(a, "10086")
         assertTrue(
             "首次点击应拉起权限请求框",
             drainActions(a).contains("android.content.pm.action.REQUEST_PERMISSIONS")
@@ -157,8 +163,7 @@ class CallPermissionReplayTest {
         // 已授权：call() 应直接拨号、不弹权限框
         val a = launch()
         grantCall(a)
-        setNumber(a, "10086")
-        invokeCall(a)
+        invokeCall(a, "10086")
         val call = drainIntents(a).firstOrNull { it.action == Intent.ACTION_CALL }
         assertNotNull("已授权时应直接拨号", call)
         assertEquals("拨出号码应为 10086", "10086", call!!.data?.schemeSpecificPart)
@@ -169,8 +174,7 @@ class CallPermissionReplayTest {
     fun emptyNumberNeverPlacesCall() {
         val a = launch()
         denyCall(a)
-        setNumber(a, "")
-        invokeCall(a)
+        invokeCall(a, "")
         // 空号码：连权限请求都不应发起
         assertTrue("空号码不应发起任何拨号或权限请求", drainActions(a).isEmpty())
         a.finish()

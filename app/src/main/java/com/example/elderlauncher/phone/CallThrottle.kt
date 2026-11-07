@@ -6,7 +6,7 @@ import android.os.SystemClock
  * 拨号防连点：老人手抖或点击后没立刻看到反馈时容易连点，可能叠出两层系统拨号界面、
  * 或在「权限弹窗」期间重复发起授权请求。
  *
- * 只在「用户点击拨号」的入口（HomeActivity.call / DialerActivity.call）调用，
+ * 只在「用户点击拨号」的入口（HomeActivity.call）调用，
  * 绝不用于 onCallPermissionResult 的授权后自动重拨 —— 那是一次点击的延续，
  * 若被节流挡掉会变回「允许权限后不拨号」的老问题。
  *

@@ -38,10 +38,6 @@
     <color name="colorErrorContainer">#93000A</color>
     <color name="colorOnErrorContainer">#FFDAD6</color>
 
-    <!-- 语义色（保留：来电大卡片接听/挂断） -->
-    <color name="answer_green">#2E9E5B</color>
-    <color name="hangup_red">#C62828</color>
-
     <!-- 应用图标背景（品牌蓝） -->
     <color name="ic_launcher_background">#3A6FF6</color>
 

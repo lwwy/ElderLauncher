@@ -484,16 +484,22 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     /**
-     * 「忽略电池优化」入口。
+     * 「忽略电池优化」入口：直达本应用的「省电策略」页（可直接选「无限制」）。
      *
-     * 旧实现用 ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS 直接弹系统确认框，但 Manifest
-     * 未声明 REQUEST_IGNORE_BATTERY_OPTIMIZATIONS 权限 —— 该 action 按官方要求必须持有权限，
-     * 请求会被拒绝/无响应；而代码无论成败都弹「已请求…请点允许」的假成功，异常时还错用
-     * 「自启动设置」文案。补该权限又会违反 Google Play 政策（lint 的 BatteryLife 警告）。
+     * 历史：v1.0.9 ~ v1.2.5 一直用 ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS +
+     * Uri.parse("package:$packageName")。带包名让系统定位到本应用，在 HyperOS 上会直达
+     * 「电量详情 → 省电策略」，连续 7 个版本真机正常。
      *
-     * 现改走 ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS（系统「电池优化」白名单列表页）：
-     * 官方明确「大多数应用都可以调用」，无需任何权限、无政策风险，用户在列表里手动设为
-     * 「不优化」。用 isIgnoringBatteryOptimizations() 判断真实状态，不再无条件假成功。
+     * v1.2.6 修 P1-3（假成功提示 / 异常错用自启动文案）时，误以为缺
+     * REQUEST_IGNORE_BATTERY_OPTIMIZATIONS 权限会导致该 action 失效，顺手把跳转目标换成
+     * ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS（不带包名的全局应用列表页），用户要多点一步。
+     * 但该权限限制主要约束 Google Play 上架，本应用本地分发不受约束，国产 ROM 也不校验，
+     * 7 个版本的真机行为证明老 action 有效 —— 属于把正常功能改坏，现换回。
+     *
+     * 现实现：首选老 action（带包名），保留 v1.2.6 的 isIgnoringBatteryOptimizations()
+     * 真状态判断、日志埋点、电池专属文案与「启动失败返回 null、不假成功」；
+     * 老 action 不可解析时顺延到系统电池优化白名单列表页，再不行退应用详情页。
+     * 全程只发 intent，Manifest 不声明 REQUEST_IGNORE_BATTERY_OPTIMIZATIONS 权限。
      *
      * 参数可注入，便于单元测试驱动各分支；返回实际启动的 intent action，未启动返回 null。
      */
@@ -508,14 +514,20 @@ class SettingsActivity : AppCompatActivity() {
             return null
         }
 
+        // 候选链按「能否直达本应用省电策略」排序；package: 是关键，缺了只会落到全局列表页
+        val strategyPage = Intent(
+            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+            Uri.parse("package:$packageName")
+        )
         val listPage = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-        val target = if (resolvable(listPage)) {
-            listPage
-        } else {
-            Intent(
-                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                Uri.parse("package:$packageName")
-            )
+        val appDetails = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.parse("package:$packageName")
+        )
+        val target = when {
+            resolvable(strategyPage) -> strategyPage
+            resolvable(listPage) -> listPage
+            else -> appDetails
         }
 
         return try {

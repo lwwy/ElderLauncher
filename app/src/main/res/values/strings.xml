@@ -27,10 +27,6 @@
     <string name="contact_deleted">已删除</string>
     <string name="edit_contact">编辑</string>
 
-    <string name="dialer_title">拨号</string>
-    <string name="dialer_call">拨打</string>
-    <string name="dialer_delete">删除</string>
-
     <string name="settings_title">设置</string>
     <string name="set_incoming">来电播报</string>
     <string name="set_lowbattery">低电量播报</string>
@@ -39,11 +35,6 @@
     <string name="set_home_title">桌面入口</string>
     <string name="set_hide_settings">隐藏设置入口</string>
     <string name="set_hide_settings_tip">开启后，首页右上角的设置图标将隐藏。需要设置时，连点屏幕时间区域 5 下即可进入</string>
-
-    <string name="incoming_title">来电</string>
-    <string name="incoming_call">来电</string>
-    <string name="incoming_answer">接听</string>
-    <string name="incoming_hangup">挂断</string>
 
     <string name="set_default_launcher">设为默认桌面</string>
     <string name="set_default_tip">点一下，在系统设置里把“老人桌面”勾选为默认主屏幕，开机即进入本应用</string>
@@ -78,7 +69,7 @@
     <string name="low_tone_status_custom">当前：%1$s</string>
     <string name="low_tone_fallback_name">本地音频</string>
     <string name="btn_pick_tone">选择提示音</string>
-    <string name="btn_reset_tone">恢复系统语音</string>
+    <string name="btn_reset_tone">恢复提示音</string>
     <string name="low_tone_tip">自定义音频，单个文件不超过 10MB</string>
     <string name="low_tone_picked">已设置提示音：%1$s</string>
     <string name="low_tone_too_large">音频文件超过 10MB，请选择更短的提示音</string>
@@ -115,9 +106,9 @@
     <string name="battery_tip">允许后台运行，保证开机与来电提醒不被系统拦截</string>
     <string name="autostart_opened">正在打开自启动设置，请允许“老人桌面”自启动与后台运行</string>
     <string name="autostart_failed">未能自动打开自启动设置，请到“设置 → 应用 → 老人桌面”中手动开启自启动与后台运行</string>
-    <string name="battery_done">已打开电池优化设置，请在列表里把“老人桌面”设为「不优化」</string>
+    <string name="battery_done">已打开省电策略，请把“老人桌面”设为「无限制」</string>
     <string name="battery_already">已允许后台运行，无需再设置</string>
-    <string name="battery_failed">无法打开电池优化设置，请到“设置 → 电池 → 电池优化”中手动把“老人桌面”设为不优化</string>
+    <string name="battery_failed">无法自动打开省电策略，请到系统「设置 → 电池」里找到“老人桌面”，把省电策略设为「无限制」</string>
     <string name="home_empty_hint">请在“设置 → 常用联系人”中添加</string>
     <!-- 首页时间/日期的占位与格式 -->
     <string name="time_placeholder" translatable="false">--:--</string>

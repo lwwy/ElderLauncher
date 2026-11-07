@@ -5,7 +5,6 @@ import android.widget.LinearLayout
 import androidx.test.core.app.ApplicationProvider
 import com.example.elderlauncher.core.Diagnostics
 import com.example.elderlauncher.data.LocalContacts
-import com.example.elderlauncher.ui.DialerActivity
 import com.example.elderlauncher.ui.SettingsActivity
 import com.google.android.material.button.MaterialButton
 import org.junit.After
@@ -23,7 +22,8 @@ import org.robolectric.annotation.Config
 /**
  * 第二、三批（结构优化 + M3 整改）的回归测试。
  * 重点覆盖「布局被重写」这类最容易在真机才炸的改动：
- * 设置页联系人行改成 XML item、拨号页换成 MaterialButton、诊断日志拆类。
+ * 设置页联系人行改成 XML item、诊断日志拆类。
+ * 注：原「拨号页 MaterialButton」用例随无入口拨号盘删除一并移除。
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
@@ -96,24 +96,6 @@ class StructureRefactorTest {
         val firstLabel = (container.getChildAt(0) as LinearLayout)
             .findViewById<android.widget.TextView>(R.id.tvContactLabel).text.toString()
         assertTrue("重建后的第一行应显示乙，实际：$firstLabel", firstLabel.contains("乙"))
-        controller.close()
-    }
-
-    // ---------- 拨号页：M3 按钮 ----------
-
-    @Test
-    fun dialer_usesMaterialButtons() {
-        val controller = Robolectric.buildActivity(DialerActivity::class.java).setup()
-        val activity = controller.get()
-
-        assertTrue(
-            "拨打/删除必须是 MaterialButton，平台 Button 不认 M3 样式",
-            activity.findViewById<android.view.View>(R.id.btnCall) is MaterialButton
-        )
-        assertTrue(
-            "拨打/删除必须是 MaterialButton，平台 Button 不认 M3 样式",
-            activity.findViewById<android.view.View>(R.id.btnDelete) is MaterialButton
-        )
         controller.close()
     }
 

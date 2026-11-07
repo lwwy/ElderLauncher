@@ -86,10 +86,8 @@ class HomeLaunchFixTest {
 
     @Test
     fun homeRole_roleQueriesDoNotCrashWithoutRoleManager() {
-        // Robolectric 环境没有真实 RoleManager 服务，两条路径都必须安全降级
+        // Robolectric 环境没有真实 RoleManager 服务，判定必须安全降级
         assertFalse(HomeRole.holdsHomeRole(app))
-        // 可能返回 null（无角色服务），也可能返回系统 intent，只要求不抛异常
-        HomeRole.requestDefaultHomeIntent(app)
     }
 
     // ------------------------------------------- HomeActivity 返回键 / 复用 / 预热

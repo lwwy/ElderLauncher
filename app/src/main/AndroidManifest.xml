@@ -64,41 +64,14 @@
             </intent-filter>
         </activity>
 
-        <!-- 拨号盘：保留类声明（供内部与单元测试使用），但不再对外暴露 DIAL/CALL + tel。
-             本应用内部没有启动它的入口，外部 tel: 链接进来只会得到空白拨号盘（onCreate 不读
-             intent.data），还会让 TelecomHelper 的 ACTION_CALL 兜底绕回自己。去掉 filter 后，
-             本应用不再被列为可选拨号器，兜底自然落到系统拨号器。 -->
-        <activity
-            android:name="com.example.elderlauncher.ui.DialerActivity"
-            android:exported="false"
-            android:launchMode="singleTask" />
-
+        <!-- 拨号盘 / 来电通话大卡片整套已删除（无入口死代码清理）：
+             本应用不申请 ROLE_DIALER，这两套界面常规安装下永远不会被系统拉起。
+             tel: 链接一律落到系统拨号器，不再解析回本应用。 -->
         <activity android:name="com.example.elderlauncher.ui.SettingsActivity" android:exported="false" />
         <activity
             android:name="com.example.elderlauncher.ui.ContactEditActivity"
             android:exported="false"
             android:label="@string/edit_contact_title" />
-
-        <!-- 来电/通话大卡片：锁屏可弹、单实例 -->
-        <activity
-            android:name="com.example.elderlauncher.ui.InCallActivity"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:excludeFromRecents="true"
-            android:showWhenLocked="true"
-            android:turnScreenOn="true" />
-
-        <!-- 通话界面服务：InCallService 官方要求 exported="true"（false 会导致系统绑定失败）。
-             本应用未申请 ROLE_DIALER，常规安装下该服务不会被系统绑定，此处仅做声明合规；
-             真正接管通话界面需要默认拨号器角色，不属于本应用当前定位。 -->
-        <service
-            android:name="com.example.elderlauncher.phone.ElderInCallService"
-            android:exported="true"
-            android:permission="android.permission.BIND_INCALL_SERVICE">
-            <intent-filter>
-                <action android:name="android.telecom.InCallService" />
-            </intent-filter>
-        </service>
 
         <!-- 系统广播接收器：只接收系统发出的广播，不对外暴露，
              避免第三方应用伪造「电量不足/来电」触发播报 -->
@@ -126,7 +99,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- 开机自启：拉起桌面（无常驻服务，来电/通话由系统按需拉起） -->
+        <!-- 开机自启：拉起桌面（无常驻服务，播报由静态广播接收器按需触发） -->
         <receiver
             android:name="com.example.elderlauncher.phone.receiver.BootReceiver"
             android:enabled="true"

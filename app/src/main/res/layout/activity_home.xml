@@ -13,7 +13,6 @@
         android:layout_marginBottom="12dp">
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardTime"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardBackgroundColor="@color/colorTimeCard"
@@ -76,7 +75,7 @@
         <!-- 设置入口：右上角齿轮图标（看护人使用）。
              用 M3 的 IconButton 形态（自带状态层与 48dp 触摸区）。
              显式关掉 elevation 与 stateListAnimator，避免任何阴影，保持与卡片齐平。
-             btnSettings 声明在 cardTime 之后、同处 FrameLayout，绘制层级在上层，
+             btnSettings 声明在时间卡片之后、同处 FrameLayout，绘制层级在上层，
              且不与下方联系人区重叠，所以去掉抬升也不会被压住。 -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSettings"
@@ -98,7 +97,6 @@
     <!-- 2x2：三个联系人卡片 + 一个电量卡片。
          每个联系人卡片内部为单层 FrameLayout：照片铺满整卡，姓名叠在照片底部。 -->
     <LinearLayout
-        android:id="@+id/gridContacts"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="0dp"

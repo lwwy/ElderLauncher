@@ -1,7 +1,6 @@
 package com.example.elderlauncher
 
 import android.app.Application
-import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -29,10 +28,12 @@ import org.robolectric.annotation.Config
  * 守护的不变量：
  *  P1-1 默认桌面判定为「ROLE_HOME 持有 或 HOME 解析到自身」任一成立，纯放宽不倒退；
  *       返回键拦截仍只走解析口径（1B，功能行为不变）；诊断日志补两条原始口径。
- *  P1-2 InCallService 必须 exported=true。
- *  P1-3 电池优化走无需权限的白名单列表页、绝不碰受限的 REQUEST_ 弹窗 action、
- *       按真实状态给反馈、异常用电池专属文案、Manifest 不声明受限权限。
- *  P1-4 拨号盘不再对外暴露，tel: 的 DIAL/CALL 不得再解析回本应用。
+ *  P1-2 / P1-4：无入口的 InCallService / 拨号盘整套已删除，
+ *       保留「tel: 的 DIAL/CALL 不得再解析回本应用」这条断言。
+ *  P1-3 电池优化：现恢复历史版本的省电策略直达入口（带包名的 REQUEST_ action，
+ *       v1.2.6 曾误改为不带包名的全局列表页），保留真状态判断、日志埋点、
+ *       电池专属文案与失败兜底；Manifest 仍不声明 REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+ *       权限（只发 intent，不申请权限）。
  *  P2-5 设置页常驻提示不再写「系统弹窗」。
  */
 @RunWith(RobolectricTestRunner::class)
@@ -131,24 +132,40 @@ class P1FixesTest {
     }
 
     @Test
-    fun battery_opensWhitelistListPageNotRestrictedRequest() {
+    fun battery_opensPowerStrategyPageWithPackageUri() {
         val a = settings()
         drainIntents(a)
         val action = a.requestIgnoreBattery(alreadyIgnoring = false, resolvable = { true })
-        assertEquals(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS, action)
+        assertEquals(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, action)
         val intents = drainIntents(a)
-        assertTrue(
-            "应打开系统电池优化白名单列表页",
-            intents.any { it.action == Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS }
+        val strategy = intents.firstOrNull {
+            it.action == Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+        }
+        assertTrue("应打开本应用的省电策略页（历史版本写法）", strategy != null)
+        assertEquals(
+            "必须带 package: 包名，否则只会落到全局应用列表页",
+            "package:${a.packageName}",
+            strategy!!.data?.toString()
         )
         assertFalse(
-            "绝不能再走需要受限权限、违反 Play 政策的 REQUEST_ 弹窗 action",
-            intents.any { it.action == Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS }
+            "首选可用时不应再退到全局列表页",
+            intents.any { it.action == Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS }
         )
     }
 
     @Test
-    fun battery_fallsBackToAppDetailsWhenListUnavailable() {
+    fun battery_fallsBackToListPageWhenStrategyUnavailable() {
+        val a = settings()
+        drainIntents(a)
+        val action = a.requestIgnoreBattery(
+            alreadyIgnoring = false,
+            resolvable = { it.action != Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS }
+        )
+        assertEquals(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS, action)
+    }
+
+    @Test
+    fun battery_fallsBackToAppDetailsWhenNoSystemPageAvailable() {
         val a = settings()
         drainIntents(a)
         val action = a.requestIgnoreBattery(alreadyIgnoring = false, resolvable = { false })
@@ -173,7 +190,7 @@ class P1FixesTest {
             app.getString(R.string.battery_failed).contains("自启动")
         )
         assertFalse(
-            "引导文案不能再写「弹窗」（现在是列表页）",
+            "引导文案不能再写「弹窗」（现在是省电策略页）",
             app.getString(R.string.battery_done).contains("弹窗")
         )
         assertFalse(
@@ -192,23 +209,7 @@ class P1FixesTest {
         )
     }
 
-    // ------------------------------------------------ P1-2 / P1-4 Manifest 声明
-
-    @Test
-    fun manifest_inCallServiceIsExported() {
-        val si = app.packageManager.getServiceInfo(
-            ComponentName(app.packageName, "com.example.elderlauncher.phone.ElderInCallService"), 0
-        )
-        assertTrue("InCallService 必须 exported=true（官方明确禁止 false）", si.exported)
-    }
-
-    @Test
-    fun manifest_dialerActivityIsNotExported() {
-        val ai = app.packageManager.getActivityInfo(
-            ComponentName(app.packageName, "com.example.elderlauncher.ui.DialerActivity"), 0
-        )
-        assertFalse("拨号盘不再对外暴露", ai.exported)
-    }
+    // ------------------------------------------------ P1-4 tel: 不得解析回本应用
 
     @Test
     fun manifest_telDialAndCallNeverResolveBackToSelf() {

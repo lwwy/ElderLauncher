@@ -86,26 +86,6 @@ object HomeRole {
             false
         }
 
-    /**
-     * 构造 RoleManager 角色申请 intent。
-     *
-     * 仅保留供诊断 / 其它场景使用，**不纳入「设为默认桌面」候选链**（原因见类注释）。
-     * 角色不可用或低版本返回 null。
-     */
-    @SuppressLint("NewApi")
-    fun requestDefaultHomeIntent(ctx: Context): Intent? =
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) null
-        else try {
-            val rm = ctx.getSystemService(RoleManager::class.java)
-            if (rm != null && rm.isRoleAvailable(RoleManager.ROLE_HOME)) {
-                rm.createRequestRoleIntent(RoleManager.ROLE_HOME)
-            } else {
-                null
-            }
-        } catch (_: Throwable) {
-            null
-        }
-
     /** 打开系统「默认主屏幕」设置，让用户手动切换或放弃默认桌面 */
     fun homeSettingsIntent(): Intent = Intent(Settings.ACTION_HOME_SETTINGS)
 

@@ -8,11 +8,10 @@ import com.example.elderlauncher.R
 import com.example.elderlauncher.core.TtsManager
 import com.example.elderlauncher.data.Prefs
 import com.example.elderlauncher.phone.ContactsHelper
-import com.example.elderlauncher.phone.ElderInCallService
 
 /**
  * 来电播报：纯本地 TTS 朗读来电人（不出网）。
- * 来电“大卡片”界面由 ElderInCallService 接管，这里不再弹 Activity，避免重复界面。
+ * 只做语音提示，不弹任何通话界面（本应用不承担默认拨号器角色）。
  */
 class CallStateReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {

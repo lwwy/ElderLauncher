@@ -7,8 +7,7 @@
     -->
     <dimen name="textDisplay">64sp</dimen>   <!-- 首页时间大字 -->
     <dimen name="textMega">52sp</dimen>      <!-- 电量数字 -->
-    <dimen name="textHuge">48sp</dimen>      <!-- 来电号码 -->
-    <dimen name="textTitle">36sp</dimen>     <!-- 页面主标题、拨号号码 -->
+    <dimen name="textTitle">36sp</dimen>     <!-- 页面主标题 -->
     <dimen name="textHeadline">30sp</dimen>  <!-- 二级标题、主按钮 -->
     <dimen name="textSubtitle">26sp</dimen>  <!-- 来电页说明、大号提示 -->
     <dimen name="textSection">22sp</dimen>   <!-- 设置页行标题 -->
@@ -16,7 +15,6 @@
     <dimen name="textLabel">18sp</dimen>     <!-- 小按钮、分区标题 -->
     <dimen name="textTiny">16sp</dimen>      <!-- 农历等辅助信息 -->
     <dimen name="textCaption">14sp</dimen>   <!-- 说明文字 -->
-    <dimen name="textKeypad">32sp</dimen>    <!-- 拨号数字键 -->
 
     <!--
       圆角令牌（对齐 M3 shape scale：none / small / medium / large）。

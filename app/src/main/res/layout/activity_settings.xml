@@ -204,7 +204,7 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <!-- 主操作：保留描边按钮 -->
+                        <!-- 主操作：描边按钮 + 默认主色文字 -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnPickTone"
                             style="@style/Widget.Material3.Button.OutlinedButton"
@@ -213,11 +213,12 @@
                             android:minHeight="@dimen/touchTarget"
                             android:text="@string/btn_pick_tone" />
 
-                        <!-- 次要操作：无边框文字按钮，视觉上不与主按钮抢焦点；
+                        <!-- 次要操作：同样用描边按钮，保证一眼看得出是可点的按钮；
+                             文字改用降权的次级色与主按钮区分主次，
                              禁用态（未选择自定义音频）由颜色状态列表自动淡化 -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnResetTone"
-                            style="@style/Widget.Material3.Button.TextButton"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"

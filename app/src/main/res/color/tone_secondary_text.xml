@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  次要操作（恢复系统语音）文字按钮的颜色状态：
+  次要操作（恢复系统语音）描边按钮的文字颜色状态：
   正常态用降权的次级文字色，禁用态再淡一档，避免与「选择提示音」主按钮抢焦点。
 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
