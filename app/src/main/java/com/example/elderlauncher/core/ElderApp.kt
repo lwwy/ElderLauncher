@@ -23,7 +23,6 @@ class ElderApp : Application() {
         // 尽早安装捕获器，Application 之后发生的任何崩溃都能记录
         CrashLogger.init(base)
         lastSessionAbnormal = CrashLogger.lastSessionAbnormal(base)
-        CrashLogger.markSessionStart()
         if (lastSessionAbnormal) {
             CrashLogger.trace("检测到上次启动未完成，已导出运行轨迹供排查")
         }

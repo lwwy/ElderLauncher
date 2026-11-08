@@ -160,6 +160,9 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 标记“本次为真实 UI 启动尝试”：只有前台桌面启动才会经此路径，
+        // 闹钟/开机等无头进程不调用，避免被误判为“上次启动未完成”而误导出轨迹。
+        CrashLogger.markSessionStart()
         CrashLogger.trace("HomeActivity.onCreate 开始")
         setContentView(R.layout.activity_home)
         CrashLogger.trace("setContentView 完成")

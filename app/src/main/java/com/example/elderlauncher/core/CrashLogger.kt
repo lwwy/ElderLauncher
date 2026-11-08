@@ -155,7 +155,13 @@ object CrashLogger {
         }
     }
 
-    /** 标记本次启动开始（用于判断“上次启动是否异常中断”） */
+    /**
+     * 标记本次为「真实 UI 启动尝试」，用于判断“上次启动是否异常中断（没走到桌面显示）”。
+     *
+     * 注意：本方法**只应在前台 UI 启动路径（HomeActivity.onCreate）调用**。
+     * 闹钟/开机等由系统拉起的「无头进程」不要调用——否则进程拉起后没有桌面显示，
+     * 标记会一直卡在 true，下一次启动会被误判为“上次启动未完成”而误导出轨迹。
+     */
     fun markSessionStart() {
         if (!ENABLED) return
         val ctx = appContext ?: return
