@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- ===== Material 3 深色方案（蓝色主色） ===== -->
-    <!-- 背景与表面 -->
     <color name="colorBackground">#0F1115</color>
     <color name="colorOnBackground">#E2E2E9</color>
     <color name="colorSurface">#1A1C22</color>
@@ -13,42 +12,27 @@
     <color name="colorSurfaceContainerHighest">#33373F</color>
     <color name="colorOutline">#44474E</color>
     <color name="colorOutlineVariant">#2A2E37</color>
-
-    <!-- 主色 Primary（蓝） -->
     <color name="colorPrimary">#AEC6FF</color>
     <color name="colorOnPrimary">#0B2F66</color>
     <color name="colorPrimaryContainer">#284786</color>
     <color name="colorOnPrimaryContainer">#D9E2FF</color>
-
-    <!-- 次要色 Secondary -->
     <color name="colorSecondary">#BEC6DC</color>
     <color name="colorOnSecondary">#283141</color>
     <color name="colorSecondaryContainer">#3E4759</color>
     <color name="colorOnSecondaryContainer">#DAE2F9</color>
-
-    <!-- 第三色 Tertiary -->
     <color name="colorTertiary">#DDBCE4</color>
     <color name="colorOnTertiary">#3F2844</color>
     <color name="colorTertiaryContainer">#573E5C</color>
     <color name="colorOnTertiaryContainer">#FAD8FF</color>
-
-    <!-- 错误色 Error -->
     <color name="colorError">#FFB4AB</color>
     <color name="colorOnError">#690005</color>
     <color name="colorErrorContainer">#93000A</color>
     <color name="colorOnErrorContainer">#FFDAD6</color>
-
     <!-- 应用图标背景（品牌蓝） -->
-    <color name="ic_launcher_background">#3A6FF6</color>
-
-    <!-- 电量卡（正常态：与桌面联系人卡片同色系，中性协调，不抢眼） -->
+    <color name="ic_launcher_background">#4285F4</color>
     <color name="colorBatteryNormalBg">#2A2E37</color>
     <color name="colorBatteryNormalFg">#E3E2E6</color>
-    <!-- 电量低于 20%：优雅的 Material 红 + 深红酒红底 -->
     <color name="colorBatteryLow">#E5484D</color>
     <color name="colorBatteryLowBg">#2A1518</color>
-
-    <!-- 首页时间文字（恢复为蓝色） -->
-    <!-- 顶部时间卡片：柔和的雾蓝（降低饱和度，长时间看不刺眼） -->
     <color name="colorTimeCard">#3A6088</color>
 </resources>
