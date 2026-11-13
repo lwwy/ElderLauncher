@@ -34,7 +34,7 @@
     </queries>
 
     <application
-        android:name="com.example.elderlauncher.blue.core.ElderApp"
+        android:name="com.example.elderlauncher.core.ElderApp"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -51,7 +51,7 @@
              主题用纯色窗口（与桌面背景同色），不再用 Splash 主题，
              这样即使被系统重建也不会重播启动画面。 -->
         <activity
-            android:name="com.example.elderlauncher.blue.ui.HomeActivity"
+            android:name="com.example.elderlauncher.ui.HomeActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:excludeFromRecents="true"
@@ -75,15 +75,15 @@
         <!-- 拨号盘 / 来电通话大卡片整套已删除（无入口死代码清理）：
              本应用不申请 ROLE_DIALER，这两套界面常规安装下永远不会被系统拉起。
              tel: 链接一律落到系统拨号器，不再解析回本应用。 -->
-        <activity android:name="com.example.elderlauncher.blue.ui.SettingsActivity" android:exported="false" />
+        <activity android:name="com.example.elderlauncher.ui.SettingsActivity" android:exported="false" />
         <activity
-            android:name="com.example.elderlauncher.blue.ui.ContactEditActivity"
+            android:name="com.example.elderlauncher.ui.ContactEditActivity"
             android:exported="false"
             android:label="@string/edit_contact_title" />
 
         <!-- 系统广播接收器：只接收系统发出的广播，不对外暴露，
              避免第三方应用伪造「电量不足」触发低电量播报 -->
-        <receiver android:name="com.example.elderlauncher.blue.phone.receiver.BatteryReceiver" android:exported="false">
+        <receiver android:name="com.example.elderlauncher.phone.receiver.BatteryReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BATTERY_LOW" />
                 <action android:name="android.intent.action.BATTERY_OKAY" />
@@ -92,10 +92,10 @@
 
         <!-- 低电量播报闹钟：系统级定时哨兵，息屏也能按时提醒（exported=false，仅本应用 AlarmManager 触发） -->
         <receiver
-            android:name="com.example.elderlauncher.blue.phone.receiver.LowBatteryAlarmReceiver"
+            android:name="com.example.elderlauncher.phone.receiver.LowBatteryAlarmReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.example.elderlauncher.blue.LOW_BATTERY_ALARM" />
+                <action android:name="com.example.elderlauncher.LOW_BATTERY_ALARM" />
             </intent-filter>
         </receiver>
 
@@ -112,7 +112,7 @@
 
         <!-- 开机自启：拉起桌面（无常驻服务，低电量播报由静态广播接收器按需触发） -->
         <receiver
-            android:name="com.example.elderlauncher.blue.phone.receiver.BootReceiver"
+            android:name="com.example.elderlauncher.phone.receiver.BootReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>

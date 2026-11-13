@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.elderlauncher.blue"
+    namespace = "com.example.elderlauncher"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.elderlauncher.blue"
+        applicationId = "com.example.elderlauncher"
         minSdk = 24
         targetSdk = 34
         versionCode = 30
