@@ -18,26 +18,26 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # 用官方 setup-gradle 配置 Gradle 与构建缓存。它只准备环境、不执行构建，
+      # 具体任务一律通过仓库自带的 wrapper 显式运行，保证本地与 CI 用同一 Gradle 版本。
+      # 已弃用的 gradle-build-action@v3 + arguments 输入就此移除，避免将来该输入
+      # 被删掉时门禁静默失效。
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 用仓库自带的 gradle wrapper 构建（与本地一致），并依次跑
-      # 单元测试 + lint + 打包。任一测试/lint 失败则整个 job 失败、
+      # 依次跑单元测试 + lint + 打包。任一测试/lint 失败则整个 job 失败、
       # 不出 APK，从而「真机不翻车」——坏代码合入前就在 CI 拦下。
       - name: Run unit tests
-        uses: gradle/gradle-build-action@v3
-        with:
-          arguments: testDebugUnitTest
+        run: ./gradlew testDebugUnitTest
 
       - name: Run lint
-        uses: gradle/gradle-build-action@v3
-        with:
-          arguments: lintDebug
+        run: ./gradlew lintDebug
 
       - name: Build debug APK
-        uses: gradle/gradle-build-action@v3
-        with:
-          arguments: assembleDebug
+        run: ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

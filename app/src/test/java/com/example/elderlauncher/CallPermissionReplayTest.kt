@@ -26,7 +26,9 @@ import org.robolectric.annotation.Config
  * 守护的不变量（历史修复过的割裂体验）：
  * 首次点击拨号时若 CALL_PHONE 未授予，只会拉起系统权限框（REQUEST_PERMISSIONS），不会真正拨号；
  * 当用户在权限弹窗点「允许」后，授权结果回调必须**自动**发起拨号（ACTION_CALL），
- * 不应要求用户再点一次。拒绝授权则任何情况下都不拨号。
+ * 不应要求用户再点一次；
+ * 拒绝授权则降级到免权限的 ACTION_DIAL（系统拨号盘预填号码），
+ * 仍可完成呼叫，绝不出现「拒绝权限就完全打不了电话」。
  *
  * 死代码清理后：无入口的 DialerActivity 整套删除，本测试改为驱动 HomeActivity 的
  * 等价逻辑（call(number) / onCallPermissionResult）——两处实现完全相同，守护的不变量不变。
@@ -132,7 +134,7 @@ class CallPermissionReplayTest {
     }
 
     @Test
-    fun deniedPermissionNeverPlacesCall() {
+    fun deniedPermissionFallsBackToActionDial() {
         val a = launch()
         denyCall(a)
 
@@ -143,12 +145,17 @@ class CallPermissionReplayTest {
             drainActions(a).contains("android.content.pm.action.REQUEST_PERMISSIONS")
         )
 
-        // 用户拒绝授权 → 绝不拨号
+        // 用户拒绝授权 → 不发起需要 CALL_PHONE 的 ACTION_CALL，
+        // 而是降级到免权限的 ACTION_DIAL，且把原号码带进拨号盘
         a.onCallPermissionResult(false)
+        val intents = drainIntents(a)
         assertTrue(
-            "拒绝授权后不应拨号",
-            drainActions(a).none { it == Intent.ACTION_CALL }
+            "拒绝授权后不得发起 ACTION_CALL（该 action 需要 CALL_PHONE）",
+            intents.none { it.action == Intent.ACTION_CALL }
         )
+        val dial = intents.firstOrNull { it.action == Intent.ACTION_DIAL }
+        assertNotNull("拒绝授权后应降级发起 ACTION_DIAL，仍能完成呼叫", dial)
+        assertEquals("拨号盘应预填原号码", "10086", dial!!.data?.schemeSpecificPart)
         a.finish()
     }
 

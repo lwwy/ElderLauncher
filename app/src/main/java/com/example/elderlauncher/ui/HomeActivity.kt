@@ -358,14 +358,18 @@ class HomeActivity : AppCompatActivity() {
 
     /**
      * 拨号权限授权结果的统一处理（由 callPermissionLauncher 回调调用，也可被单元测试直接驱动）。
-     * 授权后自动用暂存的待拨号码真正发起拨号，无需用户再点一次；拒绝则提示且不拨。
+     * 授权后自动用暂存的待拨号码真正发起拨号，无需用户再点一次；
+     * 拒绝则降级到免权限的 ACTION_DIAL（系统拨号盘预填号码），仍能完成呼叫，
+     * 绝不出现「拒绝权限就完全打不了电话」。
      */
     internal fun onCallPermissionResult(granted: Boolean) {
         val number = pendingCallNumber
         pendingCallNumber = null
-        if (granted && !number.isNullOrEmpty()) {
+        if (number.isNullOrEmpty()) return
+        if (granted) {
             TelecomHelper.placeCall(this, number)
-        } else if (!number.isNullOrEmpty()) {
+        } else {
+            TelecomHelper.dial(this, number)
             Toast.makeText(this, R.string.call_perm_denied, Toast.LENGTH_SHORT).show()
         }
     }

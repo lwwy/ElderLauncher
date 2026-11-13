@@ -3,12 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- 拨号：本地功能所需（不使用短信，故不申请 SMS 权限）。
-         来电播报功能已按隐私要求下架，因此不再声明/申请 READ_CONTACTS（通讯录），
-         也不再在运行时申请任何「电话状态 + 通讯录」权限组合；
-         READ_PHONE_STATE 仅保留声明供 TelecomHelper 做保护性检查（未授权时安全降级），
-         CALL_PHONE 仍由点拨号时按需申请。 -->
+         来电播报功能已按隐私要求下架，不再声明/申请 READ_CONTACTS（通讯录）。
+         本应用不是默认拨号器，simAccount / TelecomManager.placeCall 那套
+         SIM 选卡死代码已删除，随之移除 READ_PHONE_STATE：留着只会让每次拨号
+         都写一条「未授予 READ_PHONE_STATE」的误导性轨迹（真机日志实证）。
+         CALL_PHONE 仍由点拨号时按需申请；被拒绝时降级 ACTION_DIAL（免权限），
+         打开系统拨号盘预填号码，仍能完成呼叫。 -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <!-- 硬件非必需：本应用可跑在没有电话模块 / 摄像头的设备上（如平板） -->
     <uses-feature android:name="android.hardware.telephony" android:required="false" />

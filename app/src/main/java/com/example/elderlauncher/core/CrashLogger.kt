@@ -57,9 +57,26 @@ object CrashLogger {
     @Volatile
     private var appContext: Context? = null
 
-    private val timeFmt = SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.US)
-    private val fullFmt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
-    private val fileFmt = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US)
+    /**
+     * SimpleDateFormat 内部持有可变的 Calendar/NumberFormat，**非线程安全**。
+     * 崩溃捕获发生在任意线程，而 init 之后主线程仍可能同时写 trace，
+     * 单例共享实例会在两条路径交叉时格式化出错乱时间甚至抛异常（崩溃路径最易触发）。
+     * 改用 ThreadLocal：每线程一份，无锁、无共享可变状态，且兼容 minSdk 24
+     * （不依赖 java.time / desugaring）。用 android.os.Build 之外的纯 JDK 类即可。
+     */
+    private val timeFmt = object : ThreadLocal<SimpleDateFormat>() {
+        override fun initialValue() = SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.US)
+    }
+    private val fullFmt = object : ThreadLocal<SimpleDateFormat>() {
+        override fun initialValue() = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+    }
+    private val fileFmt = object : ThreadLocal<SimpleDateFormat>() {
+        override fun initialValue() = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US)
+    }
+
+    private fun timeText(date: Date = Date()): String = timeFmt.get()!!.format(date)
+    private fun fullText(date: Date = Date()): String = fullFmt.get()!!.format(date)
+    private fun fileText(date: Date = Date()): String = fileFmt.get()!!.format(date)
 
     /**
      * 日志脱敏：把疑似完整号码替换成 **** + 末 4 位。
@@ -150,7 +167,7 @@ object CrashLogger {
                 val tail = f.readText().takeLast(MAX_TRACE_BYTES / 2)
                 f.writeText(redactPhoneNumbers(tail))
             }
-            f.appendText("[${timeFmt.format(Date())}] $safe\n")
+            f.appendText("[${timeText()}] $safe\n")
         } catch (_: Throwable) {
             // 打点失败不影响主流程
         }
@@ -227,7 +244,7 @@ object CrashLogger {
         return try {
             val src = File(dirFor(context), TRACE_FILE)
             if (!src.exists()) return null
-            val name = "trace-${fileFmt.format(Date())}.txt"
+            val name = "trace-${fileText()}.txt"
             val text = redactPhoneNumbers(src.readText().takeLast(64 * 1024))
             if (FileExporter.writeToDownloads(context, name, text)) name else null
         } catch (_: Throwable) {
@@ -283,13 +300,13 @@ object CrashLogger {
     }
 
     /** 导出时间格式，供 Diagnostics 复用 */
-    internal fun stamp(): String = fullFmt.format(Date())
+    internal fun stamp(): String = fullText()
 
     /** 文件时间戳格式（yyyyMMdd-HHmmss），供 Diagnostics 生成文件名 */
-    internal fun fileStamp(): String = fileFmt.format(Date())
+    internal fun fileStamp(): String = fileText()
 
     /** 崩溃列表里每行的时间格式 */
-    internal fun shortTime(ms: Long): String = timeFmt.format(Date(ms))
+    internal fun shortTime(ms: Long): String = timeText(Date(ms))
 
     private fun prefs(ctx: Context) =
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -297,7 +314,7 @@ object CrashLogger {
     private fun buildCrashReport(ctx: Context, thread: Thread, error: Throwable): String {
         val sb = StringBuilder()
         sb.appendLine("================ 崩溃报告 ================")
-        sb.appendLine("时间: ${fullFmt.format(Date())}")
+        sb.appendLine("时间: ${fullText()}")
         sb.appendLine("异常线程: ${thread.name}")
         sb.appendLine("设备: ${Build.MANUFACTURER} ${Build.MODEL}")
         sb.appendLine("系统: Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
@@ -318,7 +335,7 @@ object CrashLogger {
     }
 
     private fun writeCrashFile(ctx: Context, text: String): File? = try {
-        val f = File(dirFor(ctx), "crash-${fileFmt.format(Date())}.txt")
+        val f = File(dirFor(ctx), "crash-${fileText()}.txt")
         // 崩溃场景必须同步落盘，不能用异步写入
         f.writeText(text)
         f

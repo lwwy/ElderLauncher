@@ -20,6 +20,10 @@ import java.util.Calendar
  * 2. 兼容路径：少数仍会投递 ACTION_BATTERY_LOW / BATTERY_OKAY 的 ROM，
  *    由 [onSystemLowBattery] / [onSystemBatteryOkay] 处理。
  *
+ * 系统级定时哨兵（AlarmManager）也复用本状态机，见 [LowBatteryAlarmScheduler]。
+ * [onBatteryChanged] / [onSystemLowBattery] 返回「本次是否真的播出了声音」，
+ * 供调用方决定 wakelock 持有长短，生产逻辑不依赖测试计数器。
+ *
  * 用户拍板的节奏：
  * - 跌破 20% 立即播一次，之后**每 30 分钟**再提醒一次，直到条件解除；
  * - 插上充电器 / 电量回升到 25% 以上 → 本轮清零、停止重复提醒；
@@ -27,8 +31,10 @@ import java.util.Calendar
  *   离开时段后若仍低电量、未充电，**补播一次**，之后回到 30 分钟节奏；
  * - 免打扰时段写死在代码里，不进设置页、不提供开关、不需要任何权限。
  *
- * 阈值带迟滞：低于 LOW_THRESHOLD 才播，回升到 RESET_THRESHOLD 以上才复位，
- * 防止电量在临界值上下抖动时反复打扰老人。
+ * 阈值带迟滞：低于 LOW_THRESHOLD 才开启新一轮，回升到 RESET_THRESHOLD 以上才复位，
+ * 防止电量在临界值上下抖动时反复打扰老人。注意迟滞带内**不是终止本轮**：
+ * 已开播的轮次仍要按 30 分钟节奏继续，否则哨兵在 20~25% 区间每 30 分钟空转、
+ * 漏掉重复提醒（v1.2.17 修复）。
  */
 object LowBatteryAnnouncer {
 
@@ -39,9 +45,12 @@ object LowBatteryAnnouncer {
     /** 低电量期间的重复提醒间隔：30 分钟 */
     internal const val REPEAT_INTERVAL_MS = 30L * 60L * 1000L
 
-    /** 固定免打扰时段 22:00–07:00（距零点的分钟数，跨午夜） */
+    /** 固定免打扰时段 22:00–07:00（距零点的分钟数，跨午夜）——免打扰边界的唯一真值源 */
     internal const val QUIET_START_MIN = 22 * 60
     internal const val QUIET_END_MIN = 7 * 60
+
+    /** 供定时哨兵对齐触发时刻的两个边界（小时*60+分钟），避免调度器另写一份 7/22 */
+    internal fun quietBoundaryMinutes(): List<Int> = listOf(QUIET_START_MIN, QUIET_END_MIN)
 
     /**
      * 可替换的时钟，仅供单元测试精确驱动时间与模拟跨夜。
@@ -94,45 +103,61 @@ object LowBatteryAnnouncer {
     }
 
     /**
-     * 由 ACTION_BATTERY_CHANGED（以及桌面整分 tick）驱动。
+     * 由 ACTION_BATTERY_CHANGED（以及桌面整分 tick / 系统级定时哨兵）驱动。
      * @param pct 当前电量百分比，无法取得时为负
      * @param charging 是否正在充电（EXTRA_PLUGGED != 0）
+     * @return 本次是否真的播出了声音
      */
     @Synchronized
-    fun onBatteryChanged(ctx: Context, pct: Int, charging: Boolean) {
-        if (pct < 0) return
+    fun onBatteryChanged(ctx: Context, pct: Int, charging: Boolean): Boolean {
+        if (pct < 0) return false
         val now = clock()
         if (charging || pct >= RESET_THRESHOLD) {
             // 插上充电器 / 电量回升：停止重复提醒，本轮清零
             resetCycle()
-            return
+            return false
         }
-        if (pct >= LOW_THRESHOLD) return   // 20~25 迟滞带：不新播、也不复位
-        evaluate(ctx, now)
+        // 迟滞带 [20,25)：只有「本轮从未播过、也没有待补播」时才拦截首次触发，
+        // 因为 22% 不该开启新一轮。已开播的轮次必须继续走 evaluate，
+        // 让 30 分钟节奏与免打扰补照常推进 —— 旧实现在这里无条件 return，
+        // 导致哨兵在该区间每 30 分钟空转、重复提醒停摆。
+        val inHysteresisBand = pct in LOW_THRESHOLD until RESET_THRESHOLD
+        if (inHysteresisBand && lastAnnounceAt == 0L && !quietPending) return false
+        return evaluate(ctx, now)
     }
 
     /** 系统 ACTION_BATTERY_LOW（仅部分 ROM 会投递到静态接收器） */
     @Synchronized
-    fun onSystemLowBattery(ctx: Context) = evaluate(ctx, clock())
+    fun onSystemLowBattery(ctx: Context): Boolean = evaluate(ctx, clock())
 
     /** 系统 ACTION_BATTERY_OKAY：电量已恢复，本轮结束 */
     @Synchronized
     fun onSystemBatteryOkay() = resetCycle()
 
-    /** 免打扰 + 补播 + 30 分钟节奏的统一判定 */
-    private fun evaluate(ctx: Context, now: Long) {
+    /**
+     * 免打扰 + 补播 + 30 分钟节奏的统一判定。
+     * @return 本次是否真的播出了声音
+     */
+    private fun evaluate(ctx: Context, now: Long): Boolean {
         if (isInQuietWindow(minuteOfDay(now))) {
             // 时段内静音：不播、不占用时间戳；记下待补播，离开后补一次
             if (shouldAnnounce(now)) quietPending = true
-            return
+            return false
         }
         if (quietPending) {
             // 免打扰结束后补播一次，补完回到正常 30 分钟节奏
             quietPending = false
-            if (speak(ctx)) lastAnnounceAt = now
-            return
+            if (speak(ctx)) {
+                lastAnnounceAt = now
+                return true
+            }
+            return false
         }
-        if (shouldAnnounce(now) && speak(ctx)) lastAnnounceAt = now
+        if (shouldAnnounce(now) && speak(ctx)) {
+            lastAnnounceAt = now
+            return true
+        }
+        return false
     }
 
     /**

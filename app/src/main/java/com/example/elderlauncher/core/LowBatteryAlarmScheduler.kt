@@ -7,7 +7,6 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
-import com.example.elderlauncher.core.CrashLogger
 import com.example.elderlauncher.data.Prefs
 import com.example.elderlauncher.phone.receiver.LowBatteryAlarmReceiver
 import java.util.Calendar
@@ -154,16 +153,20 @@ internal object LowBatteryAlarmScheduler {
         return if (boundary > 0) minOf(base, boundary) else base
     }
 
-    /** 紧跟 now 之后的免打扰边界（07:00 离开 / 22:00 进入），用于准时切换免打扰状态 */
+    /**
+     * 紧跟 now 之后的免打扰边界（07:00 离开 / 22:00 进入），用于准时切换免打扰状态。
+     * 边界分钟数直接取自 [LowBatteryAnnouncer.quietBoundaryMinutes]，
+     * 与状态机免打扰判定共用同一真值源，避免这里再硬编码一份 7/22。
+     */
     private fun nextQuietBoundary(now: Long): Long {
         val cal = Calendar.getInstance()
         val cands = mutableListOf<Long>()
         for (day in 0..1) {
-            for ((h, m) in listOf(7 to 0, 22 to 0)) {
+            for (minuteOfDay in LowBatteryAnnouncer.quietBoundaryMinutes()) {
                 cal.timeInMillis = now
                 cal.add(Calendar.DAY_OF_MONTH, day)
-                cal.set(Calendar.HOUR_OF_DAY, h)
-                cal.set(Calendar.MINUTE, m)
+                cal.set(Calendar.HOUR_OF_DAY, minuteOfDay / 60)
+                cal.set(Calendar.MINUTE, minuteOfDay % 60)
                 cal.set(Calendar.SECOND, 0)
                 cal.set(Calendar.MILLISECOND, 0)
                 if (cal.timeInMillis > now) cands += cal.timeInMillis
@@ -181,9 +184,9 @@ internal object LowBatteryAlarmScheduler {
             cancel(ctx)
             return
         }
-        val before = LowBatteryAnnouncer.announceCount
-        LowBatteryAnnouncer.onBatteryChanged(ctx.applicationContext, pct, plugged)
-        val spoke = LowBatteryAnnouncer.announceCount > before
+        // 用状态机正式的返回值判断本次是否出声：announceCount 是仅供测试观测的计数器，
+        // 生产逻辑不该依赖它（且它只代表「发起了播报」，不等于「真的播出了声音」）。
+        val spoke = LowBatteryAnnouncer.onBatteryChanged(ctx.applicationContext, pct, plugged)
         holdWakeLock(ctx, spoke)
         scheduleNext(ctx)
     }

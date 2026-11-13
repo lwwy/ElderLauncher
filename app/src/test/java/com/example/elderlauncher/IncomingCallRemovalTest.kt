@@ -49,6 +49,10 @@ class IncomingCallRemovalTest {
             "拨号必需的 CALL_PHONE 必须保留",
             requested.contains(android.Manifest.permission.CALL_PHONE)
         )
+        assertFalse(
+            "SIM 选卡死代码已删除，READ_PHONE_STATE 不应再声明（留着只会产生误导性轨迹）",
+            requested.contains(android.Manifest.permission.READ_PHONE_STATE)
+        )
 
         // PHONE_STATE 接收器（来电播报）已删除：静态注册不应再被解析出来
         val receivers = app.packageManager.queryBroadcastReceivers(

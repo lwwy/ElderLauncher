@@ -134,7 +134,7 @@ class PrivacyRedactionTest {
 
     @Test
     fun trace_writtenToDisk_neverContainsFullNumber() {
-        CrashLogger.trace("placeCall(SIM) 发起：13800138000")
+        CrashLogger.trace("ACTION_CALL 发起：13800138000")
         val text = traceFile().readText()
         assertFalse("落盘的 trace.log 不得含完整号码", text.contains("13800138000"))
         assertTrue(text.contains("****8000"))
@@ -142,17 +142,28 @@ class PrivacyRedactionTest {
 
     @Test
     fun placeCall_endToEnd_neverLogsFullNumber() {
-        // 无论走 SIM / ACTION_CALL 兜底 / 异常分支，写日志时都不带完整号码
+        // 直拨 ACTION_CALL / 异常降级 ACTION_DIAL，写日志时都不带完整号码
         TelecomHelper.placeCall(app, "13800138000")
         val text = traceFile().readText()
         assertFalse("端到端拨号不得把完整号码写进日志", text.contains("13800138000"))
+    }
+
+    @Test
+    fun dialFallback_endToEnd_neverLogsFullNumber() {
+        // 拒绝 CALL_PHONE 后走免权限 ACTION_DIAL，同样不得把完整号码写进日志
+        TelecomHelper.dial(app, "13800138000")
+        val text = traceFile().readText()
+        assertFalse("降级拨号盘不得把完整号码写进日志", text.contains("13800138000"))
+        assertTrue(text.contains("****8000"))
     }
 
     // ---------------------------------------------------------- 读出 / 导出端兜底
 
     @Test
     fun historicalTraceLog_isRedactedWhenRead() {
-        // 模拟「用户装过旧版本」：磁盘上早已存在含完整号码的轨迹
+        // 模拟「用户装过旧版本」：磁盘上早已存在含完整号码的轨迹。
+        // 这里的旧文案（含 placeCall(SIM)）是刻意保留的历史夹具，验证读出端
+        // 对任何已落盘文本都兜底脱敏，与当前源码是否还存在该分支无关。
         traceFile().writeText(
             "[11-07 14:42:01.123] placeCall(SIM) 发起：13800138000\n" +
                 "[11-07 14:42:02.456] dat=tel:13900001111 失败\n"
